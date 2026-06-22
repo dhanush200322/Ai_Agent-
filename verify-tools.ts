@@ -39,6 +39,7 @@ async function runTests() {
       }
     });
 
+    // @ts-ignore
     const conversation = await prisma.conversation.findFirst() || await prisma.conversation.create({
       data: {
         organizationId: org.id,
