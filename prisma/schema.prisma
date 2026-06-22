@@ -1,0 +1,195 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// Enums
+// ==========================================
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum AgentVisibility {
+  PRIVATE
+  ORGANIZATION
+  PUBLIC
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+// ==========================================
+// Models
+// ==========================================
+
+model Organization {
+  id               String             @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String             @unique
+  logoUrl          String?
+  website          String?
+  industry         String?
+  country          String?
+  timezone         String?
+  subscriptionPlan SubscriptionPlan   @default(FREE)
+  status           OrganizationStatus @default(ACTIVE)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  deletedAt        DateTime?
+
+  users            User[]
+  roles            Role[]
+  agents           Agent[]
+  invitations      Invitation[]
+
+  @@index([status])
+}
+
+model User {
+  id              String             @id @default(uuid()) @db.Uuid
+  firstName       String
+  lastName        String
+  email           String             @unique
+  passwordHash    String
+  avatar          String?
+  phone           String?
+  emailVerified   Boolean            @default(false)
+  emailVerifiedAt DateTime?
+  lastLogin       DateTime?
+  lastLoginIp     String?
+  isOwner         Boolean            @default(false)
+  status          UserStatus         @default(ACTIVE)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  deletedAt       DateTime?
+
+  organizationId  String             @db.Uuid
+  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  roleId          String             @db.Uuid
+  role            Role               @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  createdAgents   Agent[]            @relation("CreatedAgents")
+  sentInvitations Invitation[]       @relation("SentInvitations")
+
+  @@index([organizationId])
+  @@index([roleId])
+  @@index([status])
+}
+
+model Role {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  organizationId String        @db.Uuid
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  users          User[]
+  permissions    Permission[]  @relation("RolePermissions")
+  invitations    Invitation[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model Permission {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String    @unique
+  description String?
+  category    String
+  resource    String
+  action      String
+  createdAt   DateTime  @default(now())
+
+  roles       Role[]    @relation("RolePermissions")
+
+  @@index([resource, action])
+}
+
+model Agent {
+  id             String          @id @default(uuid()) @db.Uuid
+  name           String
+  slug           String
+  description    String?
+  avatar         String?
+  model          String
+  systemPrompt   String?         @db.Text
+  temperature    Float           @default(0.7)
+  topP           Float           @default(1.0)
+  maxTokens      Int             @default(2048)
+  visibility     AgentVisibility @default(PRIVATE)
+  status         AgentStatus     @default(ACTIVE)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+
+  organizationId String          @db.Uuid
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdById    String          @db.Uuid
+  createdBy      User            @relation("CreatedAgents", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@index([createdById])
+  @@index([status])
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+}
+
+model Invitation {
+  id             String           @id @default(uuid()) @db.Uuid
+  email          String
+  token          String           @unique
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organizationId String           @db.Uuid
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  roleId         String           @db.Uuid
+  role           Role             @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  inviterId      String           @db.Uuid
+  inviter        User             @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([token])
+  @@index([email])
+}
