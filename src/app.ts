@@ -12,6 +12,8 @@ import userRbacRoutes from './modules/rbac/routes/users.rbac.routes';
 import orgRoutes from './modules/organization/routes/organization.routes';
 import userRoutes from './modules/users/routes/user.routes';
 import agentRoutes from './modules/agents/routes/agent.routes';
+import knowledgeRoutes from './modules/knowledge/routes/knowledge.routes';
+import chatRoutes from './modules/chat/routes/chat.routes';
 import healthRoutes from './routes/health.routes';
 import { globalErrorHandler } from './middleware/errorHandler';
 import logger from './shared/logger/logger';
@@ -21,6 +23,7 @@ const app: Express = express();
 
 // Request ID Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log("GLOBAL CONTENT TYPE:", req.headers["content-type"]);
   req.reqId = crypto.randomUUID();
   res.setHeader('X-Request-Id', req.reqId);
   next();
@@ -54,6 +57,8 @@ app.use('/api/v1/users', userRbacRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/organization', orgRoutes);
 app.use('/api/v1/agents', agentRoutes);
+app.use('/api/v1/knowledge', knowledgeRoutes);
+app.use('/api/v1/chat', chatRoutes);
 
 // Catch 404 and forward to error handler
 app.use((req: Request, _res: Response, next: NextFunction) => {

@@ -49,6 +49,32 @@ enum InvitationStatus {
   EXPIRED
 }
 
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum MessageRole {
+  SYSTEM
+  USER
+  ASSISTANT
+}
+
+enum MemoryType {
+  SHORT_TERM
+  LONG_TERM
+  SUMMARY
+}
+
+enum ToolExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  TIMEOUT
+}
+
 // ==========================================
 // Models
 // ==========================================
@@ -72,6 +98,10 @@ model Organization {
   roles            Role[]
   agents           Agent[]
   invitations      Invitation[]
+  knowledgeBases   KnowledgeBase[]
+  knowledgeDocuments KnowledgeDocument[]
+  conversations    Conversation[]
+  tools            Tool[]
 
   @@index([status])
 }
@@ -102,6 +132,9 @@ model User {
 
   createdAgents   Agent[]            @relation("CreatedAgents")
   sentInvitations Invitation[]       @relation("SentInvitations")
+  createdKnowledgeBases KnowledgeBase[] @relation("CreatedKnowledgeBases")
+  uploadedKnowledgeDocuments KnowledgeDocument[] @relation("UploadedKnowledgeDocuments")
+  conversations    Conversation[]
 
   @@index([organizationId])
   @@index([roleId])
@@ -163,6 +196,10 @@ model Agent {
   createdById    String          @db.Uuid
   createdBy      User            @relation("CreatedAgents", fields: [createdById], references: [id], onDelete: Restrict)
 
+  conversations  Conversation[]
+  agentTools     AgentTool[]
+  toolExecutions ToolExecution[]
+
   @@unique([organizationId, slug])
   @@index([organizationId])
   @@index([createdById])
@@ -192,4 +229,230 @@ model Invitation {
   @@index([organizationId])
   @@index([token])
   @@index([email])
+}
+
+model KnowledgeBase {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdById    String       @db.Uuid
+  createdBy      User         @relation("CreatedKnowledgeBases", fields: [createdById], references: [id], onDelete: Restrict)
+
+  documents      KnowledgeDocument[]
+
+  @@index([organizationId])
+  @@index([createdById])
+  @@index([organizationId, deletedAt])
+}
+
+model KnowledgeDocument {
+  id               String        @id @default(uuid()) @db.Uuid
+  knowledgeBaseId  String        @db.Uuid
+  organizationId   String        @db.Uuid
+  uploadedById     String        @db.Uuid
+
+  originalName     String
+  fileName         String
+  mimeType         String
+  extension        String
+  size             Int
+  storagePath      String
+  status           String        @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+
+  processedAt      DateTime?
+  chunkCount       Int?
+  embeddingModel   String?
+  processingTime   Int?
+  errorMessage     String?       @db.Text
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+
+  knowledgeBase    KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedBy       User          @relation("UploadedKnowledgeDocuments", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([knowledgeBaseId])
+  @@index([organizationId])
+  @@index([uploadedById])
+  @@index([organizationId, deletedAt])
+  @@index([knowledgeBaseId, deletedAt])
+}
+
+model Conversation {
+  id              String             @id @default(uuid()) @db.Uuid
+  sessionId       String?            @db.VarChar(255) // Web, Mobile, Slack, etc.
+  title           String?            @db.VarChar(255)
+  summary         String?            @db.Text
+  status          ConversationStatus @default(ACTIVE)
+  
+  organizationId  String             @db.Uuid
+  agentId         String             @db.Uuid
+  userId          String             @db.Uuid
+
+  lastMessageAt   DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  deletedAt       DateTime?
+
+  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agent           Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messages        ConversationMessage[]
+  memories        ConversationMemory[]
+  toolExecutions  ToolExecution[]
+
+  @@index([organizationId])
+  @@index([agentId])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([status])
+}
+
+model ConversationMessage {
+  id               String       @id @default(uuid()) @db.Uuid
+  conversationId   String       @db.Uuid
+  role             MessageRole
+  content          String       @db.Text
+  
+  // Metadata
+  model            String?
+  temperature      Float?
+  latency          Int?         // milliseconds
+  finishReason     String?
+  streaming        Boolean      @default(false)
+
+  // Tokens
+  tokens           Int?
+  promptTokens     Int?
+  completionTokens Int?
+
+  createdAt        DateTime     @default(now())
+
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model ConversationMemory {
+  id               String       @id @default(uuid()) @db.Uuid
+  conversationId   String       @db.Uuid
+  organizationId   String       @db.Uuid
+  agentId          String       @db.Uuid
+  messageId        String?      @db.Uuid
+  
+  content          String       @db.Text
+  summary          String?      @db.Text
+  
+  embeddingModel   String
+  vectorId         String       @unique
+  memoryType       MemoryType   @default(SHORT_TERM)
+  
+  importance       Float        @default(0.0) // 0-100 calculated
+  score            Float?       // Search score cache
+  retrievalCount   Int          @default(0)
+  
+  lastAccessed     DateTime?
+  expiresAt        DateTime?
+  createdAt        DateTime     @default(now())
+
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([organizationId])
+  @@index([agentId])
+  @@index([memoryType])
+}
+
+// ==========================================
+// Tool Models
+// ==========================================
+
+model Tool {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  name           String
+  displayName    String
+  description    String          @db.Text
+  category       String
+  parameters     String?         @db.Text // JSON Schema for LLM parameters
+  enabled        Boolean         @default(true)
+  version        String          @default("1.0.0")
+  timeout        Int             @default(30000) // ms
+  retryCount     Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentTools     AgentTool[]
+  credentials    ToolCredential[]
+  executions     ToolExecution[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([category])
+}
+
+model ToolCredential {
+  id               String   @id @default(uuid()) @db.Uuid
+  toolId           String   @db.Uuid
+  organizationId   String   @db.Uuid
+  encryptedSecrets String   @db.Text
+  createdAt        DateTime @default(now())
+
+  tool             Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
+  @@index([organizationId])
+}
+
+model AgentTool {
+  id            String   @id @default(uuid()) @db.Uuid
+  agentId       String   @db.Uuid
+  toolId        String   @db.Uuid
+  enabled       Boolean  @default(true)
+  priority      Int      @default(0)
+  configuration String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  agent         Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  tool          Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, toolId])
+  @@index([agentId])
+  @@index([toolId])
+}
+
+model ToolExecution {
+  id             String              @id @default(uuid()) @db.Uuid
+  conversationId String              @db.Uuid
+  agentId        String              @db.Uuid
+  toolId         String              @db.Uuid
+  status         ToolExecutionStatus @default(PENDING)
+  input          String              @db.Text
+  output         String?             @db.Text
+  error          String?             @db.Text
+  duration       Int?
+  startedAt      DateTime            @default(now())
+  finishedAt     DateTime?
+
+  tool           Tool                @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  agent          Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([agentId])
+  @@index([toolId])
+  @@index([status])
 }
