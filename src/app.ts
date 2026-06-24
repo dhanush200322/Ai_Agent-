@@ -14,6 +14,8 @@ import userRoutes from './modules/users/routes/user.routes';
 import agentRoutes from './modules/agents/routes/agent.routes';
 import knowledgeRoutes from './modules/knowledge/routes/knowledge.routes';
 import chatRoutes from './modules/chat/routes/chat.routes';
+import notificationRoutes from './modules/notification/routes/notification.routes';
+import workflowRoutes from './modules/workflow/routes/workflow.routes';
 import healthRoutes from './routes/health.routes';
 import { globalErrorHandler } from './middleware/errorHandler';
 import logger from './shared/logger/logger';
@@ -59,6 +61,8 @@ app.use('/api/v1/organization', orgRoutes);
 app.use('/api/v1/agents', agentRoutes);
 app.use('/api/v1/knowledge', knowledgeRoutes);
 app.use('/api/v1/chat', chatRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/workflows', workflowRoutes);
 
 // Catch 404 and forward to error handler
 app.use((req: Request, _res: Response, next: NextFunction) => {

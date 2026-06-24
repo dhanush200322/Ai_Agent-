@@ -30,7 +30,7 @@ export class EncryptionEngine {
     const iv = crypto.randomBytes(IV_LENGTH);
     const key = this.masterKeys.get(this.currentKeyVersion)!;
     
-    const cipher = crypto.createCipheriv(ALGORITHM, iv, key);
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
     let encrypted = cipher.update(plainText, 'utf8', 'base64');
     encrypted += cipher.final('base64');
     
@@ -53,7 +53,7 @@ export class EncryptionEngine {
     const iv = Buffer.from(encryptedData.iv, 'base64');
     const authTag = Buffer.from(encryptedData.authTag, 'base64');
 
-    const decipher = crypto.createDecipheriv(ALGORITHM, iv, key);
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
 
     let decrypted = decipher.update(encryptedData.encryptedValue, 'base64', 'utf8');

@@ -1,3 +1,3 @@
-# performance-report.md
+# Performance Report
 
-Generated automatically for Phase 6.12.
+Workflow overhead minimal.

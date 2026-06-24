@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { AuthenticationError, AuthorizationError } from '../shared/errors/AppError';
+import { JWTEngine } from '../modules/auth/engine/jwt.engine';
+import { SessionService } from '../modules/auth/services/session.service';
+import { PolicyEngine } from '../modules/auth/engine/policy.engine';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+const jwtEngine = new JWTEngine();
+const sessionService = new SessionService();
+const policyEngine = new PolicyEngine();
 
 export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
   try {
@@ -14,18 +19,22 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
 
     const token = authHeader.split(' ')[1];
     
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as any;
-    
-    // Find user with relations to ensure they are still active and exist
+    // 1. JWT Validation (Signature & Expiration)
+    const decoded = await jwtEngine.verifyAccessToken(token);
+    const { userId, sessionId, organizationId } = decoded;
+
+    // 2. Redis Session Validation
+    const isSessionValid = await sessionService.validateSession(sessionId);
+    if (!isSessionValid) {
+      throw new AuthenticationError('Session is invalid or expired');
+    }
+
+    // 3. Load User & Organization Validation
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: userId },
       include: {
         organization: true,
-        role: {
-          include: {
-            permissions: true
-          }
-        }
+        role: { include: { permissions: true } }
       }
     });
 
@@ -33,22 +42,30 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
       throw new AuthenticationError('User account is inactive or not found');
     }
 
-    if (user.organization.status !== 'ACTIVE' || user.organization.deletedAt) {
-      throw new AuthenticationError('Organization account is inactive');
+    if (user.organizationId !== organizationId || user.organization.status !== 'ACTIVE' || user.organization.deletedAt) {
+      throw new AuthenticationError('Organization is inactive or mismatch');
+    }
+
+    // 4. Policy Engine Evaluation (Zero Trust context)
+    const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+    const isAllowedByPolicy = await policyEngine.evaluateAuthenticationPolicy(organizationId, ipAddress);
+    if (!isAllowedByPolicy) {
+      throw new AuthenticationError('Access denied by organization policy');
     }
 
     // Attach to request
-    const permissions = user.role.permissions.map(p => `${p.resource}:${p.action}`);
-    req.user = {
+    const permissions = user.role?.permissions?.map(p => `${p.resource}:${p.action}`) || [];
+    (req as any).user = {
       ...user,
       permissions
     };
+    (req as any).sessionId = sessionId;
 
     next();
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
       next(new AuthenticationError('Token expired'));
-    } else if (error instanceof jwt.JsonWebTokenError) {
+    } else if (error.name === 'JsonWebTokenError') {
       next(new AuthenticationError('Invalid token'));
     } else {
       next(error);
@@ -58,11 +75,12 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
 
 export const authorize = (requiredPermissions: string[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
-    if (!req.user || !req.user.permissions) {
+    const user = (req as any).user;
+    if (!user || !user.permissions) {
       return next(new AuthenticationError('User not authenticated properly'));
     }
 
-    const hasPermission = requiredPermissions.every(p => req.user!.permissions!.includes(p));
+    const hasPermission = requiredPermissions.every(p => user.permissions.includes(p));
     
     if (!hasPermission) {
       return next(new AuthorizationError('You do not have the required permissions to perform this action'));
@@ -71,3 +89,4 @@ export const authorize = (requiredPermissions: string[]) => {
     next();
   };
 };
+
