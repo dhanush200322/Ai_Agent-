@@ -26,12 +26,13 @@ export class GroqService {
       temperature?: number;
       maxTokens?: number;
       topP?: number;
+      model?: string;
     }
   ) {
     try {
       const stream = await this.groq.chat.completions.create({
         messages: messages as any,
-        model: this.defaultModel,
+        model: options?.model || this.defaultModel,
         stream: true,
         temperature: options?.temperature ?? 0.2,
         max_tokens: options?.maxTokens ?? 1024,
@@ -56,12 +57,13 @@ export class GroqService {
       topP?: number;
       tools?: any[];
       tool_choice?: "auto" | "none";
+      model?: string;
     }
   ) {
     try {
       const response = await this.groq.chat.completions.create({
         messages,
-        model: this.defaultModel,
+        model: options?.model || this.defaultModel,
         stream: false,
         temperature: options?.temperature ?? 0.2,
         max_tokens: options?.maxTokens ?? 1024,

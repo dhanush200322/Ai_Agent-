@@ -4,6 +4,9 @@ import { ToolResolverService } from './tool-resolver.service';
 import { ToolPolicyService } from './tool-policy.service';
 import { ToolExecutorService } from './tool-executor.service';
 import { ToolDefinition } from '../types/tool.types';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export class PlannerService {
   private groqService = new GroqService();
@@ -23,19 +26,36 @@ export class PlannerService {
     }
   ): Promise<ChatMessage[]> {
     let messages = [...initialMessages];
-    let chainDepth = 0;
-    const maxDepth = 5;
+    
+    // Fetch Agent Configuration
+    const agent = await prisma.agent.findUnique({
+      where: { id: context.agentId },
+      select: {
+        maxPlannerDepth: true,
+        plannerTemperature: true,
+        plannerEnabled: true,
+        toolCallingEnabled: true,
+        plannerModel: true
+      }
+    });
 
-    // If no tools are available, return the original messages immediately
-    if (!availableTools || availableTools.length === 0) {
+    if (!agent) throw new Error("Agent not found");
+
+    // If planner or tool calling is disabled, bypass execution
+    if (!agent.plannerEnabled || !agent.toolCallingEnabled || !availableTools || availableTools.length === 0) {
       return messages;
     }
+
+    let chainDepth = 0;
+    const maxDepth = agent.maxPlannerDepth;
 
     while (chainDepth < maxDepth) {
       // 1. Ask LLM to plan or execute
       const llmResponse = await this.groqService.generateChatCompletion(messages, {
         tools: availableTools,
-        tool_choice: 'auto'
+        tool_choice: 'auto',
+        temperature: agent.plannerTemperature,
+        model: agent.plannerModel || undefined
       });
 
       // Append assistant's response to the conversation history
