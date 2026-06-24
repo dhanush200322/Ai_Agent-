@@ -129,6 +129,11 @@ model Organization {
   orgEntitlements OrganizationEntitlement[]
   billingEvents   BillingEvent[]
 
+  // Phase 6.14 Vault Relations
+  vaultSecrets    VaultSecret[]
+  secretLeases    SecretLease[]
+  secretShares    SecretShare[]
+
   @@index([status])
 }
 
@@ -1659,4 +1664,148 @@ model BillingWebhookEvent {
 
   @@index([provider])
   @@index([processed])
+}
+
+// ==========================================
+// Phase 6.14 Vault & Secrets Management
+// ==========================================
+
+enum VaultProviderType {
+  DATABASE
+  AWS_SECRETS_MANAGER
+  AZURE_KEY_VAULT
+  HASHICORP_VAULT
+  GOOGLE_SECRET_MANAGER
+}
+
+enum SecretStatus {
+  ACTIVE
+  DISABLED
+  DELETED
+}
+
+enum SecretCategory {
+  AI_PROVIDER
+  DATABASE
+  PAYMENT
+  SMTP
+  OAUTH
+  PLUGIN
+  API_KEY
+  JWT
+  CUSTOM
+}
+
+enum RotationStrategy {
+  MANUAL
+  DAILY
+  WEEKLY
+  MONTHLY
+  ON_DEMAND
+  PROVIDER_MANAGED
+}
+
+model VaultSecret {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  name           String
+  description    String?          @db.Text
+  category       SecretCategory   @default(CUSTOM)
+  provider       VaultProviderType @default(DATABASE)
+  status         SecretStatus     @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  versions       VaultSecretVersion[]
+  accessLogs     VaultAccessLog[]
+  rotationPolicy SecretRotationPolicy?
+  leases         SecretLease[]
+  shares         SecretShare[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([status])
+}
+
+model VaultSecretVersion {
+  id             String       @id @default(uuid()) @db.Uuid
+  secretId       String       @db.Uuid
+  version        Int
+  encryptedValue String       @db.Text
+  iv             String       @db.Text
+  authTag        String       @db.Text
+  keyVersion     Int          @default(1)
+  createdAt      DateTime     @default(now())
+
+  secret         VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+
+  @@unique([secretId, version])
+}
+
+model VaultAccessLog {
+  id             String       @id @default(uuid()) @db.Uuid
+  secretId       String       @db.Uuid
+  action         String       // READ, UPDATE, ROTATE, DELETE, REVOKE
+  actorId        String       @db.Uuid // UserId or System Component
+  actorType      String       // USER, SYSTEM, PLUGIN
+  ipAddress      String?
+  userAgent      String?
+  metadata       String?      @db.Text
+  createdAt      DateTime     @default(now())
+
+  secret         VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+
+  @@index([secretId])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+model SecretRotationPolicy {
+  id             String           @id @default(uuid()) @db.Uuid
+  secretId       String           @db.Uuid @unique
+  strategy       RotationStrategy @default(MANUAL)
+  cronExpression String?
+  lastRotatedAt  DateTime?
+  nextRotationAt DateTime?
+  failureCount   Int              @default(0)
+  autoRetry      Boolean          @default(true)
+  metadata       String?          @db.Text // Configuration for provider rotation
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  secret         VaultSecret      @relation(fields: [secretId], references: [id], onDelete: Cascade)
+}
+
+model SecretLease {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  secretId       String       @db.Uuid
+  actorId        String       @db.Uuid
+  actorType      String       // PLUGIN, WORKFLOW
+  expiresAt      DateTime
+  isRevoked      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  secret         VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+
+  @@index([secretId])
+  @@index([expiresAt])
+}
+
+model SecretShare {
+  id               String       @id @default(uuid()) @db.Uuid
+  secretId         String       @db.Uuid
+  organizationId   String       @db.Uuid // Target organization/department (intra-org share for now)
+  targetActorId    String?      @db.Uuid // Target user or role
+  permission       String       // READ
+  expiresAt        DateTime?
+  createdAt        DateTime     @default(now())
+
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  secret           VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+
+  @@index([secretId])
+  @@index([organizationId])
 }

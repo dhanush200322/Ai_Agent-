@@ -22,6 +22,7 @@ export const REDIS_CONSTANTS = {
     LOCK: 'lock:',
     QUEUE: 'queue:',
     PLUGIN: 'plugin:',
-    MEMORY: 'memory:'
+    MEMORY: 'memory:',
+    VAULT: 'vault:'
   }
 };

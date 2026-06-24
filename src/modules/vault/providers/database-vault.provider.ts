@@ -1,0 +1,138 @@
+import { PrismaClient } from '@prisma/client';
+import { VaultProvider, StoreSecretParams, RetrieveSecretResult } from './vault-provider.interface';
+import { EncryptionEngine } from '../engine/encryption.engine';
+
+const prisma = new PrismaClient() as any;
+
+export class DatabaseVaultProvider implements VaultProvider {
+  private encryptionEngine: EncryptionEngine;
+
+  constructor() {
+    this.encryptionEngine = new EncryptionEngine();
+  }
+
+  async store(organizationId: string, params: StoreSecretParams): Promise<string> {
+    const encryptedData = this.encryptionEngine.encrypt(params.value);
+
+    const secret = await prisma.vaultSecret.create({
+      data: {
+        organizationId,
+        name: params.name,
+        description: params.description,
+        category: params.category,
+        provider: 'DATABASE',
+        status: 'ACTIVE',
+        versions: {
+          create: {
+            version: 1,
+            encryptedValue: encryptedData.encryptedValue,
+            iv: encryptedData.iv,
+            authTag: encryptedData.authTag,
+            keyVersion: encryptedData.keyVersion
+          }
+        }
+      }
+    });
+
+    return secret.id;
+  }
+
+  async retrieve(secretId: string, version?: number): Promise<RetrieveSecretResult | null> {
+    const secret = await prisma.vaultSecret.findUnique({
+      where: { id: secretId },
+      include: {
+        versions: {
+          orderBy: { version: 'desc' },
+          take: version ? undefined : 1,
+          where: version ? { version } : undefined
+        }
+      }
+    });
+
+    if (!secret || secret.status !== 'ACTIVE' || secret.versions.length === 0) {
+      return null;
+    }
+
+    const targetVersion = secret.versions[0];
+    
+    try {
+      const decrypted = this.encryptionEngine.decrypt({
+        encryptedValue: targetVersion.encryptedValue,
+        iv: targetVersion.iv,
+        authTag: targetVersion.authTag,
+        keyVersion: targetVersion.keyVersion
+      });
+
+      return {
+        value: decrypted,
+        version: targetVersion.version,
+        category: secret.category,
+        provider: secret.provider
+      };
+    } catch (err: any) {
+      // Failed to decrypt or auth tag mismatch (tampered)
+      throw new Error(`Decryption failed: ${err.message}`);
+    }
+  }
+
+  async rotate(secretId: string, newValue: string): Promise<number> {
+    const secret = await prisma.vaultSecret.findUnique({
+      where: { id: secretId },
+      include: {
+        versions: {
+          orderBy: { version: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    if (!secret || secret.status !== 'ACTIVE') {
+      throw new Error('Secret not found or not active');
+    }
+
+    const currentVersion = secret.versions.length > 0 ? secret.versions[0].version : 0;
+    const newVersionNum = currentVersion + 1;
+
+    const encryptedData = this.encryptionEngine.encrypt(newValue);
+
+    await prisma.vaultSecretVersion.create({
+      data: {
+        secretId,
+        version: newVersionNum,
+        encryptedValue: encryptedData.encryptedValue,
+        iv: encryptedData.iv,
+        authTag: encryptedData.authTag,
+        keyVersion: encryptedData.keyVersion
+      }
+    });
+
+    return newVersionNum;
+  }
+
+  async disable(secretId: string): Promise<void> {
+    await prisma.vaultSecret.update({
+      where: { id: secretId },
+      data: { status: 'DISABLED' }
+    });
+  }
+
+  async list(organizationId: string, category?: string): Promise<any[]> {
+    const whereClause: any = { organizationId, status: 'ACTIVE' };
+    if (category) {
+      whereClause.category = category;
+    }
+
+    return prisma.vaultSecret.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        category: true,
+        provider: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+  }
+}
