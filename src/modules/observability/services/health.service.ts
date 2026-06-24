@@ -1,6 +1,8 @@
 import { PrismaClient, HealthStatus } from '@prisma/client';
+import { RedisHealthService } from './redis-health.service';
 
 const prisma = new PrismaClient();
+const redisHealth = new RedisHealthService();
 
 export class HealthService {
   /**
@@ -31,10 +33,21 @@ export class HealthService {
       this.recordHealth('Database', 'READINESS', 'UNHEALTHY', Date.now() - startDb, e.message);
     }
 
-    // 2. Qdrant / Redis mock dependencies
-    const qdrantLatency = Math.floor(Math.random() * 50);
-    dependencies.push({ name: 'Qdrant', status: 'HEALTHY', latency: qdrantLatency });
-    this.recordHealth('Qdrant', 'READINESS', 'HEALTHY', qdrantLatency);
+    // 2. Redis
+    const startRedis = Date.now();
+    try {
+      const isRedisHealthy = await redisHealth.ping();
+      if (isRedisHealthy) {
+        dependencies.push({ name: 'Redis', status: 'HEALTHY', latency: Date.now() - startRedis });
+        this.recordHealth('Redis', 'READINESS', 'HEALTHY', Date.now() - startRedis);
+      } else {
+        throw new Error('Redis ping failed');
+      }
+    } catch (e: any) {
+      dependencies.push({ name: 'Redis', status: 'UNHEALTHY', error: e.message });
+      overallStatus = 'UNHEALTHY';
+      this.recordHealth('Redis', 'READINESS', 'UNHEALTHY', Date.now() - startRedis, e.message);
+    }
 
     return { status: overallStatus, dependencies };
   }

@@ -1,3 +1,3 @@
-# Performance
+# performance-report.md
 
-Average middleware interception remains under 10ms.
+Generated automatically for Phase 6.12.

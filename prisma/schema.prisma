@@ -11,13 +11,6 @@ generator client {
 // Enums
 // ==========================================
 
-enum SubscriptionPlan {
-  FREE
-  STARTER
-  PRO
-  ENTERPRISE
-}
-
 enum OrganizationStatus {
   ACTIVE
   SUSPENDED
@@ -80,85 +73,101 @@ enum ToolExecutionStatus {
 // ==========================================
 
 model Organization {
-  id               String             @id @default(uuid()) @db.Uuid
-  name             String
-  slug             String             @unique
-  logoUrl          String?
-  website          String?
-  industry         String?
-  country          String?
-  timezone         String?
-  subscriptionPlan SubscriptionPlan   @default(FREE)
-  status           OrganizationStatus @default(ACTIVE)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  deletedAt        DateTime?
+  id        String             @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String             @unique
+  logoUrl   String?
+  website   String?
+  industry  String?
+  country   String?
+  timezone  String?
+  status    OrganizationStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime?
 
-  users            User[]
-  roles            Role[]
-  agents           Agent[]
-  invitations      Invitation[]
-  knowledgeBases   KnowledgeBase[]
-  knowledgeDocuments KnowledgeDocument[]
-  conversations    Conversation[]
-  tools            Tool[]
-  workflows        Workflow[]
-  workflowExecutions WorkflowExecution[]
-  agentTeams       AgentTeam[]
-  plugins           Plugin[]
+  users               User[]
+  roles               Role[]
+  agents              Agent[]
+  invitations         Invitation[]
+  knowledgeBases      KnowledgeBase[]
+  knowledgeDocuments  KnowledgeDocument[]
+  conversations       Conversation[]
+  tools               Tool[]
+  workflows           Workflow[]
+  workflowExecutions  WorkflowExecution[]
+  agentTeams          AgentTeam[]
+  plugins             Plugin[]
   pluginInstallations PluginInstallation[]
-  connectors        Connector[]
-  pluginPermissions PluginPermission[]
-  systemMetrics    SystemMetric[]
-  traces           Trace[]
-  auditLogs        AuditLog[]
-  alertRules       AlertRule[]
-  alerts           Alert[]
-  dashboardSnapshots DashboardSnapshot[]
-  apiKeys           ApiKey[]
-  rateLimitPolicies RateLimitPolicy[]
-  usageQuota        UsageQuota?
-  apiRequestLogs    ApiRequestLog[]
+  connectors          Connector[]
+  pluginPermissions   PluginPermission[]
+  systemMetrics       SystemMetric[]
+  traces              Trace[]
+  auditLogs           AuditLog[]
+  alertRules          AlertRule[]
+  alerts              Alert[]
+  dashboardSnapshots  DashboardSnapshot[]
+  apiKeys             ApiKey[]
+  rateLimitPolicies   RateLimitPolicy[]
+  usageQuota          UsageQuota?
+  apiRequestLogs      ApiRequestLog[]
+
+  // Phase 6.12 Queue Relations
+  jobs           JobQueue[]
+  jobExecutions  JobExecution[]
+  deadLetterJobs DeadLetterJob[]
+  scheduledJobs  ScheduledJob[]
+  queuePolicies  QueuePolicy[]
+  queueMetrics   QueueMetric[]
+
+  // Phase 6.13 Billing Relations
+  subscription    OrganizationSubscription?
+  invoices        Invoice[]
+  creditWallet    CreditWallet?
+  usageEvents     UsageEvent[]
+  usageSummaries  UsageSummary[]
+  orgEntitlements OrganizationEntitlement[]
+  billingEvents   BillingEvent[]
 
   @@index([status])
 }
 
 model User {
-  id              String             @id @default(uuid()) @db.Uuid
+  id              String     @id @default(uuid()) @db.Uuid
   firstName       String
   lastName        String
-  email           String             @unique
+  email           String     @unique
   passwordHash    String
   avatar          String?
   phone           String?
-  emailVerified   Boolean            @default(false)
+  emailVerified   Boolean    @default(false)
   emailVerifiedAt DateTime?
   lastLogin       DateTime?
   lastLoginIp     String?
-  isOwner         Boolean            @default(false)
-  status          UserStatus         @default(ACTIVE)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  isOwner         Boolean    @default(false)
+  status          UserStatus @default(ACTIVE)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
   deletedAt       DateTime?
 
-  organizationId  String             @db.Uuid
-  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  roleId          String             @db.Uuid
-  role            Role               @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  roleId String @db.Uuid
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
-  createdAgents   Agent[]            @relation("CreatedAgents")
-  sentInvitations Invitation[]       @relation("SentInvitations")
-  createdKnowledgeBases KnowledgeBase[] @relation("CreatedKnowledgeBases")
-  uploadedKnowledgeDocuments KnowledgeDocument[] @relation("UploadedKnowledgeDocuments")
-  conversations    Conversation[]
-  createdWorkflows Workflow[] @relation("CreatedWorkflows")
-  approvedWorkflows WorkflowApproval[] @relation("ApprovedWorkflows")
-  createdAgentTeams AgentTeam[] @relation("CreatedAgentTeams")
-  installedPlugins  PluginInstallation[] @relation("InstalledPlugins")
-  grantedPluginPermissions PluginPermission[] @relation("GrantedPluginPermissions")
-  auditLogs        AuditLog[] @relation("UserAuditLogs")
-  rateLimitPolicies RateLimitPolicy[]
+  createdAgents              Agent[]              @relation("CreatedAgents")
+  sentInvitations            Invitation[]         @relation("SentInvitations")
+  createdKnowledgeBases      KnowledgeBase[]      @relation("CreatedKnowledgeBases")
+  uploadedKnowledgeDocuments KnowledgeDocument[]  @relation("UploadedKnowledgeDocuments")
+  conversations              Conversation[]
+  createdWorkflows           Workflow[]           @relation("CreatedWorkflows")
+  approvedWorkflows          WorkflowApproval[]   @relation("ApprovedWorkflows")
+  createdAgentTeams          AgentTeam[]          @relation("CreatedAgentTeams")
+  installedPlugins           PluginInstallation[] @relation("InstalledPlugins")
+  grantedPluginPermissions   PluginPermission[]   @relation("GrantedPluginPermissions")
+  auditLogs                  AuditLog[]           @relation("UserAuditLogs")
+  rateLimitPolicies          RateLimitPolicy[]
 
   @@index([organizationId])
   @@index([roleId])
@@ -166,79 +175,79 @@ model User {
 }
 
 model Role {
-  id             String        @id @default(uuid()) @db.Uuid
+  id             String       @id @default(uuid()) @db.Uuid
   name           String
   description    String?
-  organizationId String        @db.Uuid
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
-  users          User[]
-  permissions    Permission[]  @relation("RolePermissions")
-  invitations    Invitation[]
+  users       User[]
+  permissions Permission[] @relation("RolePermissions")
+  invitations Invitation[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
 }
 
 model Permission {
-  id          String    @id @default(uuid()) @db.Uuid
-  name        String    @unique
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
   description String?
   category    String
   resource    String
   action      String
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
-  roles       Role[]    @relation("RolePermissions")
+  roles Role[] @relation("RolePermissions")
 
   @@index([resource, action])
 }
 
 model Agent {
-  id             String          @id @default(uuid()) @db.Uuid
-  name           String
-  slug           String
-  description    String?
-  avatar         String?
-  model          String
-  systemPrompt   String?         @db.Text
-  temperature    Float           @default(0.7)
-  topP           Float           @default(1.0)
-  maxTokens      Int             @default(2048)
-  visibility     AgentVisibility @default(PRIVATE)
-  status         AgentStatus     @default(ACTIVE)
+  id           String          @id @default(uuid()) @db.Uuid
+  name         String
+  slug         String
+  description  String?
+  avatar       String?
+  model        String
+  systemPrompt String?         @db.Text
+  temperature  Float           @default(0.7)
+  topP         Float           @default(1.0)
+  maxTokens    Int             @default(2048)
+  visibility   AgentVisibility @default(PRIVATE)
+  status       AgentStatus     @default(ACTIVE)
 
   // Planner Configuration
-  maxPlannerDepth      Int       @default(5)
-  maxExecutionTimeMs   Int       @default(30000)
-  maxToolExecutions    Int       @default(10)
-  maxParallelTools     Int       @default(3)
-  plannerTemperature   Float     @default(0.7)
-  plannerEnabled       Boolean   @default(true)
-  toolCallingEnabled   Boolean   @default(true)
-  plannerModel         String?
+  maxPlannerDepth    Int     @default(5)
+  maxExecutionTimeMs Int     @default(30000)
+  maxToolExecutions  Int     @default(10)
+  maxParallelTools   Int     @default(3)
+  plannerTemperature Float   @default(0.7)
+  plannerEnabled     Boolean @default(true)
+  toolCallingEnabled Boolean @default(true)
+  plannerModel       String?
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  deletedAt      DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  organizationId String          @db.Uuid
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  createdById    String          @db.Uuid
-  createdBy      User            @relation("CreatedAgents", fields: [createdById], references: [id], onDelete: Restrict)
+  createdById String @db.Uuid
+  createdBy   User   @relation("CreatedAgents", fields: [createdById], references: [id], onDelete: Restrict)
 
-  conversations  Conversation[]
-  agentTools     AgentTool[]
-  toolExecutions ToolExecution[]
-  teamMemberships AgentTeamMember[]
-  capabilities   AgentCapability[]
-  assignedTasks  AgentTask[] @relation("AssignedTasks")
-  sentMessages   AgentMessage[] @relation("SentMessages")
-  receivedMessages AgentMessage[] @relation("ReceivedMessages")
+  conversations    Conversation[]
+  agentTools       AgentTool[]
+  toolExecutions   ToolExecution[]
+  teamMemberships  AgentTeamMember[]
+  capabilities     AgentCapability[]
+  assignedTasks    AgentTask[]       @relation("AssignedTasks")
+  sentMessages     AgentMessage[]    @relation("SentMessages")
+  receivedMessages AgentMessage[]    @relation("ReceivedMessages")
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -249,22 +258,22 @@ model Agent {
 }
 
 model Invitation {
-  id             String           @id @default(uuid()) @db.Uuid
-  email          String
-  token          String           @unique
-  status         InvitationStatus @default(PENDING)
-  expiresAt      DateTime
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id        String           @id @default(uuid()) @db.Uuid
+  email     String
+  token     String           @unique
+  status    InvitationStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
-  organizationId String           @db.Uuid
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  roleId         String           @db.Uuid
-  role           Role             @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  roleId String @db.Uuid
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
-  inviterId      String           @db.Uuid
-  inviter        User             @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Restrict)
+  inviterId String @db.Uuid
+  inviter   User   @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Restrict)
 
   @@index([organizationId])
   @@index([token])
@@ -272,20 +281,20 @@ model Invitation {
 }
 
 model KnowledgeBase {
-  id             String       @id @default(uuid()) @db.Uuid
-  name           String
-  description    String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  deletedAt      DateTime?
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   organizationId String       @db.Uuid
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  createdById    String       @db.Uuid
-  createdBy      User         @relation("CreatedKnowledgeBases", fields: [createdById], references: [id], onDelete: Restrict)
+  createdById String @db.Uuid
+  createdBy   User   @relation("CreatedKnowledgeBases", fields: [createdById], references: [id], onDelete: Restrict)
 
-  documents      KnowledgeDocument[]
+  documents KnowledgeDocument[]
 
   @@index([organizationId])
   @@index([createdById])
@@ -293,32 +302,32 @@ model KnowledgeBase {
 }
 
 model KnowledgeDocument {
-  id               String        @id @default(uuid()) @db.Uuid
-  knowledgeBaseId  String        @db.Uuid
-  organizationId   String        @db.Uuid
-  uploadedById     String        @db.Uuid
+  id              String @id @default(uuid()) @db.Uuid
+  knowledgeBaseId String @db.Uuid
+  organizationId  String @db.Uuid
+  uploadedById    String @db.Uuid
 
-  originalName     String
-  fileName         String
-  mimeType         String
-  extension        String
-  size             Int
-  storagePath      String
-  status           String        @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  originalName String
+  fileName     String
+  mimeType     String
+  extension    String
+  size         Int
+  storagePath  String
+  status       String @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
 
-  processedAt      DateTime?
-  chunkCount       Int?
-  embeddingModel   String?
-  processingTime   Int?
-  errorMessage     String?       @db.Text
+  processedAt    DateTime?
+  chunkCount     Int?
+  embeddingModel String?
+  processingTime Int?
+  errorMessage   String?   @db.Text
 
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  deletedAt        DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  knowledgeBase    KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
-  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  uploadedBy       User          @relation("UploadedKnowledgeDocuments", fields: [uploadedById], references: [id], onDelete: Restrict)
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedBy    User          @relation("UploadedKnowledgeDocuments", fields: [uploadedById], references: [id], onDelete: Restrict)
 
   @@index([knowledgeBaseId])
   @@index([organizationId])
@@ -328,28 +337,28 @@ model KnowledgeDocument {
 }
 
 model Conversation {
-  id              String             @id @default(uuid()) @db.Uuid
-  sessionId       String?            @db.VarChar(255) // Web, Mobile, Slack, etc.
-  title           String?            @db.VarChar(255)
-  summary         String?            @db.Text
-  status          ConversationStatus @default(ACTIVE)
-  
-  organizationId  String             @db.Uuid
-  agentId         String             @db.Uuid
-  userId          String             @db.Uuid
+  id        String             @id @default(uuid()) @db.Uuid
+  sessionId String?            @db.VarChar(255) // Web, Mobile, Slack, etc.
+  title     String?            @db.VarChar(255)
+  summary   String?            @db.Text
+  status    ConversationStatus @default(ACTIVE)
 
-  lastMessageAt   DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  deletedAt       DateTime?
+  organizationId String @db.Uuid
+  agentId        String @db.Uuid
+  userId         String @db.Uuid
 
-  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  agent           Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
-  messages        ConversationMessage[]
-  memories        ConversationMemory[]
-  toolExecutions  ToolExecution[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agent        Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messages       ConversationMessage[]
+  memories       ConversationMemory[]
+  toolExecutions ToolExecution[]
 
   @@index([organizationId])
   @@index([agentId])
@@ -359,54 +368,54 @@ model Conversation {
 }
 
 model ConversationMessage {
-  id               String       @id @default(uuid()) @db.Uuid
-  conversationId   String       @db.Uuid
-  role             MessageRole
-  content          String       @db.Text
-  
+  id             String      @id @default(uuid()) @db.Uuid
+  conversationId String      @db.Uuid
+  role           MessageRole
+  content        String      @db.Text
+
   // Metadata
-  model            String?
-  temperature      Float?
-  latency          Int?         // milliseconds
-  finishReason     String?
-  streaming        Boolean      @default(false)
+  model        String?
+  temperature  Float?
+  latency      Int? // milliseconds
+  finishReason String?
+  streaming    Boolean @default(false)
 
   // Tokens
   tokens           Int?
   promptTokens     Int?
   completionTokens Int?
 
-  createdAt        DateTime     @default(now())
+  createdAt DateTime @default(now())
 
-  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([createdAt])
 }
 
 model ConversationMemory {
-  id               String       @id @default(uuid()) @db.Uuid
-  conversationId   String       @db.Uuid
-  organizationId   String       @db.Uuid
-  agentId          String       @db.Uuid
-  messageId        String?      @db.Uuid
-  
-  content          String       @db.Text
-  summary          String?      @db.Text
-  
-  embeddingModel   String
-  vectorId         String       @unique
-  memoryType       MemoryType   @default(SHORT_TERM)
-  
-  importance       Float        @default(0.0) // 0-100 calculated
-  score            Float?       // Search score cache
-  retrievalCount   Int          @default(0)
-  
-  lastAccessed     DateTime?
-  expiresAt        DateTime?
-  createdAt        DateTime     @default(now())
+  id             String  @id @default(uuid()) @db.Uuid
+  conversationId String  @db.Uuid
+  organizationId String  @db.Uuid
+  agentId        String  @db.Uuid
+  messageId      String? @db.Uuid
 
-  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  content String  @db.Text
+  summary String? @db.Text
+
+  embeddingModel String
+  vectorId       String     @unique
+  memoryType     MemoryType @default(SHORT_TERM)
+
+  importance     Float  @default(0.0) // 0-100 calculated
+  score          Float? // Search score cache
+  retrievalCount Int    @default(0)
+
+  lastAccessed DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([organizationId])
@@ -419,25 +428,25 @@ model ConversationMemory {
 // ==========================================
 
 model Tool {
-  id             String          @id @default(uuid()) @db.Uuid
-  organizationId String          @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
   name           String
   displayName    String
-  description    String          @db.Text
+  description    String    @db.Text
   category       String
-  parameters     String?         @db.Text // JSON Schema for LLM parameters
-  enabled        Boolean         @default(true)
-  version        String          @default("1.0.0")
-  timeout        Int             @default(30000) // ms
-  retryCount     Int             @default(0)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  parameters     String?   @db.Text // JSON Schema for LLM parameters
+  enabled        Boolean   @default(true)
+  version        String    @default("1.0.0")
+  timeout        Int       @default(30000) // ms
+  retryCount     Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
 
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  agentTools     AgentTool[]
-  credentials    ToolCredential[]
-  executions     ToolExecution[]
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentTools   AgentTool[]
+  credentials  ToolCredential[]
+  executions   ToolExecution[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -451,7 +460,7 @@ model ToolCredential {
   encryptedSecrets String   @db.Text
   createdAt        DateTime @default(now())
 
-  tool             Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
 
   @@index([toolId])
   @@index([organizationId])
@@ -466,8 +475,8 @@ model AgentTool {
   configuration String?  @db.Text
   createdAt     DateTime @default(now())
 
-  agent         Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  tool          Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  tool  Tool  @relation(fields: [toolId], references: [id], onDelete: Cascade)
 
   @@unique([agentId, toolId])
   @@index([agentId])
@@ -487,9 +496,9 @@ model ToolExecution {
   startedAt      DateTime            @default(now())
   finishedAt     DateTime?
 
-  tool           Tool                @relation(fields: [toolId], references: [id], onDelete: Cascade)
-  agent          Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  tool         Tool         @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  agent        Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([agentId])
@@ -533,21 +542,21 @@ enum ApprovalStatus {
 }
 
 model Workflow {
-  id             String          @id @default(uuid()) @db.Uuid
-  organizationId String          @db.Uuid
-  createdById    String          @db.Uuid
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  createdById    String         @db.Uuid
   name           String
   slug           String
-  description    String?         @db.Text
-  status         WorkflowStatus  @default(DRAFT)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  description    String?        @db.Text
+  status         WorkflowStatus @default(DRAFT)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   deletedAt      DateTime?
 
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy      User            @relation("CreatedWorkflows", fields: [createdById], references: [id], onDelete: Restrict)
-  versions       WorkflowVersion[]
-  triggers       WorkflowTrigger[]
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User              @relation("CreatedWorkflows", fields: [createdById], references: [id], onDelete: Restrict)
+  versions     WorkflowVersion[]
+  triggers     WorkflowTrigger[]
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -555,51 +564,51 @@ model Workflow {
 }
 
 model WorkflowVersion {
-  id             String          @id @default(uuid()) @db.Uuid
-  workflowId     String          @db.Uuid
-  version        Int
-  nodes          String          @db.Text // JSON definition of nodes
-  connections    String          @db.Text // JSON definition of edges
-  metadata       String          @db.Text // JSON definition of UI metadata, viewport, globals
-  published      Boolean         @default(false)
-  createdAt      DateTime        @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  workflowId  String   @db.Uuid
+  version     Int
+  nodes       String   @db.Text // JSON definition of nodes
+  connections String   @db.Text // JSON definition of edges
+  metadata    String   @db.Text // JSON definition of UI metadata, viewport, globals
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-  workflow       Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  executions     WorkflowExecution[]
+  workflow   Workflow            @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executions WorkflowExecution[]
 
   @@unique([workflowId, version])
   @@index([workflowId])
 }
 
 model WorkflowTrigger {
-  id             String          @id @default(uuid()) @db.Uuid
-  workflowId     String          @db.Uuid
-  type           String          // MANUAL, WEBHOOK, SCHEDULE, EVENT
-  config         String          @db.Text // JSON config
-  enabled        Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id         String   @id @default(uuid()) @db.Uuid
+  workflowId String   @db.Uuid
+  type       String // MANUAL, WEBHOOK, SCHEDULE, EVENT
+  config     String   @db.Text // JSON config
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  workflow       Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([workflowId])
   @@index([type])
 }
 
 model WorkflowExecution {
-  id                String                   @id @default(uuid()) @db.Uuid
-  workflowVersionId String                   @db.Uuid
-  organizationId    String                   @db.Uuid
-  status            WorkflowExecutionStatus  @default(PENDING)
-  state             String?                  @db.Text // JSON snapshot of Workflow variables
-  startedAt         DateTime                 @default(now())
+  id                String                  @id @default(uuid()) @db.Uuid
+  workflowVersionId String                  @db.Uuid
+  organizationId    String                  @db.Uuid
+  status            WorkflowExecutionStatus @default(PENDING)
+  state             String?                 @db.Text // JSON snapshot of Workflow variables
+  startedAt         DateTime                @default(now())
   finishedAt        DateTime?
-  error             String?                  @db.Text
+  error             String?                 @db.Text
 
-  workflowVersion   WorkflowVersion          @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
-  organization      Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  logs              WorkflowExecutionLog[]
-  approvals         WorkflowApproval[]
+  workflowVersion WorkflowVersion        @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  logs            WorkflowExecutionLog[]
+  approvals       WorkflowApproval[]
 
   @@index([workflowVersionId])
   @@index([organizationId])
@@ -607,35 +616,35 @@ model WorkflowExecution {
 }
 
 model WorkflowExecutionLog {
-  id             String               @id @default(uuid()) @db.Uuid
-  executionId    String               @db.Uuid
-  nodeId         String               // ID of the node from the JSON definition
-  nodeType       String
-  status         NodeExecutionStatus  @default(PENDING)
-  input          String?              @db.Text // JSON
-  output         String?              @db.Text // JSON
-  error          String?              @db.Text
-  duration       Int?                 // milliseconds
-  startedAt      DateTime             @default(now())
-  finishedAt     DateTime?
+  id          String              @id @default(uuid()) @db.Uuid
+  executionId String              @db.Uuid
+  nodeId      String // ID of the node from the JSON definition
+  nodeType    String
+  status      NodeExecutionStatus @default(PENDING)
+  input       String?             @db.Text // JSON
+  output      String?             @db.Text // JSON
+  error       String?             @db.Text
+  duration    Int? // milliseconds
+  startedAt   DateTime            @default(now())
+  finishedAt  DateTime?
 
-  execution      WorkflowExecution    @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  execution WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
 
   @@index([executionId])
   @@index([nodeId])
 }
 
 model WorkflowApproval {
-  id             String           @id @default(uuid()) @db.Uuid
-  executionId    String           @db.Uuid
-  nodeId         String
-  status         ApprovalStatus   @default(PENDING)
-  requestedAt    DateTime         @default(now())
-  approvedAt     DateTime?
-  approvedById   String?          @db.Uuid
+  id           String         @id @default(uuid()) @db.Uuid
+  executionId  String         @db.Uuid
+  nodeId       String
+  status       ApprovalStatus @default(PENDING)
+  requestedAt  DateTime       @default(now())
+  approvedAt   DateTime?
+  approvedById String?        @db.Uuid
 
-  execution      WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  approvedBy     User?             @relation("ApprovedWorkflows", fields: [approvedById], references: [id], onDelete: SetNull)
+  execution  WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  approvedBy User?             @relation("ApprovedWorkflows", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([executionId])
   @@index([status])
@@ -683,25 +692,25 @@ model AgentTeam {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy         User              @relation("CreatedAgentTeams", fields: [createdById], references: [id], onDelete: Restrict)
-  members           AgentTeamMember[]
-  tasks             AgentTask[]
-  sharedMemories    SharedMemory[]
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User              @relation("CreatedAgentTeams", fields: [createdById], references: [id], onDelete: Restrict)
+  members        AgentTeamMember[]
+  tasks          AgentTask[]
+  sharedMemories SharedMemory[]
 
   @@index([organizationId])
 }
 
 model AgentTeamMember {
-  id                String            @id @default(uuid()) @db.Uuid
-  teamId            String            @db.Uuid
-  agentId           String            @db.Uuid
-  role              TeamRole          @default(WORKER)
-  customRoleName    String?
-  createdAt         DateTime          @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  teamId         String   @db.Uuid
+  agentId        String   @db.Uuid
+  role           TeamRole @default(WORKER)
+  customRoleName String?
+  createdAt      DateTime @default(now())
 
-  team              AgentTeam         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  agent             Agent             @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  team  AgentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  agent Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, agentId])
   @@index([teamId])
@@ -709,15 +718,15 @@ model AgentTeamMember {
 }
 
 model AgentCapability {
-  id                String            @id @default(uuid()) @db.Uuid
-  agentId           String            @db.Uuid
-  name              String            // e.g. knowledge.search, code.generate
-  priority          Int               @default(0)
-  version           String            @default("1.0")
-  enabled           Boolean           @default(true)
-  createdAt         DateTime          @default(now())
+  id        String   @id @default(uuid()) @db.Uuid
+  agentId   String   @db.Uuid
+  name      String // e.g. knowledge.search, code.generate
+  priority  Int      @default(0)
+  version   String   @default("1.0")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
 
-  agent             Agent             @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@unique([agentId, name])
   @@index([agentId])
@@ -725,23 +734,23 @@ model AgentCapability {
 }
 
 model AgentTask {
-  id                String            @id @default(uuid()) @db.Uuid
-  teamId            String            @db.Uuid
-  assignedAgentId   String?           @db.Uuid
-  parentTaskId      String?           @db.Uuid
-  status            TaskStatus        @default(PENDING)
-  priority          Int               @default(0)
-  input             String            @db.Text
-  output            String?           @db.Text
-  createdAt         DateTime          @default(now())
-  startedAt         DateTime?
-  completedAt       DateTime?
+  id              String     @id @default(uuid()) @db.Uuid
+  teamId          String     @db.Uuid
+  assignedAgentId String?    @db.Uuid
+  parentTaskId    String?    @db.Uuid
+  status          TaskStatus @default(PENDING)
+  priority        Int        @default(0)
+  input           String     @db.Text
+  output          String?    @db.Text
+  createdAt       DateTime   @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
 
-  team              AgentTeam         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  assignedAgent     Agent?            @relation("AssignedTasks", fields: [assignedAgentId], references: [id], onDelete: SetNull)
-  parentTask        AgentTask?        @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
-  subTasks          AgentTask[]       @relation("SubTasks")
-  messages          AgentMessage[]
+  team          AgentTeam      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignedAgent Agent?         @relation("AssignedTasks", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+  parentTask    AgentTask?     @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subTasks      AgentTask[]    @relation("SubTasks")
+  messages      AgentMessage[]
 
   @@index([teamId])
   @@index([assignedAgentId])
@@ -750,18 +759,18 @@ model AgentTask {
 }
 
 model AgentMessage {
-  id                String            @id @default(uuid()) @db.Uuid
-  taskId            String?           @db.Uuid
-  senderAgentId     String            @db.Uuid
-  receiverAgentId   String?           @db.Uuid
-  type              AgentMessageType  @default(UPDATE)
-  content           String            @db.Text
-  metadata          String?           @db.Text
-  createdAt         DateTime          @default(now())
+  id              String           @id @default(uuid()) @db.Uuid
+  taskId          String?          @db.Uuid
+  senderAgentId   String           @db.Uuid
+  receiverAgentId String?          @db.Uuid
+  type            AgentMessageType @default(UPDATE)
+  content         String           @db.Text
+  metadata        String?          @db.Text
+  createdAt       DateTime         @default(now())
 
-  task              AgentTask?        @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  senderAgent       Agent             @relation("SentMessages", fields: [senderAgentId], references: [id], onDelete: Cascade)
-  receiverAgent     Agent?            @relation("ReceivedMessages", fields: [receiverAgentId], references: [id], onDelete: SetNull)
+  task          AgentTask? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  senderAgent   Agent      @relation("SentMessages", fields: [senderAgentId], references: [id], onDelete: Cascade)
+  receiverAgent Agent?     @relation("ReceivedMessages", fields: [receiverAgentId], references: [id], onDelete: SetNull)
 
   @@index([taskId])
   @@index([senderAgentId])
@@ -769,14 +778,14 @@ model AgentMessage {
 }
 
 model SharedMemory {
-  id                String            @id @default(uuid()) @db.Uuid
-  teamId            String            @db.Uuid
-  embeddingId       String            @unique
-  content           String            @db.Text
-  importance        Float             @default(0.0)
-  createdAt         DateTime          @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  teamId      String   @db.Uuid
+  embeddingId String   @unique
+  content     String   @db.Text
+  importance  Float    @default(0.0)
+  createdAt   DateTime @default(now())
 
-  team              AgentTeam         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team AgentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@index([teamId])
 }
@@ -829,25 +838,25 @@ enum ConnectorType {
 }
 
 model Plugin {
-  id               String           @id @default(uuid()) @db.Uuid
-  name             String
-  slug             String           @unique
-  description      String           @db.Text
-  author           String
-  visibility       PluginVisibility @default(PUBLIC)
-  status           PluginStatus     @default(DRAFT)
-  icon             String?
-  homepage         String?
-  repository       String?
-  documentation    String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  
-  organizationId   String?          @db.Uuid // Nullable: null means Global Public Marketplace. If set, it's Private.
-  organization     Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id            String           @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String           @unique
+  description   String           @db.Text
+  author        String
+  visibility    PluginVisibility @default(PUBLIC)
+  status        PluginStatus     @default(DRAFT)
+  icon          String?
+  homepage      String?
+  repository    String?
+  documentation String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
-  versions         PluginVersion[]
-  installations    PluginInstallation[]
+  organizationId String?       @db.Uuid // Nullable: null means Global Public Marketplace. If set, it's Private.
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  versions      PluginVersion[]
+  installations PluginInstallation[]
 
   @@index([visibility])
   @@index([status])
@@ -855,31 +864,31 @@ model Plugin {
 }
 
 model PluginVersion {
-  id                     String           @id @default(uuid()) @db.Uuid
-  pluginId               String           @db.Uuid
-  version                String           // e.g. 1.0.0
-  manifest               String           @db.Text // JSON definition
-  changelog              String?          @db.Text
-  minimumPlatformVersion String           @default("6.9.0")
+  id                     String   @id @default(uuid()) @db.Uuid
+  pluginId               String   @db.Uuid
+  version                String // e.g. 1.0.0
+  manifest               String   @db.Text // JSON definition
+  changelog              String?  @db.Text
+  minimumPlatformVersion String   @default("6.9.0")
   maximumPlatformVersion String?
   checksum               String
   signature              String
-  publishedAt            DateTime         @default(now())
+  publishedAt            DateTime @default(now())
 
-  plugin                 Plugin           @relation(fields: [pluginId], references: [id], onDelete: Cascade)
-  dependencies           PluginDependency[]
+  plugin       Plugin             @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  dependencies PluginDependency[]
 
   @@unique([pluginId, version])
   @@index([pluginId])
 }
 
 model PluginDependency {
-  id                     String           @id @default(uuid()) @db.Uuid
-  pluginVersionId        String           @db.Uuid
-  requiredPluginSlug     String
-  requiredVersionRange   String           // e.g. "^1.0.0"
-  
-  pluginVersion          PluginVersion    @relation(fields: [pluginVersionId], references: [id], onDelete: Cascade)
+  id                   String @id @default(uuid()) @db.Uuid
+  pluginVersionId      String @db.Uuid
+  requiredPluginSlug   String
+  requiredVersionRange String // e.g. "^1.0.0"
+
+  pluginVersion PluginVersion @relation(fields: [pluginVersionId], references: [id], onDelete: Cascade)
 
   @@index([pluginVersionId])
 }
@@ -896,12 +905,12 @@ model PluginInstallation {
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
 
-  plugin           Plugin               @relation(fields: [pluginId], references: [id], onDelete: Cascade)
-  organization     Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  installedBy      User                 @relation("InstalledPlugins", fields: [installedById], references: [id], onDelete: Restrict)
+  plugin       Plugin       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  installedBy  User         @relation("InstalledPlugins", fields: [installedById], references: [id], onDelete: Restrict)
 
-  credentials      PluginCredential[]
-  executions       PluginExecution[]
+  credentials PluginCredential[]
+  executions  PluginExecution[]
 
   @@unique([organizationId, pluginId])
   @@index([organizationId])
@@ -910,62 +919,62 @@ model PluginInstallation {
 }
 
 model PluginCredential {
-  id                 String             @id @default(uuid()) @db.Uuid
-  installationId     String             @db.Uuid
-  key                String
-  encryptedValue     String             @db.Text
-  createdAt          DateTime           @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  installationId String   @db.Uuid
+  key            String
+  encryptedValue String   @db.Text
+  createdAt      DateTime @default(now())
 
-  installation       PluginInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  installation PluginInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
 
   @@unique([installationId, key])
   @@index([installationId])
 }
 
 model Connector {
-  id               String           @id @default(uuid()) @db.Uuid
-  organizationId   String           @db.Uuid
-  pluginId         String?          @db.Uuid // Nullable if native connector
-  name             String
-  type             ConnectorType
-  configuration    String           @db.Text // JSON
-  enabled          Boolean          @default(true)
-  createdAt        DateTime         @default(now())
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  pluginId       String?       @db.Uuid // Nullable if native connector
+  name           String
+  type           ConnectorType
+  configuration  String        @db.Text // JSON
+  enabled        Boolean       @default(true)
+  createdAt      DateTime      @default(now())
 
-  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([type])
 }
 
 model PluginExecution {
-  id               String             @id @default(uuid()) @db.Uuid
-  installationId   String             @db.Uuid
-  operation        String             // e.g. tool execution, workflow node, webhook
-  status           String             // COMPLETED, FAILED, TIMEOUT
-  duration         Int                // ms
-  retries          Int                @default(0)
-  error            String?            @db.Text
-  metrics          String?            @db.Text // JSON CPU/Memory usage
-  createdAt        DateTime           @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  installationId String   @db.Uuid
+  operation      String // e.g. tool execution, workflow node, webhook
+  status         String // COMPLETED, FAILED, TIMEOUT
+  duration       Int // ms
+  retries        Int      @default(0)
+  error          String?  @db.Text
+  metrics        String?  @db.Text // JSON CPU/Memory usage
+  createdAt      DateTime @default(now())
 
-  installation     PluginInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  installation PluginInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
 
   @@index([installationId])
   @@index([status])
 }
 
 model PluginPermission {
-  id               String             @id @default(uuid()) @db.Uuid
-  organizationId   String             @db.Uuid
-  pluginSlug       String
-  permission       String             // e.g. plugin.install, plugin.execute, network.access, fs.read
-  granted          Boolean            @default(false)
-  grantedById      String?            @db.Uuid
-  createdAt        DateTime           @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  pluginSlug     String
+  permission     String // e.g. plugin.install, plugin.execute, network.access, fs.read
+  granted        Boolean  @default(false)
+  grantedById    String?  @db.Uuid
+  createdAt      DateTime @default(now())
 
-  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  grantedBy        User?              @relation("GrantedPluginPermissions", fields: [grantedById], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  grantedBy    User?        @relation("GrantedPluginPermissions", fields: [grantedById], references: [id], onDelete: SetNull)
 
   @@unique([organizationId, pluginSlug, permission])
   @@index([organizationId])
@@ -989,15 +998,15 @@ enum HealthStatus {
 }
 
 model SystemMetric {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String?      @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
   module         String
   metricName     String
   metricValue    Float
-  tags           String?      @db.Text // JSON
-  timestamp      DateTime     @default(now())
+  tags           String?  @db.Text // JSON
+  timestamp      DateTime @default(now())
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([module])
@@ -1005,21 +1014,21 @@ model SystemMetric {
 }
 
 model Trace {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String?      @db.Uuid
-  traceId        String       @db.Uuid
-  spanId         String       @db.Uuid @unique
-  parentSpanId   String?      @db.Uuid
-  correlationId  String?      @db.Uuid // Cross-request tracking
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  traceId        String   @db.Uuid
+  spanId         String   @unique @db.Uuid
+  parentSpanId   String?  @db.Uuid
+  correlationId  String?  @db.Uuid // Cross-request tracking
   module         String
   operation      String
-  duration       Int          // ms
-  status         String       // OK, ERROR
-  attributes     String?      @db.Text // JSON (OTel alignment)
-  events         String?      @db.Text // JSON (OTel alignment)
-  timestamp      DateTime     @default(now())
+  duration       Int // ms
+  status         String // OK, ERROR
+  attributes     String?  @db.Text // JSON (OTel alignment)
+  events         String?  @db.Text // JSON (OTel alignment)
+  timestamp      DateTime @default(now())
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([traceId])
   @@index([correlationId])
@@ -1027,19 +1036,19 @@ model Trace {
 }
 
 model AuditLog {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
-  userId         String?      @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  userId         String?  @db.Uuid
   action         String
   resource       String
   resourceId     String
   ipAddress      String?
   userAgent      String?
-  metadata       String?      @db.Text // JSON
-  createdAt      DateTime     @default(now())
+  metadata       String?  @db.Text // JSON
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User?        @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([action])
@@ -1047,59 +1056,59 @@ model AuditLog {
 }
 
 model AlertRule {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String?      @db.Uuid
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String?       @db.Uuid
   name           String
   metricName     String
-  condition      String       // e.g. GREATER_THAN
+  condition      String // e.g. GREATER_THAN
   threshold      Float
   severity       AlertSeverity
-  notification   String?      @db.Text // JSON channel config
-  enabled        Boolean      @default(true)
-  createdAt      DateTime     @default(now())
+  notification   String?       @db.Text // JSON channel config
+  enabled        Boolean       @default(true)
+  createdAt      DateTime      @default(now())
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([metricName])
 }
 
 model Alert {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String?      @db.Uuid
-  ruleId         String?      @db.Uuid
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String?       @db.Uuid
+  ruleId         String?       @db.Uuid
   severity       AlertSeverity
   source         String
-  message        String       @db.Text
-  resolved       Boolean      @default(false)
+  message        String        @db.Text
+  resolved       Boolean       @default(false)
   resolvedAt     DateTime?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime      @default(now())
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([severity])
   @@index([resolved])
 }
 
 model HealthCheck {
-  id             String       @id @default(uuid()) @db.Uuid
-  component      String
-  type           String       // LIVENESS, READINESS, STARTUP
-  status         HealthStatus
-  latency        Int?         // ms
-  message        String?      @db.Text
-  checkedAt      DateTime     @default(now())
+  id        String       @id @default(uuid()) @db.Uuid
+  component String
+  type      String // LIVENESS, READINESS, STARTUP
+  status    HealthStatus
+  latency   Int? // ms
+  message   String?      @db.Text
+  checkedAt DateTime     @default(now())
 
   @@index([component])
   @@index([status])
 }
 
 model DashboardSnapshot {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String?      @db.Uuid
-  snapshot       String       @db.Text // JSON
-  createdAt      DateTime     @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  snapshot       String   @db.Text // JSON
+  createdAt      DateTime @default(now())
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([createdAt])
@@ -1110,51 +1119,51 @@ model DashboardSnapshot {
 // ==========================================
 
 model ApiKey {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
   name           String
-  keyHash        String       @unique
+  keyHash        String    @unique
   prefix         String
-  status         String       @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
+  status         String    @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
   expiresAt      DateTime?
   lastUsedAt     DateTime?
-  createdAt      DateTime     @default(now())
-  createdById    String?      @db.Uuid
+  createdAt      DateTime  @default(now())
+  createdById    String?   @db.Uuid
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  permissions    ApiKeyPermission[]
-  logs           ApiRequestLog[]
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions  ApiKeyPermission[]
+  logs         ApiRequestLog[]
 
   @@index([organizationId])
   @@index([keyHash])
 }
 
 model ApiKeyPermission {
-  id             String       @id @default(uuid()) @db.Uuid
-  apiKeyId       String       @db.Uuid
-  scope          String       // api.chat, api.workflow.execute, etc.
+  id       String @id @default(uuid()) @db.Uuid
+  apiKeyId String @db.Uuid
+  scope    String // api.chat, api.workflow.execute, etc.
 
-  apiKey         ApiKey       @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
 
   @@unique([apiKeyId, scope])
 }
 
 model RateLimitPolicy {
-  id                String       @id @default(uuid()) @db.Uuid
-  organizationId    String?      @db.Uuid
-  userId            String?      @db.Uuid
-  apiKeyId          String?      @db.Uuid
-  planTier          String?      // FREE, PRO, ENTERPRISE
+  id                String   @id @default(uuid()) @db.Uuid
+  organizationId    String?  @db.Uuid
+  userId            String?  @db.Uuid
+  apiKeyId          String?  @db.Uuid
+  planTier          String? // FREE, PRO, ENTERPRISE
   name              String
   requestsPerMinute Int?
   requestsPerHour   Int?
   requestsPerDay    Int?
   burstLimit        Int?
   concurrentLimit   Int?
-  createdAt         DateTime     @default(now())
+  createdAt         DateTime @default(now())
 
-  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user              User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([userId])
@@ -1162,37 +1171,37 @@ model RateLimitPolicy {
 }
 
 model UsageQuota {
-  id                String       @id @default(uuid()) @db.Uuid
-  organizationId    String       @db.Uuid @unique
-  tokensUsed        BigInt       @default(0)
-  embeddingsUsed    BigInt       @default(0)
-  requestsCount     BigInt       @default(0)
-  workflowsRun      Int          @default(0)
-  toolCalls         Int          @default(0)
-  pluginCalls       Int          @default(0)
-  storageBytes      BigInt       @default(0)
-  resetDate         DateTime?
-  updatedAt         DateTime     @updatedAt
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @unique @db.Uuid
+  tokensUsed     BigInt    @default(0)
+  embeddingsUsed BigInt    @default(0)
+  requestsCount  BigInt    @default(0)
+  workflowsRun   Int       @default(0)
+  toolCalls      Int       @default(0)
+  pluginCalls    Int       @default(0)
+  storageBytes   BigInt    @default(0)
+  resetDate      DateTime?
+  updatedAt      DateTime  @updatedAt
 
-  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 model ApiRequestLog {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String?      @db.Uuid
-  apiKeyId       String?      @db.Uuid
-  requestId      String       @unique
-  correlationId  String?      @db.Uuid
-  traceId        String?      @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  apiKeyId       String?  @db.Uuid
+  requestId      String   @unique
+  correlationId  String?  @db.Uuid
+  traceId        String?  @db.Uuid
   endpoint       String
   method         String
-  latency        Int          // ms
+  latency        Int // ms
   statusCode     Int
   ipAddress      String?
-  timestamp      DateTime     @default(now())
+  timestamp      DateTime @default(now())
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  apiKey         ApiKey?       @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  apiKey       ApiKey?       @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([apiKeyId])
@@ -1201,9 +1210,453 @@ model ApiRequestLog {
 }
 
 model ApiVersion {
-  id             String       @id @default(uuid()) @db.Uuid
-  version        String       @unique // "v1", "v2"
-  status         String       // ACTIVE, DEPRECATED, RETIRED
-  releaseDate    DateTime     @default(now())
-  deprecatedAt   DateTime?
+  id           String    @id @default(uuid()) @db.Uuid
+  version      String    @unique // "v1", "v2"
+  status       String // ACTIVE, DEPRECATED, RETIRED
+  releaseDate  DateTime  @default(now())
+  deprecatedAt DateTime?
+}
+
+// ==========================================
+// Enterprise Background Jobs & Distributed Queue (Phase 6.12)
+// ==========================================
+
+enum JobType {
+  CHAT
+  WORKFLOW
+  TOOL
+  PLUGIN
+  MULTI_AGENT
+  EMAIL
+  NOTIFICATION
+  EMBEDDING
+  WEBHOOK
+}
+
+enum JobStatus {
+  WAITING
+  DELAYED
+  ACTIVE
+  COMPLETED
+  FAILED
+  RETRYING
+  CANCELLED
+}
+
+enum JobPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum WorkerStatus {
+  ONLINE
+  OFFLINE
+  DEGRADED
+}
+
+model QueuePolicy {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String?     @db.Uuid
+  queueName      String
+  concurrency    Int         @default(1)
+  timeout        Int         @default(30000)
+  retries        Int         @default(3)
+  backoffType    String      @default("EXPONENTIAL") // FIXED, LINEAR, EXPONENTIAL
+  priority       JobPriority @default(NORMAL)
+  retentionDays  Int         @default(7)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, queueName])
+  @@index([organizationId])
+}
+
+model JobQueue {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @db.Uuid
+  queue          String
+  type           JobType
+  status         JobStatus   @default(WAITING)
+  priority       JobPriority @default(NORMAL)
+  payload        String      @db.Text // JSON
+  attempts       Int         @default(0)
+  maxAttempts    Int         @default(3)
+  createdAt      DateTime    @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+  failedAt       DateTime?
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  executions   JobExecution[]
+
+  @@index([organizationId])
+  @@index([queue])
+  @@index([status])
+  @@index([type])
+}
+
+model JobExecution {
+  id             String    @id @default(uuid()) @db.Uuid
+  jobId          String    @db.Uuid
+  organizationId String    @db.Uuid
+  worker         String
+  duration       Int? // ms
+  retries        Int       @default(0)
+  logs           String?   @db.Text
+  traceId        String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+  finishedAt     DateTime?
+
+  job          JobQueue     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([organizationId])
+  @@index([worker])
+}
+
+model DeadLetterJob {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  queue          String
+  type           JobType
+  payload        String   @db.Text // JSON
+  reason         String   @db.Text
+  failedWorker   String
+  retryCount     Int
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([queue])
+}
+
+model ScheduledJob {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  queue          String
+  type           JobType
+  payload        String    @db.Text // JSON
+  cronExpression String?
+  intervalMs     Int?
+  oneTime        Boolean   @default(false)
+  timezone       String    @default("UTC")
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([queue])
+}
+
+model WorkerNode {
+  id            String       @id @default(uuid()) @db.Uuid
+  hostname      String       @unique
+  capabilities  String       @db.Text // JSON array of supported types
+  status        WorkerStatus @default(ONLINE)
+  concurrency   Int
+  lastHeartbeat DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+
+  @@index([status])
+  @@index([lastHeartbeat])
+}
+
+model QueueMetric {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  queue          String
+  waiting        Int      @default(0)
+  active         Int      @default(0)
+  completed      Int      @default(0)
+  failed         Int      @default(0)
+  delayed        Int      @default(0)
+  timestamp      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([queue])
+  @@index([timestamp])
+}
+
+// ==========================================
+// Enterprise Billing, Subscription & Payment (Phase 6.13)
+// ==========================================
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELLED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  FAILED
+  VOID
+  REFUNDED
+}
+
+enum PaymentProviderType {
+  STRIPE
+  RAZORPAY
+  PAYPAL
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  REFUND
+  BONUS
+  CONSUMPTION
+  ADJUSTMENT
+}
+
+model SubscriptionPlan {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  description  String?  @db.Text
+  monthlyPrice Decimal  @db.Decimal(10, 2)
+  yearlyPrice  Decimal  @db.Decimal(10, 2)
+  maxAgents    Int      @default(0)
+  maxUsers     Int      @default(0)
+  maxTokens    BigInt   @default(0)
+  maxStorage   BigInt   @default(0)
+  maxWorkflows Int      @default(0)
+  maxApiCalls  Int      @default(0)
+  features     String   @db.Text // JSON array of feature slugs
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subscriptions OrganizationSubscription[]
+}
+
+model OrganizationSubscription {
+  id              String              @id @default(uuid()) @db.Uuid
+  organizationId  String              @unique @db.Uuid
+  planId          String              @db.Uuid
+  billingCycle    String // MONTHLY, YEARLY
+  status          SubscriptionStatus  @default(TRIAL)
+  startDate       DateTime            @default(now())
+  renewalDate     DateTime?
+  cancelDate      DateTime?
+  paymentProvider PaymentProviderType @default(STRIPE)
+  autoRenew       Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+}
+
+model Invoice {
+  id             String        @id @default(uuid()) @db.Uuid
+  invoiceNumber  String        @unique
+  organizationId String        @db.Uuid
+  subtotal       Decimal       @db.Decimal(10, 2)
+  tax            Decimal       @db.Decimal(10, 2)
+  total          Decimal       @db.Decimal(10, 2)
+  status         InvoiceStatus @default(DRAFT)
+  paidAt         DateTime?
+  dueDate        DateTime?
+  pdfUrl         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lineItems    InvoiceLineItem[]
+  payments     Payment[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  invoiceId   String   @db.Uuid
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  amount      Decimal  @db.Decimal(10, 2)
+  type        String // TOKENS, WORKFLOW, STORAGE, BASE_PLAN
+  createdAt   DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model Payment {
+  id                String              @id @default(uuid()) @db.Uuid
+  invoiceId         String              @db.Uuid
+  provider          PaymentProviderType
+  providerPaymentId String              @unique
+  currency          String              @default("USD")
+  amount            Decimal             @db.Decimal(10, 2)
+  status            PaymentStatus       @default(PENDING)
+  metadata          String?             @db.Text // JSON
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([status])
+}
+
+model CreditWallet {
+  id               String   @id @default(uuid()) @db.Uuid
+  organizationId   String   @unique @db.Uuid
+  credits          Decimal  @default(0) @db.Decimal(12, 4)
+  purchasedCredits Decimal  @default(0) @db.Decimal(12, 4)
+  bonusCredits     Decimal  @default(0) @db.Decimal(12, 4)
+  consumedCredits  Decimal  @default(0) @db.Decimal(12, 4)
+  updatedAt        DateTime @updatedAt
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions CreditTransaction[]
+}
+
+model CreditTransaction {
+  id          String                @id @default(uuid()) @db.Uuid
+  walletId    String                @db.Uuid
+  type        CreditTransactionType
+  amount      Decimal               @db.Decimal(12, 4)
+  description String?
+  referenceId String? // Link to UsageEvent or Payment
+  createdAt   DateTime              @default(now())
+
+  wallet CreditWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([type])
+}
+
+model UsageEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  type           String // CHAT_TOKENS, WORKFLOW_EXECUTION, API_CALL
+  quantity       BigInt   @default(1)
+  metadata       String?  @db.Text // JSON
+  timestamp      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([timestamp])
+}
+
+model UsageSummary {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  type           String // CHAT_TOKENS, WORKFLOW_EXECUTION
+  period         String // HOURLY, DAILY, MONTHLY
+  startDate      DateTime
+  endDate        DateTime
+  totalQuantity  BigInt   @default(0)
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type, period, startDate])
+  @@index([organizationId])
+}
+
+model FeatureEntitlement {
+  id          String   @id @default(uuid()) @db.Uuid
+  planId      String?  @db.Uuid
+  featureSlug String // chat, voice, workflow
+  limit       BigInt? // Null means unlimited
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@unique([planId, featureSlug])
+}
+
+model OrganizationEntitlement {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  featureSlug    String
+  limit          BigInt?
+  enabled        Boolean  @default(true)
+  metadata       String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, featureSlug])
+}
+
+model Coupon {
+  id            String    @id @default(uuid()) @db.Uuid
+  code          String    @unique
+  percentage    Decimal?  @db.Decimal(5, 2)
+  fixedDiscount Decimal?  @db.Decimal(10, 2)
+  expiresAt     DateTime?
+  usageLimit    Int?
+  timesUsed     Int       @default(0)
+  createdAt     DateTime  @default(now())
+}
+
+model TaxConfiguration {
+  id          String   @id @default(uuid()) @db.Uuid
+  countryCode String
+  stateCode   String?
+  taxType     String // GST, VAT, SALES_TAX
+  rate        Decimal  @db.Decimal(5, 2)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([countryCode, stateCode, taxType])
+}
+
+model BillingEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  eventType      String // INVOICE_GENERATED, PAYMENT_FAILED
+  payload        String   @db.Text // JSON
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([eventType])
+}
+
+model BillingWebhookEvent {
+  id              String              @id @default(uuid()) @db.Uuid
+  provider        PaymentProviderType
+  providerEventId String              @unique
+  eventType       String // invoice.payment_succeeded
+  payload         String              @db.Text // JSON
+  processed       Boolean             @default(false)
+  error           String?             @db.Text
+  createdAt       DateTime            @default(now())
+  processedAt     DateTime?
+
+  @@index([provider])
+  @@index([processed])
 }

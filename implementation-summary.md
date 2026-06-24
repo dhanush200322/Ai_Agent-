@@ -1,3 +1,3 @@
-# Implementation Summary
+# implementation-summary.md
 
-Phase 6.11 Enterprise API Gateway is complete.
+Generated automatically for Phase 6.12.
