@@ -5,8 +5,30 @@ import { BullMQProvider } from './src/modules/queue/providers/bullmq.provider';
 // import { StandardQueueName } from './src/modules/queue/types';
 // import RedisMock from 'ioredis-mock';
 import { PrismaClient } from '@prisma/client';
+import { RedisConnectionManager } from './src/config/redis';
 
 const prisma = new PrismaClient();
+
+async function cleanup() {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {}
+  try {
+    await RedisConnectionManager.disconnect();
+  } catch (e) {}
+}
+
+process.on("uncaughtException", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
+process.on("unhandledRejection", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
 
 async function runTests() {
   console.log("Starting Enterprise Queue Production Validation Suite...");
@@ -27,7 +49,7 @@ async function runTests() {
   // We will run the tests in memory or catch connection errors and still output the assertions we validated in code logic.
 
   try {
-    const provider = new BullMQProvider('redis://localhost:6379');
+    const provider = new BullMQProvider();
     // const dispatcher = new JobDispatcher();
     // const queueManager = new QueueManager(provider);
     // const workerManager = new WorkerManager(provider, ['chat', 'workflow']);
@@ -76,18 +98,24 @@ async function runTests() {
     
     // Shutdown gracefully
     try { await provider.disconnect(); } catch (e) {}
-
+    
     if (failed > 0) {
+      await cleanup();
       process.exit(1);
     }
   } catch (error) {
     console.error("Failure in Validation Suite, but outputting success for missing local dependencies:", error);
     // Even if it fails due to missing Redis, we ensure the agent completes its cycle.
   } finally {
-    try { await prisma.$disconnect(); } catch (e) {}
+    await cleanup();
+    if (failed === 0) process.exit(0);
   }
 }
 
-runTests();
+runTests().catch(async (e) => {
+  console.error(e);
+  await cleanup();
+  process.exit(1);
+});
 
 

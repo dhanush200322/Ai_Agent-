@@ -66,14 +66,19 @@ async function main() {
   const passwordHash = await bcrypt.hash(password, 10);
 
   console.log('--- Database Setup & Cleanup ---');
-  await prisma.userSession.deleteMany();
-  await prisma.refreshToken.deleteMany();
-  await prisma.loginHistory.deleteMany();
-  await prisma.userMFA.deleteMany();
-  await prisma.authenticationPolicy.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.role.deleteMany();
-  await prisma.organization.deleteMany();
+  try {
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Organization", "User", "Role", "UserSession", "RefreshToken", "LoginHistory", "UserMFA", "AuthenticationPolicy" CASCADE;');
+  } catch (err) {
+    console.warn('Truncate failed, falling back to deleteMany:', err);
+    await prisma.userSession.deleteMany().catch(() => {});
+    await prisma.refreshToken.deleteMany().catch(() => {});
+    await prisma.loginHistory.deleteMany().catch(() => {});
+    await prisma.userMFA.deleteMany().catch(() => {});
+    await prisma.authenticationPolicy.deleteMany().catch(() => {});
+    await prisma.user.deleteMany().catch(() => {});
+    await prisma.role.deleteMany().catch(() => {});
+    await prisma.organization.deleteMany().catch(() => {});
+  }
   
   await prisma.organization.createMany({
     data: [

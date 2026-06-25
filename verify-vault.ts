@@ -45,6 +45,29 @@ EncryptionEngine.prototype.decrypt = function(encryptedData: any) {
 };
 
 const prisma = new PrismaClient() as any;
+import { RedisConnectionManager } from './src/config/redis';
+
+async function cleanup() {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {}
+  try {
+    await RedisConnectionManager.disconnect();
+  } catch (e) {}
+}
+
+process.on("uncaughtException", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
+process.on("unhandledRejection", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
 
 // Monkey patch VaultService to fix invalid UUID actorId from RotationEngine
 const originalRotateSecret = VaultService.prototype.rotateSecret;
@@ -174,15 +197,27 @@ async function runVaultTests() {
     assert(rotatedAI !== null && rotatedAI !== undefined && rotatedAI !== 'sk-proj-old' && rotatedAI.includes('rotated'), "Rotation Worker safely executed scheduled provider-managed rotation");
 
     console.log(`\n✅ Enterprise Vault Validation Complete: ${passed} passed, ${failed} failed`);
-    if (failed > 0) process.exit(1);
+    if (failed > 0) {
+      await cleanup();
+      process.exit(1);
+    }
 
   } catch (err: any) {
     console.error("Test Suite Error:", err);
+    await cleanup();
     process.exit(1);
   } finally {
     // Cleanup
-    await prisma.organization.delete({ where: { id: orgId } }).catch(() => {});
+    if (typeof orgId !== 'undefined') {
+      await prisma.organization.delete({ where: { id: orgId } }).catch(() => {});
+    }
+    await cleanup();
+    if (failed === 0) process.exit(0);
   }
 }
 
-runVaultTests();
+runVaultTests().catch(async (e) => {
+  console.error(e);
+  await cleanup();
+  process.exit(1);
+});

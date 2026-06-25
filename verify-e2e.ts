@@ -2,8 +2,32 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { RedisConnectionManager } from './src/config/redis';
 
 const BASE_URL = 'http://localhost:3000/api/v1';
+
+const prisma = new PrismaClient();
+
+async function cleanup() {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {}
+  try {
+    await RedisConnectionManager.disconnect();
+  } catch (e) {}
+}
+
+process.on("uncaughtException", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
+process.on("unhandledRejection", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
 
 async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -16,9 +40,34 @@ async function runE2E() {
 
   try {
     // 0. Setup Authentication
-    const prisma = new PrismaClient();
-    const user = await prisma.user.findFirst({ where: { email: 'enterprise001@gmail.com' } });
-    if (!user) throw new Error('Test user not found');
+    let user = await prisma.user.findFirst({ where: { email: 'enterprise001@gmail.com' } });
+    if (!user) {
+      user = await prisma.user.findFirst();
+    }
+    if (!user) {
+      let org = await prisma.organization.findFirst();
+      if (!org) {
+        org = await prisma.organization.create({
+          data: { name: 'E2E Org', slug: 'e2e-org-' + Date.now() }
+        });
+      }
+      let role = await prisma.role.findFirst({ where: { organizationId: org.id } });
+      if (!role) {
+        role = await prisma.role.create({
+          data: { name: 'Admin', organizationId: org.id }
+        });
+      }
+      user = await prisma.user.create({
+        data: {
+          firstName: 'E2E',
+          lastName: 'User',
+          email: 'enterprise001@gmail.com',
+          passwordHash: 'hash',
+          organizationId: org.id,
+          roleId: role.id
+        }
+      });
+    }
     
     // 0.2 Grant Permissions to Role
     const requiredPerms = ['chat:create', 'chat:read', 'chat:update', 'chat:delete', 'knowledge:create', 'knowledge:view'];
@@ -57,18 +106,18 @@ async function runE2E() {
     const { PermissionCache } = require('./src/modules/rbac/utils/permissionCache');
     await PermissionCache.invalidate(user.roleId);
 
-    // Create JWT Token dynamically to avoid expiration
-    require('dotenv').config();
-    const API_TOKEN = jwt.sign(
-      { 
-        userId: user.id, 
-        organizationId: user.organizationId, 
-        roleId: user.roleId,
-        email: user.email
-      },
-      process.env.JWT_ACCESS_SECRET || '',
-      { expiresIn: '1h' }
-    );
+    const sessionService = new (require('./src/modules/auth/services/session.service').SessionService)();
+    const jwtEngine = new (require('./src/modules/auth/engine/jwt.engine').JWTEngine)();
+
+    // Create session in Redis/DB
+    const session = await sessionService.createSession(user.id, '127.0.0.1', 'Verify-E2E-Client');
+
+    // Create a valid JWT
+    const API_TOKEN = await jwtEngine.generateAccessToken({
+      userId: user.id,
+      sessionId: session.id,
+      organizationId: user.organizationId
+    });
 
     // 0.5 Setup Knowledge Base
     let kb = await prisma.knowledgeBase.findFirst({ where: { organizationId: user.organizationId, deletedAt: null } });
@@ -112,8 +161,20 @@ async function runE2E() {
     await delay(3000); // 3 seconds should be enough for local processing
 
     // Get an Agent ID
-    const agent = await prisma.agent.findFirst({ where: { slug: 'test-agent' } });
-    if (!agent) throw new Error('Test agent not found. Did verify-memory run?');
+    let agent = await prisma.agent.findFirst({ where: { organizationId: user.organizationId } });
+    if (!agent) {
+      agent = await prisma.agent.create({
+        data: {
+          name: 'Test Agent',
+          slug: 'test-agent',
+          description: 'Test agent for E2E',
+          model: 'llama-3.3-70b-versatile',
+          organizationId: user.organizationId,
+          createdById: user.id,
+          systemPrompt: 'You are a test agent.'
+        }
+      });
+    }
 
     // ----------------------------------------------------
     // 2. Create Conversation
@@ -248,11 +309,18 @@ async function runE2E() {
     console.log('🏆 E2E WORKFLOW VALIDATION SUCCESSFUL!');
     console.log('Your backend foundation is officially COMPLETE.');
     console.log('================================================\n');
+    await cleanup();
+    process.exit(0);
 
   } catch (error) {
     console.error('\n❌ E2E Validation Failed:', error);
+    await cleanup();
     process.exit(1);
   }
 }
 
-runE2E();
+runE2E().catch(async (e) => {
+  console.error(e);
+  await cleanup();
+  process.exit(1);
+});

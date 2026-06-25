@@ -5,8 +5,30 @@ import { InvoiceEngine } from './src/modules/billing/engine/invoice.engine';
 import { SubscriptionEngine } from './src/modules/billing/engine/subscription.engine';
 import { StripeProvider } from './src/modules/billing/providers/stripe.provider';
 import { v4 as uuidv4 } from 'uuid';
+import { RedisConnectionManager } from './src/config/redis';
 
 const prisma = new PrismaClient() as any;
+
+async function cleanup() {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {}
+  try {
+    await RedisConnectionManager.disconnect();
+  } catch (e) {}
+}
+
+process.on("uncaughtException", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
+process.on("unhandledRejection", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
 
 async function runBillingTests() {
   console.log("Starting Enterprise Billing Suite Validation...");
@@ -112,15 +134,27 @@ async function runBillingTests() {
     assert(processedWebhook?.processed === true, "Webhook event marked as processed");
 
     console.log(`\n✅ Enterprise Billing Validation Complete: ${passed} passed, ${failed} failed`);
-    if (failed > 0) process.exit(1);
+    if (failed > 0) {
+      await cleanup();
+      process.exit(1);
+    }
 
   } catch (err: any) {
     console.error("Test Suite Error:", err);
+    await cleanup();
     process.exit(1);
   } finally {
     // Cleanup
-    await prisma.organization.delete({ where: { id: orgId } }).catch(() => {});
+    if (typeof orgId !== 'undefined') {
+      await prisma.organization.delete({ where: { id: orgId } }).catch(() => {});
+    }
+    await cleanup();
+    if (failed === 0) process.exit(0);
   }
 }
 
-runBillingTests();
+runBillingTests().catch(async (e) => {
+  console.error(e);
+  await cleanup();
+  process.exit(1);
+});

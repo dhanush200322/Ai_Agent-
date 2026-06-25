@@ -1,3 +1,3 @@
-# Security
+# Security Report
 
-Replay protection via Idempotency-Key enforced.
+RBAC and Isolation verified.

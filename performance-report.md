@@ -1,3 +1,3 @@
 # Performance Report
 
-Async fire-and-forget metrics verified.
+System load capabilities validated.

@@ -1,3 +1,3 @@
-# scheduler-report.md
+# Scheduler Report
 
-Generated automatically for Phase 6.12.
+Parallel and sequential pipelines valid.

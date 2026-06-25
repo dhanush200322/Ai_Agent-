@@ -16,7 +16,7 @@ const validateChatCompletion = (req, _res, next) => {
     }
     catch (error) {
         if (error instanceof zod_1.z.ZodError) {
-            const messages = error.errors.map((e) => e.message).join(', ');
+            const messages = error.issues.map((e) => e.message).join(', ');
             next(new AppError_1.AppError(`Validation failed: ${messages}`, 400));
         }
         else {

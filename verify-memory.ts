@@ -52,8 +52,35 @@ async function verifyMemory() {
   const vectorService = new VectorService();
 
   // Grab seed users
-  const user = await prisma.user.findFirst({ where: { email: 'enterprise001@gmail.com' }, include: { organization: true } });
-  if (!user) throw new Error('Seed user not found');
+  let user = await prisma.user.findFirst({ where: { email: 'enterprise001@gmail.com' }, include: { organization: true } });
+  if (!user) {
+    user = await prisma.user.findFirst({ include: { organization: true } });
+  }
+  if (!user) {
+    let org = await prisma.organization.findFirst();
+    if (!org) {
+      org = await prisma.organization.create({
+        data: { name: 'Memory Org', slug: 'memory-org-' + Date.now() }
+      });
+    }
+    let role = await prisma.role.findFirst({ where: { organizationId: org.id } });
+    if (!role) {
+      role = await prisma.role.create({
+        data: { name: 'Admin', organizationId: org.id }
+      });
+    }
+    user = await prisma.user.create({
+      data: {
+        firstName: 'Memory',
+        lastName: 'User',
+        email: 'enterprise001@gmail.com',
+        passwordHash: 'hash',
+        organizationId: org.id,
+        roleId: role.id
+      },
+      include: { organization: true }
+    });
+  }
   const orgId = user.organizationId;
   let agent = await prisma.agent.findFirst({ where: { organizationId: orgId } });
   if (!agent) {

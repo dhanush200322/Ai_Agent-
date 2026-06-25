@@ -1,5 +1,30 @@
 import { EnterpriseTestRunner } from './src/tests/integration/test-runner';
 import fs from 'fs';
+import { PrismaClient } from '@prisma/client';
+import { RedisConnectionManager } from './src/config/redis';
+
+const prisma = new PrismaClient();
+
+async function cleanup() {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {}
+  try {
+    await RedisConnectionManager.disconnect();
+  } catch (e) {}
+}
+
+process.on("uncaughtException", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
+process.on("unhandledRejection", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
 
 async function runGatewayTests() {
   const runner = new EnterpriseTestRunner();
@@ -34,8 +59,15 @@ async function runGatewayTests() {
 
   const totalFailed = runner.results.reduce((acc, curr) => acc + curr.failed, 0);
   if (totalFailed > 0) {
+    await cleanup();
     process.exit(1);
   }
+  await cleanup();
+  process.exit(0);
 }
 
-runGatewayTests().catch(console.error);
+runGatewayTests().catch(async (e) => {
+  console.error(e);
+  await cleanup();
+  process.exit(1);
+});

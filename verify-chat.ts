@@ -2,8 +2,37 @@ import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 dotenv.config();
 import jwt from 'jsonwebtoken';
+import { RedisConnectionManager } from './src/config/redis';
 
 const prisma = new PrismaClient();
+
+async function cleanup() {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {}
+  try {
+    await RedisConnectionManager.disconnect();
+  } catch (e) {}
+  
+  // Clear any dangling timers from engines
+  let id = setTimeout(() => {}, 0);
+  while ((id as any) > 0) {
+    clearTimeout(id);
+    (id as any)--;
+  }
+}
+
+process.on("uncaughtException", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
+process.on("unhandledRejection", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
 
 async function run() {
   try {
@@ -11,18 +40,56 @@ async function run() {
     const agent = await prisma.agent.findFirst();
 
     if (!user || !agent) {
-      console.log('No user or agent found. Please seed DB.');
-      return;
+      throw new Error('No user or agent found. Please seed DB.');
     }
 
-    // Create a valid JWT
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: '1h' }
-    );
+    // Ensure 'chat:create' permission exists in DB
+    await prisma.permission.upsert({
+      where: { name: 'chat:create' },
+      update: {},
+      create: {
+        name: 'chat:create',
+        resource: 'chat',
+        action: 'create',
+        category: 'Chat'
+      }
+    });
 
-    console.log(`Using User: ${user.email}, Agent: ${agent.name}`);
+    // Connect all permissions to user's role to prevent 403
+    const allPermissions = await prisma.permission.findMany();
+    await prisma.role.update({
+      where: { id: user.roleId },
+      data: {
+        permissions: {
+          connect: allPermissions.map(p => ({ id: p.id }))
+        }
+      }
+    });
+
+    const sessionService = new (require('./src/modules/auth/services/session.service').SessionService)();
+    const jwtEngine = new (require('./src/modules/auth/engine/jwt.engine').JWTEngine)();
+
+    // Create session in Redis/DB
+    const session = await sessionService.createSession(user.id, '127.0.0.1', 'Verify-Chat-Client');
+
+    // Create a valid JWT
+    const token = await jwtEngine.generateAccessToken({
+      userId: user.id,
+      sessionId: session.id,
+      organizationId: user.organizationId
+    });
+
+    // Create a new Conversation for testing
+    const conversation = await prisma.conversation.create({
+      data: {
+        organizationId: user.organizationId,
+        userId: user.id,
+        agentId: agent.id,
+        status: 'ACTIVE'
+      }
+    });
+
+    console.log(`Using User: ${user.email}, Agent: ${agent.name}, Conversation: ${conversation.id}`);
     console.log('Sending request to /api/v1/chat/completions...');
 
     const response = await fetch('http://localhost:3000/api/v1/chat/completions', {
@@ -33,6 +100,7 @@ async function run() {
       },
       body: JSON.stringify({
         agentId: agent.id,
+        conversationId: conversation.id,
         message: 'What is Enterprise AI?'
       })
     });
@@ -40,14 +108,13 @@ async function run() {
     if (!response.ok) {
       console.log('Error Status:', response.status);
       console.log('Error Body:', await response.text());
-      return;
+      throw new Error('Request failed');
     }
 
     console.log('--- STREAM STARTED ---');
 
     if (!response.body) {
-      console.log('No response body');
-      return;
+      throw new Error('No response body');
     }
 
     const reader = response.body.getReader();
@@ -87,11 +154,17 @@ async function run() {
       }
     }
 
-    await prisma.$disconnect();
+    await cleanup();
+    process.exit(0);
   } catch (err: any) {
     console.error('Error:', err);
-    await prisma.$disconnect();
+    await cleanup();
+    process.exit(1);
   }
 }
 
-run();
+run().catch(async (e) => {
+  console.error(e);
+  await cleanup();
+  process.exit(1);
+});

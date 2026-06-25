@@ -4,21 +4,74 @@ import { VectorService } from './src/modules/knowledge/services/vector.service';
 import { EmbeddingService } from './src/modules/knowledge/services/embedding.service';
 import fs from 'fs';
 import path from 'path';
+import { RedisConnectionManager } from './src/config/redis';
 
 const prisma = new PrismaClient();
+
+async function cleanup() {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {}
+  try {
+    await RedisConnectionManager.disconnect();
+  } catch (e) {}
+}
+
+process.on("uncaughtException", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
+
+process.on("unhandledRejection", async (err)=>{
+   console.error(err);
+   await cleanup();
+   process.exit(1);
+});
 
 async function run() {
   const startTime = Date.now();
   console.log('=== STARTING PIPELINE VERIFICATION ===');
   try {
-    const org = await prisma.organization.findFirst();
-    const user = await prisma.user.findFirst();
-    // @ts-ignore
-    const kb = await prisma.knowledgeBase.findFirst();
+    let org = await prisma.organization.findFirst();
+    if (!org) {
+      org = await prisma.organization.create({
+        data: { name: 'Pipeline Org', slug: 'pipeline-org-' + Date.now() }
+      });
+    }
 
-    if (!org || !user || !kb) {
-      console.log('Missing basic data. Please seed DB.');
-      return;
+    let user = await prisma.user.findFirst();
+    if (!user) {
+      let role = await prisma.role.findFirst({ where: { organizationId: org.id } });
+      if (!role) {
+        role = await prisma.role.create({
+          data: { name: 'Admin', organizationId: org.id }
+        });
+      }
+      user = await prisma.user.create({
+        data: {
+          firstName: 'Pipeline',
+          lastName: 'User',
+          email: `pipeline-${Date.now()}@test.com`,
+          passwordHash: 'hash',
+          organizationId: org.id,
+          roleId: role.id
+        }
+      });
+    }
+
+    // @ts-ignore
+    let kb = await prisma.knowledgeBase.findFirst();
+    if (!kb) {
+      // @ts-ignore
+      kb = await prisma.knowledgeBase.create({
+        data: {
+          name: 'Pipeline KB',
+          description: 'Pipeline Knowledge Base',
+          organizationId: org.id,
+          createdById: user.id
+        }
+      });
     }
 
     const testPdfPath = path.join(__dirname, 'public', 'uploads', 'test-verification.txt');
@@ -102,11 +155,18 @@ Authentication relies on secure JWT tokens.
 
   } catch (err) {
     console.error('Test failed', err);
+    await cleanup();
+    process.exit(1);
   } finally {
-    await prisma.$disconnect();
     const totalTime = Date.now() - startTime;
     console.log(`\n=== VERIFICATION FINISHED in ${totalTime}ms ===`);
+    await cleanup();
+    process.exit(0);
   }
 }
 
-run();
+run().catch(async (e) => {
+  console.error(e);
+  await cleanup();
+  process.exit(1);
+});
