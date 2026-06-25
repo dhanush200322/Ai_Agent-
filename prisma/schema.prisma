@@ -131,9 +131,9 @@ model Organization {
   billingEvents   BillingEvent[]
 
   // Phase 6.14 Vault Relations
-  vaultSecrets    VaultSecret[]
-  secretLeases    SecretLease[]
-  secretShares    SecretShare[]
+  vaultSecrets VaultSecret[]
+  secretLeases SecretLease[]
+  secretShares SecretShare[]
 
   // Phase 6.15 Auth Relations
   securityPolicies AuthenticationPolicy[]
@@ -146,6 +146,46 @@ model Organization {
   notificationAudits      NotificationAudit[]
   notificationWebhooks    NotificationWebhook[]
   notificationAnalytics   NotificationAnalytics[]
+
+  // Phase 6.19 Agent Runtime
+  agentPolicies   AgentPolicy[]
+  agentExecutions AgentExecution[]
+  agentSessions   AgentSession[]
+
+  // Phase 6.19 Model Gateway & LLM Orchestration
+  aiProviders               AIProvider[]
+  promptLibraries           PromptLibrary[]
+  promptExecutions          PromptExecution[]
+  modelUsages               ModelUsage[]
+  modelCosts                ModelCost[]
+  modelQuotas               ModelQuota[]
+  tokenUsages               TokenUsage[]
+  completionLogs            CompletionLog[]
+  streamingSessions         StreamingSession[]
+  embeddingExecutions       EmbeddingExecution[]
+  imageGenerationExecutions ImageGenerationExecution[]
+  audioGenerationExecutions AudioGenerationExecution[]
+  modelFeedback             ModelFeedback[]
+
+  // Phase 6.20 Integration Relations
+  integrationInstances      IntegrationInstance[]
+  connectorConfigurations   ConnectorConfiguration[]
+  connectorCredentials      ConnectorCredential[]
+  connectorPermissions      ConnectorPermission[]
+  pluginEvents              PluginEvent[]
+  pluginLogs                PluginLog[]
+  pluginSchedules           PluginSchedule[]
+  pluginWebhooks            PluginWebhook[]
+  oauthConnections          OAuthConnection[]
+  webhookSubscriptions      WebhookSubscription[]
+  externalAccounts          ExternalAccount[]
+  externalEvents            ExternalEvent[]
+  connectorHealths          ConnectorHealth[]
+  connectorUsages           ConnectorUsage[]
+  connectorMetrics          ConnectorMetrics[]
+  connectorAudits           ConnectorAudit[]
+  connectorPolicies         ConnectorPolicy[]
+  connectorQuotas           ConnectorQuota[]
 
   @@index([status])
 }
@@ -188,17 +228,20 @@ model User {
   rateLimitPolicies          RateLimitPolicy[]
 
   // Phase 6.15 Auth Relations
-  sessions                   UserSession[]
-  devices                    TrustedDevice[]
-  mfas                       UserMFA[]
-  recoveryCodes              RecoveryCode[]
-  identityProviders          IdentityProviderAccount[]
-  loginHistory               LoginHistory[]
-  sessionAudits              SessionAudit[]
+  sessions          UserSession[]
+  devices           TrustedDevice[]
+  mfas              UserMFA[]
+  recoveryCodes     RecoveryCode[]
+  identityProviders IdentityProviderAccount[]
+  loginHistory      LoginHistory[]
+  sessionAudits     SessionAudit[]
 
   // Phase 6.16 Notification Relations
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+
+  // Phase 6.19 Agent Runtime
+  agentSessions AgentSession[]
 
   @@index([organizationId])
   @@index([roleId])
@@ -279,6 +322,17 @@ model Agent {
   assignedTasks    AgentTask[]       @relation("AssignedTasks")
   sentMessages     AgentMessage[]    @relation("SentMessages")
   receivedMessages AgentMessage[]    @relation("ReceivedMessages")
+
+  // Phase 6.19 Agent Runtime
+  runtimeConfig   AgentRuntimeConfiguration?
+  executions      AgentExecution[]
+  sessions        AgentSession[]
+  delegationsFrom AgentDelegation[]          @relation("DelegatedFrom")
+  delegationsTo   AgentDelegation[]          @relation("DelegatedTo")
+  contexts        AgentContext[]
+  state           AgentState?
+  events          AgentEvent[]
+  heartbeat       AgentHeartbeat?
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -595,25 +649,25 @@ enum ApprovalStatus {
 }
 
 model Workflow {
-  id             String            @id @default(uuid()) @db.Uuid
-  organizationId String            @db.Uuid
-  createdById    String            @db.Uuid
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  createdById    String         @db.Uuid
   name           String
   slug           String
-  description    String?           @db.Text
-  status         WorkflowStatus    @default(DRAFT)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  description    String?        @db.Text
+  status         WorkflowStatus @default(DRAFT)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   deletedAt      DateTime?
 
-  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy      User              @relation("CreatedWorkflows", fields: [createdById], references: [id], onDelete: Restrict)
-  versions       WorkflowVersion[]
-  triggers       WorkflowTrigger[]
-  schedules      WorkflowSchedule[]
-  variables      WorkflowVariable[]
-  templates      WorkflowTemplate[]
-  executions     WorkflowExecution[]
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                @relation("CreatedWorkflows", fields: [createdById], references: [id], onDelete: Restrict)
+  versions     WorkflowVersion[]
+  triggers     WorkflowTrigger[]
+  schedules    WorkflowSchedule[]
+  variables    WorkflowVariable[]
+  templates    WorkflowTemplate[]
+  executions   WorkflowExecution[]
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -631,28 +685,28 @@ model WorkflowVersion {
   status      WorkflowVersionStatus @default(DRAFT)
   createdAt   DateTime              @default(now())
 
-  workflow        Workflow              @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  executions      WorkflowExecution[]
-  versionNodes    WorkflowNode[]
+  workflow           Workflow             @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executions         WorkflowExecution[]
+  versionNodes       WorkflowNode[]
   versionConnections WorkflowConnection[]
-  snapshots       WorkflowSnapshot[]
+  snapshots          WorkflowSnapshot[]
 
   @@unique([workflowId, version])
   @@index([workflowId])
 }
 
 model WorkflowNode {
-  id                String          @id @default(uuid()) @db.Uuid
-  nodeId            String          // custom nodeId, e.g. "1" or "node_1"
-  workflowVersionId String          @db.Uuid
-  type              String          // e.g. "trigger", "ai", "tool", "approval"
+  id                String   @id @default(uuid()) @db.Uuid
+  nodeId            String // custom nodeId, e.g. "1" or "node_1"
+  workflowVersionId String   @db.Uuid
+  type              String // e.g. "trigger", "ai", "tool", "approval"
   label             String
-  config            String          @db.Text // JSON string
-  metadata          String?         @db.Text // JSON string
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  config            String   @db.Text // JSON string
+  metadata          String?  @db.Text // JSON string
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  workflowVersion   WorkflowVersion @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
+  workflowVersion   WorkflowVersion      @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
   sourceConnections WorkflowConnection[] @relation("SourceNode")
   targetConnections WorkflowConnection[] @relation("TargetNode")
 
@@ -661,18 +715,18 @@ model WorkflowNode {
 }
 
 model WorkflowConnection {
-  id                String          @id @default(uuid()) @db.Uuid
-  workflowVersionId String          @db.Uuid
-  sourceNodeId      String          // custom source nodeId
-  targetNodeId      String          // custom target nodeId
+  id                String   @id @default(uuid()) @db.Uuid
+  workflowVersionId String   @db.Uuid
+  sourceNodeId      String // custom source nodeId
+  targetNodeId      String // custom target nodeId
   sourceHandle      String?
   targetHandle      String?
-  condition         String?         @db.Text
-  createdAt         DateTime        @default(now())
+  condition         String?  @db.Text
+  createdAt         DateTime @default(now())
 
-  workflowVersion   WorkflowVersion @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
-  sourceNode        WorkflowNode    @relation("SourceNode", fields: [workflowVersionId, sourceNodeId], references: [workflowVersionId, nodeId], onDelete: Cascade)
-  targetNode        WorkflowNode    @relation("TargetNode", fields: [workflowVersionId, targetNodeId], references: [workflowVersionId, nodeId], onDelete: Cascade)
+  workflowVersion WorkflowVersion @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
+  sourceNode      WorkflowNode    @relation("SourceNode", fields: [workflowVersionId, sourceNodeId], references: [workflowVersionId, nodeId], onDelete: Cascade)
+  targetNode      WorkflowNode    @relation("TargetNode", fields: [workflowVersionId, targetNodeId], references: [workflowVersionId, nodeId], onDelete: Cascade)
 
   @@index([workflowVersionId])
 }
@@ -688,13 +742,13 @@ model WorkflowExecution {
   finishedAt        DateTime?
   error             String?                 @db.Text
 
-  workflow          Workflow?               @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  workflowVersion   WorkflowVersion         @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
-  organization      Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  logs              WorkflowExecutionLog[]
-  approvals         WorkflowApproval[]
-  steps             WorkflowExecutionStep[]
-  snapshots         WorkflowSnapshot[]
+  workflow        Workflow?               @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflowVersion WorkflowVersion         @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  logs            WorkflowExecutionLog[]
+  approvals       WorkflowApproval[]
+  steps           WorkflowExecutionStep[]
+  snapshots       WorkflowSnapshot[]
 
   @@index([workflowVersionId])
   @@index([organizationId])
@@ -714,22 +768,22 @@ model WorkflowExecutionStep {
   startedAt   DateTime            @default(now())
   finishedAt  DateTime?
 
-  execution   WorkflowExecution   @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  execution WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
 
   @@index([executionId])
   @@index([nodeId])
 }
 
 model WorkflowVariable {
-  id             String   @id @default(uuid()) @db.Uuid
-  workflowId     String   @db.Uuid
-  key            String
-  value          String   @db.Text // JSON string or encrypted value
-  isSecret       Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id         String   @id @default(uuid()) @db.Uuid
+  workflowId String   @db.Uuid
+  key        String
+  value      String   @db.Text // JSON string or encrypted value
+  isSecret   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  workflow       Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@unique([workflowId, key])
 }
@@ -743,7 +797,7 @@ model WorkflowTrigger {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([workflowId])
   @@index([type])
@@ -760,7 +814,7 @@ model WorkflowSchedule {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([workflowId])
 }
@@ -774,8 +828,8 @@ model WorkflowApproval {
   approvedAt   DateTime?
   approvedById String?                @db.Uuid
 
-  execution    WorkflowExecution      @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  approvedBy   User?                  @relation("ApprovedWorkflows", fields: [approvedById], references: [id], onDelete: SetNull)
+  execution  WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  approvedBy User?             @relation("ApprovedWorkflows", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([executionId])
   @@index([status])
@@ -794,40 +848,40 @@ model WorkflowExecutionLog {
   startedAt   DateTime            @default(now())
   finishedAt  DateTime?
 
-  execution   WorkflowExecution   @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  execution WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
 
   @@index([executionId])
   @@index([nodeId])
 }
 
 model WorkflowSnapshot {
-  id                String            @id @default(uuid()) @db.Uuid
-  executionId       String            @db.Uuid
-  workflowVersionId String            @db.Uuid
+  id                String   @id @default(uuid()) @db.Uuid
+  executionId       String   @db.Uuid
+  workflowVersionId String   @db.Uuid
   nodeId            String
-  state             String            @db.Text // JSON string
-  createdAt         DateTime          @default(now())
+  state             String   @db.Text // JSON string
+  createdAt         DateTime @default(now())
 
-  execution         WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  workflowVersion   WorkflowVersion   @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
+  execution       WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  workflowVersion WorkflowVersion   @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
 
   @@index([executionId])
 }
 
 model WorkflowTemplate {
-  id             String        @id @default(uuid()) @db.Uuid
-  organizationId String?       @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
   name           String
-  description    String?       @db.Text
-  nodes          String        @db.Text // JSON definition
-  connections    String        @db.Text // JSON definition
-  metadata       String?       @db.Text // JSON definition
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  description    String?  @db.Text
+  nodes          String   @db.Text // JSON definition
+  connections    String   @db.Text // JSON definition
+  metadata       String?  @db.Text // JSON definition
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  workflowId     String?       @db.Uuid
-  workflow       Workflow?     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workflowId   String?       @db.Uuid
+  workflow     Workflow?     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
 }
@@ -933,6 +987,9 @@ model AgentTask {
   parentTask    AgentTask?     @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
   subTasks      AgentTask[]    @relation("SubTasks")
   messages      AgentMessage[]
+
+  // Phase 6.19 Agent Runtime
+  delegations AgentDelegation[]
 
   @@index([teamId])
   @@index([assignedAgentId])
@@ -1040,6 +1097,12 @@ model Plugin {
   versions      PluginVersion[]
   installations PluginInstallation[]
 
+  events        PluginEvent[]
+  logs          PluginLog[]
+  schedules     PluginSchedule[]
+  webhooks      PluginWebhook[]
+  marketplaceEntries PluginMarketplaceEntry[]
+
   @@index([visibility])
   @@index([status])
   @@index([organizationId])
@@ -1124,6 +1187,16 @@ model Connector {
   createdAt      DateTime      @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  configurations ConnectorConfiguration[]
+  credentials    ConnectorCredential[]
+  permissions    ConnectorPermission[]
+  healths        ConnectorHealth[]
+  usages         ConnectorUsage[]
+  metrics        ConnectorMetrics[]
+  audits         ConnectorAudit[]
+  policies       ConnectorPolicy[]
+  quotas         ConnectorQuota[]
 
   @@index([organizationId])
   @@index([type])
@@ -1413,6 +1486,7 @@ enum JobType {
   NOTIFICATION
   EMBEDDING
   WEBHOOK
+  AGENT_RUNTIME
 }
 
 enum JobStatus {
@@ -1883,17 +1957,17 @@ enum RotationStrategy {
 }
 
 model VaultSecret {
-  id             String           @id @default(uuid()) @db.Uuid
-  organizationId String           @db.Uuid
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
   name           String
-  description    String?          @db.Text
-  category       SecretCategory   @default(CUSTOM)
+  description    String?           @db.Text
+  category       SecretCategory    @default(CUSTOM)
   provider       VaultProviderType @default(DATABASE)
-  status         SecretStatus     @default(ACTIVE)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  status         SecretStatus      @default(ACTIVE)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   versions       VaultSecretVersion[]
   accessLogs     VaultAccessLog[]
   rotationPolicy SecretRotationPolicy?
@@ -1906,32 +1980,32 @@ model VaultSecret {
 }
 
 model VaultSecretVersion {
-  id             String       @id @default(uuid()) @db.Uuid
-  secretId       String       @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  secretId       String   @db.Uuid
   version        Int
-  encryptedValue String       @db.Text
-  iv             String       @db.Text
-  authTag        String       @db.Text
-  keyVersion     Int          @default(1)
-  createdAt      DateTime     @default(now())
+  encryptedValue String   @db.Text
+  iv             String   @db.Text
+  authTag        String   @db.Text
+  keyVersion     Int      @default(1)
+  createdAt      DateTime @default(now())
 
-  secret         VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  secret VaultSecret @relation(fields: [secretId], references: [id], onDelete: Cascade)
 
   @@unique([secretId, version])
 }
 
 model VaultAccessLog {
-  id             String       @id @default(uuid()) @db.Uuid
-  secretId       String       @db.Uuid
-  action         String       // READ, UPDATE, ROTATE, DELETE, REVOKE
-  actorId        String       @db.Uuid // UserId or System Component
-  actorType      String       // USER, SYSTEM, PLUGIN
-  ipAddress      String?
-  userAgent      String?
-  metadata       String?      @db.Text
-  createdAt      DateTime     @default(now())
+  id        String   @id @default(uuid()) @db.Uuid
+  secretId  String   @db.Uuid
+  action    String // READ, UPDATE, ROTATE, DELETE, REVOKE
+  actorId   String   @db.Uuid // UserId or System Component
+  actorType String // USER, SYSTEM, PLUGIN
+  ipAddress String?
+  userAgent String?
+  metadata  String?  @db.Text
+  createdAt DateTime @default(now())
 
-  secret         VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  secret VaultSecret @relation(fields: [secretId], references: [id], onDelete: Cascade)
 
   @@index([secretId])
   @@index([actorId])
@@ -1940,7 +2014,7 @@ model VaultAccessLog {
 
 model SecretRotationPolicy {
   id             String           @id @default(uuid()) @db.Uuid
-  secretId       String           @db.Uuid @unique
+  secretId       String           @unique @db.Uuid
   strategy       RotationStrategy @default(MANUAL)
   cronExpression String?
   lastRotatedAt  DateTime?
@@ -1951,37 +2025,37 @@ model SecretRotationPolicy {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  secret         VaultSecret      @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  secret VaultSecret @relation(fields: [secretId], references: [id], onDelete: Cascade)
 }
 
 model SecretLease {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
-  secretId       String       @db.Uuid
-  actorId        String       @db.Uuid
-  actorType      String       // PLUGIN, WORKFLOW
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  secretId       String   @db.Uuid
+  actorId        String   @db.Uuid
+  actorType      String // PLUGIN, WORKFLOW
   expiresAt      DateTime
-  isRevoked      Boolean      @default(false)
-  createdAt      DateTime     @default(now())
+  isRevoked      Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  secret         VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  secret       VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
 
   @@index([secretId])
   @@index([expiresAt])
 }
 
 model SecretShare {
-  id               String       @id @default(uuid()) @db.Uuid
-  secretId         String       @db.Uuid
-  organizationId   String       @db.Uuid // Target organization/department (intra-org share for now)
-  targetActorId    String?      @db.Uuid // Target user or role
-  permission       String       // READ
-  expiresAt        DateTime?
-  createdAt        DateTime     @default(now())
+  id             String    @id @default(uuid()) @db.Uuid
+  secretId       String    @db.Uuid
+  organizationId String    @db.Uuid // Target organization/department (intra-org share for now)
+  targetActorId  String?   @db.Uuid // Target user or role
+  permission     String // READ
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
 
-  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  secret           VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  secret       VaultSecret  @relation(fields: [secretId], references: [id], onDelete: Cascade)
 
   @@index([secretId])
   @@index([organizationId])
@@ -2045,22 +2119,22 @@ enum RiskLevel {
 }
 
 model UserSession {
-  id             String        @id @default(uuid()) @db.Uuid
-  userId         String        @db.Uuid
-  deviceId       String?       @db.Uuid
-  tokenFingerprint String      @unique
-  ipAddress      String?
-  userAgent      String?
-  status         SessionStatus @default(ACTIVE)
-  riskScore      Float         @default(0.0)
-  lastActivityAt DateTime      @default(now())
-  expiresAt      DateTime
-  createdAt      DateTime      @default(now())
+  id               String        @id @default(uuid()) @db.Uuid
+  userId           String        @db.Uuid
+  deviceId         String?       @db.Uuid
+  tokenFingerprint String        @unique
+  ipAddress        String?
+  userAgent        String?
+  status           SessionStatus @default(ACTIVE)
+  riskScore        Float         @default(0.0)
+  lastActivityAt   DateTime      @default(now())
+  expiresAt        DateTime
+  createdAt        DateTime      @default(now())
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  device         TrustedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
-  refreshTokens  RefreshToken[]
-  audits         SessionAudit[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device        TrustedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  refreshTokens RefreshToken[]
+  audits        SessionAudit[]
 
   @@index([userId])
   @@index([tokenFingerprint])
@@ -2068,63 +2142,63 @@ model UserSession {
 }
 
 model RefreshToken {
-  id             String        @id @default(uuid()) @db.Uuid
-  sessionId      String        @db.Uuid
-  tokenHash      String        @unique
-  isRevoked      Boolean       @default(false)
-  expiresAt      DateTime
-  createdAt      DateTime      @default(now())
-  replacedByToken String?      @db.Text
+  id              String   @id @default(uuid()) @db.Uuid
+  sessionId       String   @db.Uuid
+  tokenHash       String   @unique
+  isRevoked       Boolean  @default(false)
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  replacedByToken String?  @db.Text
 
-  session        UserSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([tokenHash])
 }
 
 model TrustedDevice {
-  id             String           @id @default(uuid()) @db.Uuid
-  userId         String           @db.Uuid
-  deviceFingerprint String        @unique
-  name           String?
-  browser        String?
-  os             String?
-  trustLevel     DeviceTrustLevel @default(UNTRUSTED)
-  lastIpAddress  String?
-  lastUsedAt     DateTime         @default(now())
-  createdAt      DateTime         @default(now())
+  id                String           @id @default(uuid()) @db.Uuid
+  userId            String           @db.Uuid
+  deviceFingerprint String           @unique
+  name              String?
+  browser           String?
+  os                String?
+  trustLevel        DeviceTrustLevel @default(UNTRUSTED)
+  lastIpAddress     String?
+  lastUsedAt        DateTime         @default(now())
+  createdAt         DateTime         @default(now())
 
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sessions       UserSession[]
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions UserSession[]
 
   @@index([userId])
   @@index([deviceFingerprint])
 }
 
 model UserMFA {
-  id             String        @id @default(uuid()) @db.Uuid
-  userId         String        @db.Uuid
-  type           MFAType
-  secret         String?       @db.Text // Encrypted in Vault
-  isEnabled      Boolean       @default(false)
-  isVerified     Boolean       @default(false)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  type       MFAType
+  secret     String?  @db.Text // Encrypted in Vault
+  isEnabled  Boolean  @default(false)
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, type])
 }
 
 model RecoveryCode {
-  id             String        @id @default(uuid()) @db.Uuid
-  userId         String        @db.Uuid
-  codeHash       String
-  isUsed         Boolean       @default(false)
-  usedAt         DateTime?
-  createdAt      DateTime      @default(now())
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  codeHash  String
+  isUsed    Boolean   @default(false)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -2141,41 +2215,41 @@ model IdentityProviderAccount {
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
 
-  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerUserId])
   @@index([userId])
 }
 
 model LoginHistory {
-  id             String         @id @default(uuid()) @db.Uuid
-  userId         String         @db.Uuid
-  eventType      LoginEventType
-  ipAddress      String?
-  userAgent      String?
-  location       String?        // Country/City based on IP
-  riskScore      Float          @default(0.0)
-  status         String         // SUCCESS, FAILED
-  failureReason  String?        @db.Text
-  createdAt      DateTime       @default(now())
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String         @db.Uuid
+  eventType     LoginEventType
+  ipAddress     String?
+  userAgent     String?
+  location      String? // Country/City based on IP
+  riskScore     Float          @default(0.0)
+  status        String // SUCCESS, FAILED
+  failureReason String?        @db.Text
+  createdAt     DateTime       @default(now())
 
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
 }
 
 model SessionAudit {
-  id             String        @id @default(uuid()) @db.Uuid
-  sessionId      String        @db.Uuid
-  userId         String        @db.Uuid
-  action         String
-  ipAddress      String?
-  userAgent      String?
-  createdAt      DateTime      @default(now())
+  id        String   @id @default(uuid()) @db.Uuid
+  sessionId String   @db.Uuid
+  userId    String   @db.Uuid
+  action    String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 
-  session        UserSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([userId])
@@ -2186,79 +2260,79 @@ model SessionAudit {
 // ==========================================
 
 model AuthenticationPolicy {
-  id                   String        @id @default(uuid()) @db.Uuid
-  organizationId       String        @db.Uuid @unique
-  name                 String
-  description          String?       @db.Text
-  requireMfa           Boolean       @default(false)
-  mfaEnforcementLevel  String        // OPTIONAL, REQUIRED_FOR_ADMINS, REQUIRED_FOR_ALL
-  sessionTimeoutMins   Int           @default(1440) // 24 hours
-  idleTimeoutMins      Int           @default(60)
-  maxConcurrentSessions Int          @default(5)
-  passwordMinLength    Int           @default(12)
-  passwordRequireNum   Boolean       @default(true)
-  passwordRequireSym   Boolean       @default(true)
-  passwordRequireUpper Boolean       @default(true)
-  passwordExpiryDays   Int           @default(90)
-  passwordHistoryCount Int           @default(5)
-  lockoutThreshold     Int           @default(5)
-  lockoutDurationMins  Int           @default(30)
-  enforceGeoRestriction Boolean       @default(false)
-  enforceIpRestriction Boolean       @default(false)
-  enforceWorkingHours  Boolean       @default(false)
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id                    String   @id @default(uuid()) @db.Uuid
+  organizationId        String   @unique @db.Uuid
+  name                  String
+  description           String?  @db.Text
+  requireMfa            Boolean  @default(false)
+  mfaEnforcementLevel   String // OPTIONAL, REQUIRED_FOR_ADMINS, REQUIRED_FOR_ALL
+  sessionTimeoutMins    Int      @default(1440) // 24 hours
+  idleTimeoutMins       Int      @default(60)
+  maxConcurrentSessions Int      @default(5)
+  passwordMinLength     Int      @default(12)
+  passwordRequireNum    Boolean  @default(true)
+  passwordRequireSym    Boolean  @default(true)
+  passwordRequireUpper  Boolean  @default(true)
+  passwordExpiryDays    Int      @default(90)
+  passwordHistoryCount  Int      @default(5)
+  lockoutThreshold      Int      @default(5)
+  lockoutDurationMins   Int      @default(30)
+  enforceGeoRestriction Boolean  @default(false)
+  enforceIpRestriction  Boolean  @default(false)
+  enforceWorkingHours   Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  organization         Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  ipRanges             IPRange[]
-  geoRestrictions      GeoRestriction[]
-  workingHours         WorkingHoursPolicy[]
+  organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ipRanges        IPRange[]
+  geoRestrictions GeoRestriction[]
+  workingHours    WorkingHoursPolicy[]
 }
 
 model IPRange {
-  id             String               @id @default(uuid()) @db.Uuid
-  policyId       String               @db.Uuid
-  type           String               // ALLOWLIST, BLOCKLIST
-  cidr           String
-  description    String?
-  isActive       Boolean              @default(true)
-  createdAt      DateTime             @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  policyId    String   @db.Uuid
+  type        String // ALLOWLIST, BLOCKLIST
+  cidr        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
-  policy         AuthenticationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policy AuthenticationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
   @@index([policyId])
   @@index([type])
 }
 
 model GeoRestriction {
-  id             String               @id @default(uuid()) @db.Uuid
-  policyId       String               @db.Uuid
-  type           String               // ALLOWLIST, BLOCKLIST
-  countryCode    String               // ISO 3166-1 alpha-2
-  isActive       Boolean              @default(true)
-  createdAt      DateTime             @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  policyId    String   @db.Uuid
+  type        String // ALLOWLIST, BLOCKLIST
+  countryCode String // ISO 3166-1 alpha-2
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
-  policy         AuthenticationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policy AuthenticationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
   @@index([policyId])
 }
 
 model WorkingHoursPolicy {
-  id             String               @id @default(uuid()) @db.Uuid
-  policyId       String               @db.Uuid
-  timezone       String               @default("UTC")
-  monday         Boolean              @default(true)
-  tuesday        Boolean              @default(true)
-  wednesday      Boolean              @default(true)
-  thursday       Boolean              @default(true)
-  friday         Boolean              @default(true)
-  saturday       Boolean              @default(false)
-  sunday         Boolean              @default(false)
-  startTime      String               // "09:00"
-  endTime        String               // "17:00"
-  createdAt      DateTime             @default(now())
+  id        String   @id @default(uuid()) @db.Uuid
+  policyId  String   @db.Uuid
+  timezone  String   @default("UTC")
+  monday    Boolean  @default(true)
+  tuesday   Boolean  @default(true)
+  wednesday Boolean  @default(true)
+  thursday  Boolean  @default(true)
+  friday    Boolean  @default(true)
+  saturday  Boolean  @default(false)
+  sunday    Boolean  @default(false)
+  startTime String // "09:00"
+  endTime   String // "17:00"
+  createdAt DateTime @default(now())
 
-  policy         AuthenticationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policy AuthenticationPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
   @@index([policyId])
 }
@@ -2377,22 +2451,22 @@ model Notification {
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 
-  isRead         Boolean              @default(false)
-  readAt         DateTime?
-  isArchived     Boolean              @default(false)
-  archivedAt     DateTime?
-  isDeleted      Boolean              @default(false)
-  deletedAt      DateTime?
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+  isDeleted  Boolean   @default(false)
+  deletedAt  DateTime?
 
-  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template       NotificationTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  provider       NotificationProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template     NotificationTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  provider     NotificationProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
 
-  deliveries     NotificationDelivery[]
-  attachments    NotificationAttachment[]
-  analytics      NotificationAnalytics[]
-  schedule       NotificationSchedule?
+  deliveries  NotificationDelivery[]
+  attachments NotificationAttachment[]
+  analytics   NotificationAnalytics[]
+  schedule    NotificationSchedule?
 
   @@index([organizationId])
   @@index([userId])
@@ -2402,85 +2476,85 @@ model Notification {
 }
 
 model NotificationDelivery {
-  id             String               @id @default(uuid()) @db.Uuid
-  notificationId String               @db.Uuid
-  providerId     String?              @db.Uuid
+  id             String             @id @default(uuid()) @db.Uuid
+  notificationId String             @db.Uuid
+  providerId     String?            @db.Uuid
   status         NotificationStatus
   deliveryTime   DateTime?
-  latency        Int?                 // ms
-  retryCount     Int                  @default(0)
-  error          String?              @db.Text
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  latency        Int? // ms
+  retryCount     Int                @default(0)
+  error          String?            @db.Text
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
-  notification   Notification         @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-  provider       NotificationProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  notification Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  provider     NotificationProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
 
   @@index([notificationId])
   @@index([status])
 }
 
 model NotificationTemplate {
-  id             String               @id @default(uuid()) @db.Uuid
-  organizationId String               @db.Uuid
+  id             String                   @id @default(uuid()) @db.Uuid
+  organizationId String                   @db.Uuid
   name           String
   slug           String
   type           NotificationTemplateType
   subject        String?
-  content        String               @db.Text
-  language       String               @default("en")
-  version        String               @default("1.0.0")
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  content        String                   @db.Text
+  language       String                   @default("en")
+  version        String                   @default("1.0.0")
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
 
-  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  notifications  Notification[]
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  notifications Notification[]
 
   @@unique([organizationId, slug, language])
   @@index([organizationId])
 }
 
 model NotificationPreference {
-  id             String               @id @default(uuid()) @db.Uuid
-  organizationId String               @db.Uuid
-  userId         String?              @db.Uuid
-  department     String?
-  team           String?
-  enabledChannels String?             @db.Text // JSON string list
-  disabledChannels String?            @db.Text // JSON string list
-  quietHoursStart String?             // "HH:MM"
-  quietHoursEnd   String?             // "HH:MM"
-  digestMode      Boolean              @default(false)
-  digestFrequency String?             // "DAILY", "WEEKLY"
-  priorityLevel   NotificationPriority @default(LOW)
-  frequencyLimit  Int?                 // Max notifications per hour
-  language        String               @default("en")
-  timezone        String               @default("UTC")
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  id               String               @id @default(uuid()) @db.Uuid
+  organizationId   String               @db.Uuid
+  userId           String?              @db.Uuid
+  department       String?
+  team             String?
+  enabledChannels  String?              @db.Text // JSON string list
+  disabledChannels String?              @db.Text // JSON string list
+  quietHoursStart  String? // "HH:MM"
+  quietHoursEnd    String? // "HH:MM"
+  digestMode       Boolean              @default(false)
+  digestFrequency  String? // "DAILY", "WEEKLY"
+  priorityLevel    NotificationPriority @default(LOW)
+  frequencyLimit   Int? // Max notifications per hour
+  language         String               @default("en")
+  timezone         String               @default("UTC")
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
-  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([userId])
 }
 
 model NotificationProvider {
-  id             String               @id @default(uuid()) @db.Uuid
-  organizationId String?              @db.Uuid
+  id             String                   @id @default(uuid()) @db.Uuid
+  organizationId String?                  @db.Uuid
   name           String
   type           NotificationProviderType
-  config         String               @db.Text // Encrypted config JSON
-  vaultSecretId  String?              @db.Uuid
-  isActive       Boolean              @default(true)
-  priority       Int                  @default(0)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  config         String                   @db.Text // Encrypted config JSON
+  vaultSecretId  String?                  @db.Uuid
+  isActive       Boolean                  @default(true)
+  priority       Int                      @default(0)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
 
-  organization   Organization?        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  notifications  Notification[]
-  deliveries     NotificationDelivery[]
+  organization  Organization?          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+  deliveries    NotificationDelivery[]
 
   @@index([organizationId])
 }
@@ -2501,88 +2575,1104 @@ model NotificationQueue {
 }
 
 model NotificationAudit {
-  id             String               @id @default(uuid()) @db.Uuid
-  organizationId String               @db.Uuid
-  userId         String?              @db.Uuid
-  notificationId String?              @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  userId         String?  @db.Uuid
+  notificationId String?  @db.Uuid
   action         String
   ipAddress      String?
   userAgent      String?
-  metadata       String?              @db.Text // JSON string
-  createdAt      DateTime             @default(now())
+  metadata       String?  @db.Text // JSON string
+  createdAt      DateTime @default(now())
 
-  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([createdAt])
 }
 
 model NotificationWebhook {
-  id             String               @id @default(uuid()) @db.Uuid
-  organizationId String               @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
   url            String
-  secret         String               // HMAC signing key
-  events         String               // JSON array of event types
-  isActive       Boolean              @default(true)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  secret         String // HMAC signing key
+  events         String // JSON array of event types
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
 }
 
 model NotificationAttachment {
-  id             String               @id @default(uuid()) @db.Uuid
-  notificationId String               @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  notificationId String   @db.Uuid
   fileName       String
   filePath       String
   fileSize       Int
   mimeType       String
-  createdAt      DateTime             @default(now())
+  createdAt      DateTime @default(now())
 
-  notification   Notification         @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 
   @@index([notificationId])
 }
 
 model NotificationAnalytics {
-  id             String               @id @default(uuid()) @db.Uuid
-  organizationId String               @db.Uuid
-  notificationId String?              @db.Uuid
+  id             String                   @id @default(uuid()) @db.Uuid
+  organizationId String                   @db.Uuid
+  notificationId String?                  @db.Uuid
   channel        NotificationChannel
   providerType   NotificationProviderType
   status         DeliveryStatus
-  latency        Int?                 // ms
-  isRead         Boolean              @default(false)
+  latency        Int? // ms
+  isRead         Boolean                  @default(false)
   readAt         DateTime?
-  isClicked      Boolean              @default(false)
+  isClicked      Boolean                  @default(false)
   clickedAt      DateTime?
-  metadata       String?              @db.Text // JSON string
-  timestamp      DateTime             @default(now())
+  metadata       String?                  @db.Text // JSON string
+  timestamp      DateTime                 @default(now())
 
-  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  notification   Notification?        @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([timestamp])
 }
 
 model NotificationSchedule {
-  id             String               @id @default(uuid()) @db.Uuid
-  notificationId String               @db.Uuid @unique
+  id             String    @id @default(uuid()) @db.Uuid
+  notificationId String    @unique @db.Uuid
   cronExpression String?
   intervalMs     Int?
   runAt          DateTime?
-  timezone       String               @default("UTC")
+  timezone       String    @default("UTC")
   lastRunAt      DateTime?
   nextRunAt      DateTime?
-  isActive       Boolean              @default(true)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  notification   Notification         @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 
   @@index([nextRunAt])
 }
 
+// ==========================================
+// Agent Runtime Engine (Phase 6.19)
+// ==========================================
+
+enum AgentExecutionStatus {
+  PENDING
+  RUNNING
+  PAUSED
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum DelegationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  FAILED
+}
+
+enum AgentEventType {
+  START
+  STEP
+  TOOL_CALL
+  TOOL_RESULT
+  DELEGATION
+  PAUSE
+  RESUME
+  COMPLETE
+  ERROR
+}
+
+enum LockStatus {
+  ACQUIRED
+  RELEASED
+  EXPIRED
+}
+
+model AgentRuntimeConfiguration {
+  id               String   @id @default(uuid()) @db.Uuid
+  agentId          String   @unique @db.Uuid
+  enabled          Boolean  @default(true)
+  maxIterations    Int      @default(10)
+  executionTimeout Int      @default(60000)
+  maxTokens        Int      @default(4096)
+  modelRouting     String?  @db.Text // JSON config for model routing
+  fallbackModels   String?  @db.Text // JSON list of fallback models
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model AgentPolicy {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  description    String?  @db.Text
+  rules          String   @db.Text // JSON policy rules (e.g. allowed models, max budget)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model AgentExecution {
+  id             String               @id @default(uuid()) @db.Uuid
+  organizationId String               @db.Uuid
+  agentId        String               @db.Uuid
+  sessionId      String?              @db.Uuid
+  status         AgentExecutionStatus @default(PENDING)
+  goal           String               @db.Text
+  result         String?              @db.Text
+  error          String?              @db.Text
+  startedAt      DateTime             @default(now())
+  finishedAt     DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agent        Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  session      AgentSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  steps       AgentExecutionStep[]
+  logs        AgentExecutionLog[]
+  metrics     AgentPerformanceMetrics?
+  checkpoints AgentCheckpoint[]
+  snapshots   AgentExecutionSnapshot[]
+
+  @@index([organizationId])
+  @@index([agentId])
+  @@index([status])
+}
+
+model AgentExecutionStep {
+  id          String   @id @default(uuid()) @db.Uuid
+  executionId String   @db.Uuid
+  stepNumber  Int
+  thought     String?  @db.Text
+  action      String?  @db.Text
+  observation String?  @db.Text
+  duration    Int? // in ms
+  createdAt   DateTime @default(now())
+
+  execution AgentExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([stepNumber])
+}
+
+model AgentSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  agentId        String    @db.Uuid
+  userId         String?   @db.Uuid
+  isActive       Boolean   @default(true)
+  metadata       String?   @db.Text
+  startedAt      DateTime  @default(now())
+  endedAt        DateTime?
+
+  organization Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agent        Agent                   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user         User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  executions   AgentExecution[]
+  streams      AgentStreamingSession[]
+
+  @@index([organizationId])
+  @@index([agentId])
+}
+
+model AgentDelegation {
+  id             String           @id @default(uuid()) @db.Uuid
+  sourceAgentId  String           @db.Uuid
+  targetAgentId  String           @db.Uuid
+  taskId         String?          @db.Uuid
+  status         DelegationStatus @default(PENDING)
+  taskDefinition String           @db.Text
+  result         String?          @db.Text
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  sourceAgent Agent      @relation("DelegatedFrom", fields: [sourceAgentId], references: [id], onDelete: Cascade)
+  targetAgent Agent      @relation("DelegatedTo", fields: [targetAgentId], references: [id], onDelete: Cascade)
+  task        AgentTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([sourceAgentId])
+  @@index([targetAgentId])
+  @@index([status])
+}
+
+model AgentCheckpoint {
+  id          String   @id @default(uuid()) @db.Uuid
+  executionId String   @db.Uuid
+  state       String   @db.Text // Serialized JSON state
+  createdAt   DateTime @default(now())
+
+  execution AgentExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+}
+
+model AgentExecutionSnapshot {
+  id          String   @id @default(uuid()) @db.Uuid
+  executionId String   @db.Uuid
+  data        String   @db.Text // Full dump
+  createdAt   DateTime @default(now())
+
+  execution AgentExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+}
+
+model AgentContext {
+  id        String   @id @default(uuid()) @db.Uuid
+  agentId   String   @db.Uuid
+  key       String
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, key])
+}
+
+model AgentState {
+  id        String   @id @default(uuid()) @db.Uuid
+  agentId   String   @db.Uuid
+  state     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId])
+}
+
+model AgentEvent {
+  id        String         @id @default(uuid()) @db.Uuid
+  agentId   String         @db.Uuid
+  type      AgentEventType
+  payload   String         @db.Text
+  timestamp DateTime       @default(now())
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([timestamp])
+}
+
+model AgentExecutionLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  executionId String   @db.Uuid
+  level       String // INFO, WARN, ERROR
+  message     String   @db.Text
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  execution AgentExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+}
+
+model AgentResourceLock {
+  id         String     @id @default(uuid()) @db.Uuid
+  resourceId String     @unique
+  owner      String // Worker ID
+  status     LockStatus @default(ACQUIRED)
+  expiresAt  DateTime
+  createdAt  DateTime   @default(now())
+}
+
+model AgentHeartbeat {
+  id         String   @id @default(uuid()) @db.Uuid
+  agentId    String   @unique @db.Uuid
+  lastActive DateTime @default(now())
+  status     String // ONLINE, OFFLINE
+  metadata   String?  @db.Text
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model AgentPerformanceMetrics {
+  id               String   @id @default(uuid()) @db.Uuid
+  executionId      String   @unique @db.Uuid
+  totalLatency     Int // in ms
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalCost        Decimal  @default(0) @db.Decimal(12, 4)
+  createdAt        DateTime @default(now())
+
+  execution AgentExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+}
+
+model AgentStreamingSession {
+  id           String    @id @default(uuid()) @db.Uuid
+  sessionId    String    @db.Uuid
+  connectionId String    @unique
+  status       String // ACTIVE, CLOSED
+  startedAt    DateTime  @default(now())
+  closedAt     DateTime?
+
+  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+// ==========================================
+// Phase 6.19 Model Gateway & LLM Orchestration
+// ==========================================
+
+model AIProvider {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String // e.g. "openai", "anthropic", "gemini", "azure", "bedrock"
+  baseUrl        String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization                  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  models       AIModel[]
+  credentials  ProviderCredentialReference[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model ProviderCredentialReference {
+  id            String   @id @default(uuid()) @db.Uuid
+  providerId    String   @db.Uuid
+  vaultSecretId String   @db.Uuid
+  createdAt     DateTime @default(now())
+
+  provider AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model AIModel {
+  id              String   @id @default(uuid()) @db.Uuid
+  providerId      String   @db.Uuid
+  name            String // e.g. "gpt-4"
+  modelId         String // e.g. "gpt-4-0613"
+  contextWindow   Int
+  maxOutputTokens Int
+  inputCostPer1k  Decimal  @db.Decimal(10, 6)
+  outputCostPer1k Decimal  @db.Decimal(10, 6)
+  isActive        Boolean  @default(true)
+  isFallback      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  provider      AIProvider          @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  capabilities  AIModelCapability[]
+  routingRules  ModelRoutingRule[]
+  fallbackRules ModelFallback[]
+  healthChecks  ModelHealth[]
+
+  @@unique([providerId, modelId])
+  @@index([providerId])
+}
+
+model AIModelCapability {
+  id         String   @id @default(uuid()) @db.Uuid
+  modelId    String   @db.Uuid
+  capability String // "chat", "completion", "embedding", "vision", "audio", "function-calling", "json-mode", "reasoning"
+  createdAt  DateTime @default(now())
+
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, capability])
+}
+
+model PromptLibrary {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  description    String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  categories   PromptCategory[]
+  templates    PromptTemplate[]
+
+  @@index([organizationId])
+}
+
+model PromptCategory {
+  id        String   @id @default(uuid()) @db.Uuid
+  libraryId String   @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+
+  library   PromptLibrary    @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  templates PromptTemplate[]
+
+  @@index([libraryId])
+}
+
+model PromptTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  libraryId   String   @db.Uuid
+  categoryId  String?  @db.Uuid
+  name        String
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  library    PromptLibrary     @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  category   PromptCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  versions   PromptVersion[]
+  executions PromptExecution[]
+
+  @@index([libraryId])
+  @@index([categoryId])
+}
+
+model PromptVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  templateId    String   @db.Uuid
+  versionNumber Int
+  content       String   @db.Text
+  modelId       String?  @db.Uuid
+  temperature   Float    @default(0.7)
+  topP          Float    @default(1.0)
+  maxTokens     Int      @default(2048)
+  status        String // DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, ARCHIVED
+  createdAt     DateTime @default(now())
+
+  template  PromptTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  variables PromptVariable[]
+  approvals PromptApproval[]
+  audits    PromptAudit[]
+
+  @@unique([templateId, versionNumber])
+  @@index([templateId])
+}
+
+model PromptVariable {
+  id         String   @id @default(uuid()) @db.Uuid
+  versionId  String   @db.Uuid
+  name       String
+  type       String // string, number, boolean
+  isRequired Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  version PromptVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId])
+}
+
+model PromptApproval {
+  id         String   @id @default(uuid()) @db.Uuid
+  versionId  String   @db.Uuid
+  status     String // APPROVED, REJECTED
+  reviewerId String   @db.Uuid
+  comments   String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  version PromptVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId])
+}
+
+model PromptAudit {
+  id        String   @id @default(uuid()) @db.Uuid
+  versionId String   @db.Uuid
+  action    String
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  version PromptVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId])
+}
+
+model PromptExecution {
+  id             String   @id @default(uuid()) @db.Uuid
+  templateId     String   @db.Uuid
+  organizationId String   @db.Uuid
+  userId         String?  @db.Uuid
+  variables      String?  @db.Text // JSON
+  result         String?  @db.Text
+  latency        Int?
+  tokensUsed     Int?
+  cost           Decimal? @db.Decimal(10, 6)
+  status         String // SUCCESS, FAILED
+  error          String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  template     PromptTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@index([organizationId])
+}
+
+model PromptCache {
+  id        String   @id @default(uuid()) @db.Uuid
+  hashKey   String   @unique
+  response  String   @db.Text
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([hashKey])
+}
+
+model ModelUsage {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  model          String
+  tokens         Int
+  cost           Decimal  @db.Decimal(10, 6)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([model])
+  @@index([createdAt])
+}
+
+model ModelCost {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  date           DateTime @db.Date
+  model          String
+  totalCost      Decimal  @db.Decimal(10, 6)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, date, model])
+}
+
+model ModelHealth {
+  id          String   @id @default(uuid()) @db.Uuid
+  modelId     String   @db.Uuid
+  status      String // HEALTHY, DEGRADED, DOWN
+  latency     Int
+  errorRate   Float
+  lastChecked DateTime @default(now())
+
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+}
+
+model ModelFallback {
+  id              String   @id @default(uuid()) @db.Uuid
+  primaryModelId  String   @db.Uuid
+  fallbackModelId String   @db.Uuid
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  primaryModel AIModel @relation(fields: [primaryModelId], references: [id], onDelete: Cascade)
+
+  @@index([primaryModelId])
+}
+
+model ModelRoutingRule {
+  id         String   @id @default(uuid()) @db.Uuid
+  modelId    String   @db.Uuid
+  criteria   String   @db.Text // JSON logic for matching this rule
+  priority   Int      @default(0)
+  trafficPct Int      @default(100) // For A/B routing
+  createdAt  DateTime @default(now())
+
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+}
+
+model ModelQuota {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  model          String
+  dailyLimit     Int
+  monthlyLimit   Int
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, model])
+}
+
+model TokenUsage {
+  id               String   @id @default(uuid()) @db.Uuid
+  organizationId   String   @db.Uuid
+  promptTokens     Int
+  completionTokens Int
+  totalTokens      Int
+  createdAt        DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model CompletionLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  model          String
+  prompt         String   @db.Text
+  completion     String?  @db.Text
+  latencyMs      Int?
+  status         String // SUCCESS, FAILED
+  error          String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([model])
+}
+
+model StreamingSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  model          String
+  status         String // ACTIVE, CLOSED, ERROR
+  startedAt      DateTime  @default(now())
+  endedAt        DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model EmbeddingExecution {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  model          String
+  inputLength    Int
+  tokensUsed     Int
+  latencyMs      Int
+  status         String // SUCCESS, FAILED
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model ImageGenerationExecution {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  model          String
+  prompt         String   @db.Text
+  size           String
+  latencyMs      Int
+  status         String // SUCCESS, FAILED
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model AudioGenerationExecution {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  model          String
+  text           String?  @db.Text
+  audioLengthSec Int?
+  latencyMs      Int
+  status         String // SUCCESS, FAILED
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model ModelPerformanceMetrics {
+  id         String   @id @default(uuid()) @db.Uuid
+  model      String
+  timestamp  DateTime @default(now())
+  avgLatency Float
+  errorRate  Float
+  p95Latency Float
+  p99Latency Float
+
+  @@index([model])
+  @@index([timestamp])
+}
+
+model ModelFeedback {
+  id              String   @id @default(uuid()) @db.Uuid
+  organizationId  String   @db.Uuid
+  model           String
+  thumbsUp        Boolean  @default(false)
+  thumbsDown      Boolean  @default(false)
+  rating          Int? // 1-5 or 1-10
+  comment         String?  @db.Text
+  preferredModel  String?
+  responseQuality Float? // Calculated score
+  latencyScore    Float? // Calculated score
+  createdAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([model])
+}
+
+
+// ==========================================
+// Integrations & Connectors (Phase 6.20)
+// ==========================================
+
+model IntegrationProvider {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  category    String?
+  website     String?
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  instances IntegrationInstance[]
+}
+
+model IntegrationInstance {
+  id             String   @id @default(uuid()) @db.Uuid
+  providerId     String   @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  status         String   @default("ACTIVE") // ACTIVE, ERROR, DISABLED
+  configuration  String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  provider     IntegrationProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([providerId])
+}
+
+model ConnectorDefinition {
+  id             String   @id @default(uuid()) @db.Uuid
+  providerSlug   String
+  name           String
+  description    String?
+  version        String   @default("1.0.0")
+  capabilities   String   @db.Text // JSON: array of supported capabilities
+  schema         String?  @db.Text // JSON schema for configuration
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ConnectorConfiguration {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  config         String   @db.Text // JSON
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([connectorId])
+}
+
+model ConnectorCredential {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  vaultKey       String   @unique // Reference to vault secret
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([connectorId])
+}
+
+model ConnectorPermission {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  action         String
+  roleId         String?  @db.Uuid
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([connectorId])
+}
+
+model PluginEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  pluginId       String   @db.Uuid
+  organizationId String   @db.Uuid
+  eventType      String
+  payload        String   @db.Text // JSON
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plugin       Plugin       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([pluginId])
+}
+
+model PluginLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  pluginId       String   @db.Uuid
+  organizationId String   @db.Uuid
+  level          String
+  message        String   @db.Text
+  timestamp      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plugin       Plugin       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([pluginId])
+}
+
+model PluginSchedule {
+  id             String   @id @default(uuid()) @db.Uuid
+  pluginId       String   @db.Uuid
+  organizationId String   @db.Uuid
+  cron           String
+  action         String
+  enabled        Boolean  @default(true)
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plugin       Plugin       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([pluginId])
+}
+
+model PluginWebhook {
+  id             String   @id @default(uuid()) @db.Uuid
+  pluginId       String   @db.Uuid
+  organizationId String   @db.Uuid
+  path           String
+  method         String   @default("POST")
+  secretKey      String?
+  enabled        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plugin       Plugin       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([pluginId])
+}
+
+model OAuthConnection {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  provider       String
+  clientId       String
+  clientSecret   String   // Should ideally be in vault
+  status         String   @default("PENDING") // PENDING, CONNECTED, ERROR
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tokens       OAuthToken[]
+
+  @@index([organizationId])
+}
+
+model OAuthToken {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectionId   String   @db.Uuid
+  accessToken    String   @db.Text // Should be in vault
+  refreshToken   String?  @db.Text // Should be in vault
+  expiresAt      DateTime?
+  scopes         String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  connection OAuthConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+}
+
+model WebhookSubscription {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  url            String
+  events         String   @db.Text // JSON array of event names
+  secret         String?
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model ExternalAccount {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  provider       String
+  accountId      String
+  metadata       String?  @db.Text // JSON
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@unique([provider, accountId])
+}
+
+model ExternalEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  source         String
+  type           String
+  payload        String   @db.Text // JSON
+  processed      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([processed])
+}
+
+model ConnectorHealth {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  status         String   // HEALTHY, DEGRADED, DOWN
+  latencyMs      Int
+  errorRate      Float
+  lastCheckedAt  DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([connectorId])
+}
+
+model ConnectorUsage {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  action         String
+  count          Int      @default(0)
+  date           DateTime @db.Date
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, connectorId, action, date])
+}
+
+model ConnectorMetrics {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  timestamp      DateTime @default(now())
+  avgLatencyMs   Float
+  successRate    Float
+  totalRequests  Int
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([connectorId])
+}
+
+model ConnectorAudit {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  userId         String?  @db.Uuid
+  action         String
+  status         String
+  details        String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([connectorId])
+}
+
+model ConnectorPolicy {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  rules          String   @db.Text // JSON
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([connectorId])
+}
+
+model ConnectorQuota {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectorId    String   @db.Uuid // Refers to Connector
+  organizationId String   @db.Uuid
+  dailyLimit     Int
+  monthlyLimit   Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    Connector    @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, connectorId])
+}
+
+model IntegrationCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+}
+
+model PluginMarketplaceEntry {
+  id             String   @id @default(uuid()) @db.Uuid
+  pluginId       String   @db.Uuid
+  categoryId     String   @db.Uuid
+  featured       Boolean  @default(false)
+  downloads      Int      @default(0)
+  rating         Float    @default(0.0)
+  publishedAt    DateTime @default(now())
+
+  plugin Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@index([pluginId])
+  @@index([categoryId])
+}

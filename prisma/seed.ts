@@ -23,6 +23,38 @@ async function main() {
   }
 
   console.log(`Successfully seeded ${count} permissions.`);
+
+  // Create a default organization for the providers
+  const org = await prisma.organization.upsert({
+    where: { slug: 'system-default-org' },
+    update: {},
+    create: {
+      name: 'System Default Org',
+      slug: 'system-default-org',
+    }
+  });
+
+  // Seed default AI Providers
+  const providers = ['openai', 'anthropic', 'gemini', 'groq', 'openrouter', 'ollama'];
+  let providerCount = 0;
+  for (const name of providers) {
+    await prisma.aIProvider.upsert({
+      where: {
+        organizationId_name: {
+          organizationId: org.id,
+          name: name
+        }
+      },
+      update: {},
+      create: {
+        organizationId: org.id,
+        name: name,
+        isActive: true
+      }
+    });
+    providerCount++;
+  }
+  console.log(`Successfully seeded ${providerCount} AI Providers.`);
 }
 
 main()
