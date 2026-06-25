@@ -1,0 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const model_controller_1 = require("../controllers/model.controller");
+const prompt_controller_1 = require("../controllers/prompt.controller");
+const router = (0, express_1.Router)();
+const modelController = new model_controller_1.ModelController();
+const promptController = new prompt_controller_1.PromptController();
+// Models
+router.get('/models', (req, res) => modelController.listModels(req, res));
+router.get('/models/providers', (req, res) => modelController.listProviders(req, res));
+router.post('/models/chat', (req, res) => modelController.chat(req, res));
+router.post('/models/completion', (req, res) => modelController.completion(req, res));
+router.post('/models/stream', (req, res) => modelController.stream(req, res));
+router.post('/models/embeddings', (req, res) => modelController.embeddings(req, res));
+router.post('/models/image', (req, res) => modelController.image(req, res));
+router.post('/models/audio', (req, res) => modelController.audio(req, res));
+router.post('/models/function-call', (req, res) => modelController.functionCall(req, res));
+router.post('/models/json', (req, res) => modelController.json(req, res));
+router.get('/models/usage', (req, res) => modelController.usage(req, res));
+router.get('/models/cost', (req, res) => modelController.cost(req, res));
+router.get('/models/health', (req, res) => modelController.health(req, res));
+router.get('/models/metrics', (req, res) => modelController.metrics(req, res));
+// Prompts
+router.get('/prompts', (req, res) => promptController.listPrompts(req, res));
+router.post('/prompts', (req, res) => promptController.createPrompt(req, res));
+router.put('/prompts/:id', (req, res) => promptController.updatePrompt(req, res));
+router.delete('/prompts/:id', (req, res) => promptController.deletePrompt(req, res));
+router.post('/prompts/render', (req, res) => promptController.renderPrompt(req, res));
+router.post('/prompts/version', (req, res) => promptController.createVersion(req, res));
+exports.default = router;

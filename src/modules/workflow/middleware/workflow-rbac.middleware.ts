@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const authorizeWorkflow = (action: 'read' | 'write' | 'execute' | 'delete') => {
   return async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = req.user!;
       if (!user) {
         throw new AuthorizationError('Authentication required.');
       }
@@ -17,8 +17,8 @@ export const authorizeWorkflow = (action: 'read' | 'write' | 'execute' | 'delete
 
       // 1. Evaluate general permissions mapping
       const requiredPermission = `workflow:${action}`;
-      const hasPermission = user.permissions.includes(requiredPermission) || 
-                            user.permissions.includes('workflow:admin') ||
+      const hasPermission = user.permissions?.includes(requiredPermission) || 
+                            user.permissions?.includes('workflow:admin') ||
                             user.role?.name === 'Owner' || 
                             user.role?.name === 'Admin';
 

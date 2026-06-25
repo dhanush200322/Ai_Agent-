@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const rbac_controller_1 = require("../controllers/rbac.controller");
+const validate_1 = require("../../../middleware/validate");
+const auth_1 = require("../../../middleware/auth");
+const authorize_1 = require("../../../middleware/authorize");
+const asyncHandler_1 = require("../../../shared/utils/asyncHandler");
+const rbac_validator_1 = require("../validators/rbac.validator");
+const router = (0, express_1.Router)();
+const rbacController = new rbac_controller_1.RBACController();
+router.put('/:id/role', auth_1.authenticate, (0, authorize_1.authorize)('user:update'), (0, validate_1.validate)(rbac_validator_1.assignRoleSchema), (0, asyncHandler_1.asyncHandler)(rbacController.assignUserRole));
+exports.default = router;

@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function checkNotificationQuota(req: Request, res: Response, next: NextFunction) {
-  const organizationId = (req as any).user?.organizationId;
+  const organizationId = req.user?.organizationId;
   if (!organizationId) {
     return res.status(400).json({ error: 'Organization ID not found in token' });
   }

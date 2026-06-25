@@ -7,8 +7,8 @@ export class VaultController {
   private rotationEngine = new RotationEngine();
 
   async storeSecret(req: Request, res: Response) {
-    const organizationId = (req as any).user.organizationId;
-    const actorId = (req as any).user.id;
+    const organizationId = req.user!.organizationId;
+    const actorId = req.user!.id;
     const { name, value, category, description } = req.body;
 
     try {
@@ -20,7 +20,7 @@ export class VaultController {
   }
 
   async listSecrets(req: Request, res: Response) {
-    const organizationId = (req as any).user.organizationId;
+    const organizationId = req.user!.organizationId;
     const { category } = req.query;
     
     try {
@@ -32,7 +32,7 @@ export class VaultController {
   }
 
   async retrieveSecret(req: Request, res: Response) {
-    const actorId = (req as any).user.id;
+    const actorId = req.user!.id;
     const { id } = req.params;
     
     try {
@@ -48,7 +48,7 @@ export class VaultController {
   }
 
   async rotateSecret(req: Request, res: Response) {
-    const actorId = (req as any).user.id;
+    const actorId = req.user!.id;
     const { id } = req.params;
     const { newValue } = req.body; // Manual Rotation
     
@@ -67,7 +67,7 @@ export class VaultController {
   }
 
   async revokeSecret(req: Request, res: Response) {
-    const actorId = (req as any).user.id;
+    const actorId = req.user!.id;
     const { id } = req.params;
     
     try {
@@ -79,8 +79,8 @@ export class VaultController {
   }
 
   async createLease(req: Request, res: Response) {
-    const organizationId = (req as any).user.organizationId;
-    const actorId = (req as any).user.id;
+    const organizationId = req.user!.organizationId;
+    const actorId = req.user!.id;
     const { id } = req.params;
     const { ttlSeconds, actorType } = req.body;
 

@@ -1,3 +1,3 @@
 # Performance Report
 
-Workflow overhead minimal.
+Async fire-and-forget metrics verified.

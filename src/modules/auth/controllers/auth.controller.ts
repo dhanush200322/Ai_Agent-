@@ -43,7 +43,7 @@ export class AuthController {
   };
 
   logout = async (req: Request, res: Response) => {
-    const sessionId = (req as any).sessionId;
+    const sessionId = req.sessionId;
     if (sessionId) {
       await this.authEngine.logout(sessionId);
       await this.authQueue.add('logout', { sessionId });
@@ -70,15 +70,15 @@ export class AuthController {
   };
 
   passwordChange = async (req: Request, res: Response) => {
-    const userId = (req as any).user.id;
+    const userId = req.user!.id;
     await this.authQueue.add('password-change', { userId });
     await this.auditQueue.add('audit', { action: 'PASSWORD_CHANGE', userId });
     res.status(200).json(ApiResponse.success(null, 'Password changed successfully', req.reqId));
   };
 
   mfaSetup = async (req: Request, res: Response) => {
-    const user = (req as any).user;
-    const { secret, qrCodeUrl } = await this.mfaEngine.generateSecret(user.email);
+    const user = req.user!;
+    const { secret, qrCodeUrl } = await this.mfaEngine.generateSecret(user.email!);
     res.status(200).json(ApiResponse.success({ secret, qrCodeUrl }, 'MFA Setup initialized', req.reqId));
   };
 
@@ -97,7 +97,7 @@ export class AuthController {
   };
 
   mfaDisable = async (req: Request, res: Response) => {
-    const userId = (req as any).user.id;
+    const userId = req.user!.id;
     await prisma.userMFA.updateMany({ where: { userId }, data: { isEnabled: false } });
     await this.authQueue.add('mfa-disabled', { userId });
     await this.auditQueue.add('audit', { action: 'MFA_DISABLED', userId });
@@ -105,7 +105,7 @@ export class AuthController {
   };
 
   getSessions = async (req: Request, res: Response) => {
-    const userId = (req as any).user.id;
+    const userId = req.user!.id;
     const sessions = await this.sessionService.listActiveSessions(userId);
     res.status(200).json(ApiResponse.success(sessions, 'Sessions retrieved', req.reqId));
   };
@@ -118,7 +118,7 @@ export class AuthController {
   };
 
   revokeAllSessions = async (req: Request, res: Response) => {
-    const userId = (req as any).user.id;
+    const userId = req.user!.id;
     await this.sessionService.revokeAllUserSessions(userId);
     res.status(200).json(ApiResponse.success(null, 'All sessions revoked', req.reqId));
   };

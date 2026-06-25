@@ -18,7 +18,7 @@ export class BillingController {
   }
 
   async getSubscription(req: Request, res: Response) {
-    const organizationId = (req as any).user.organizationId;
+    const organizationId = req.user!.organizationId;
     const sub = await prisma.organizationSubscription.findUnique({
       where: { organizationId },
       include: { plan: true }
@@ -27,7 +27,7 @@ export class BillingController {
   }
 
   async subscribe(req: Request, res: Response) {
-    const organizationId = (req as any).user.organizationId;
+    const organizationId = req.user!.organizationId;
     const { planId } = req.body;
     try {
       const sub = await this.subscriptionEngine.subscribe(organizationId, planId);
@@ -38,7 +38,7 @@ export class BillingController {
   }
 
   async cancel(req: Request, res: Response) {
-    const organizationId = (req as any).user.organizationId;
+    const organizationId = req.user!.organizationId;
     const sub = await this.subscriptionEngine.cancel(organizationId);
     res.json(sub);
   }

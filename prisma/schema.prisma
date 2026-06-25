@@ -168,24 +168,34 @@ model Organization {
   modelFeedback             ModelFeedback[]
 
   // Phase 6.20 Integration Relations
-  integrationInstances      IntegrationInstance[]
-  connectorConfigurations   ConnectorConfiguration[]
-  connectorCredentials      ConnectorCredential[]
-  connectorPermissions      ConnectorPermission[]
-  pluginEvents              PluginEvent[]
-  pluginLogs                PluginLog[]
-  pluginSchedules           PluginSchedule[]
-  pluginWebhooks            PluginWebhook[]
-  oauthConnections          OAuthConnection[]
-  webhookSubscriptions      WebhookSubscription[]
-  externalAccounts          ExternalAccount[]
-  externalEvents            ExternalEvent[]
-  connectorHealths          ConnectorHealth[]
-  connectorUsages           ConnectorUsage[]
-  connectorMetrics          ConnectorMetrics[]
-  connectorAudits           ConnectorAudit[]
-  connectorPolicies         ConnectorPolicy[]
-  connectorQuotas           ConnectorQuota[]
+  integrationInstances    IntegrationInstance[]
+  connectorConfigurations ConnectorConfiguration[]
+  connectorCredentials    ConnectorCredential[]
+  connectorPermissions    ConnectorPermission[]
+  pluginEvents            PluginEvent[]
+  pluginLogs              PluginLog[]
+  pluginSchedules         PluginSchedule[]
+  pluginWebhooks          PluginWebhook[]
+  oauthConnections        OAuthConnection[]
+  webhookSubscriptions    WebhookSubscription[]
+  externalAccounts        ExternalAccount[]
+  externalEvents          ExternalEvent[]
+  connectorHealths        ConnectorHealth[]
+  connectorUsages         ConnectorUsage[]
+  connectorMetrics        ConnectorMetrics[]
+  connectorAudits         ConnectorAudit[]
+  connectorPolicies       ConnectorPolicy[]
+  connectorQuotas         ConnectorQuota[]
+
+  // Phase 6.21 Observability Relations
+  alertHistories     AlertHistory[]
+  alertNotifications AlertNotification[]
+  errorLogs          ErrorLog[]
+  usageAnalytics     UsageAnalytics[]
+  tokenAnalytics     TokenAnalytics[]
+  costAnalytics      CostAnalytics[]
+
+  DeveloperOAuthApplication DeveloperOAuthApplication[]
 
   @@index([status])
 }
@@ -242,6 +252,7 @@ model User {
 
   // Phase 6.19 Agent Runtime
   agentSessions AgentSession[]
+  Developer     Developer?
 
   @@index([organizationId])
   @@index([roleId])
@@ -1097,10 +1108,10 @@ model Plugin {
   versions      PluginVersion[]
   installations PluginInstallation[]
 
-  events        PluginEvent[]
-  logs          PluginLog[]
-  schedules     PluginSchedule[]
-  webhooks      PluginWebhook[]
+  events             PluginEvent[]
+  logs               PluginLog[]
+  schedules          PluginSchedule[]
+  webhooks           PluginWebhook[]
   marketplaceEntries PluginMarketplaceEntry[]
 
   @@index([visibility])
@@ -1374,16 +1385,22 @@ model DashboardSnapshot {
 // ==========================================
 
 model ApiKey {
-  id             String    @id @default(uuid()) @db.Uuid
-  organizationId String    @db.Uuid
-  name           String
-  keyHash        String    @unique
-  prefix         String
-  status         String    @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
-  expiresAt      DateTime?
-  lastUsedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  createdById    String?   @db.Uuid
+  id                     String    @id @default(uuid()) @db.Uuid
+  organizationId         String    @db.Uuid
+  type                   String    @default("INTERNAL")
+  ownerType              String    @default("SYSTEM")
+  developerApplicationId String?   @db.Uuid
+  name                   String
+  keyHash                String    @unique
+  prefix                 String
+  status                 String    @default("ACTIVE")
+  permissionsJson        Json?
+  rateLimit              Int?
+  quota                  Int?
+  expiresAt              DateTime?
+  lastUsedAt             DateTime?
+  createdAt              DateTime  @default(now())
+  createdById            String?   @db.Uuid
 
   organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   permissions  ApiKeyPermission[]
@@ -1462,14 +1479,6 @@ model ApiRequestLog {
   @@index([apiKeyId])
   @@index([timestamp])
   @@index([correlationId])
-}
-
-model ApiVersion {
-  id           String    @id @default(uuid()) @db.Uuid
-  version      String    @unique // "v1", "v2"
-  status       String // ACTIVE, DEPRECATED, RETIRED
-  releaseDate  DateTime  @default(now())
-  deprecatedAt DateTime?
 }
 
 // ==========================================
@@ -3330,7 +3339,6 @@ model ModelFeedback {
   @@index([model])
 }
 
-
 // ==========================================
 // Integrations & Connectors (Phase 6.20)
 // ==========================================
@@ -3367,15 +3375,15 @@ model IntegrationInstance {
 }
 
 model ConnectorDefinition {
-  id             String   @id @default(uuid()) @db.Uuid
-  providerSlug   String
-  name           String
-  description    String?
-  version        String   @default("1.0.0")
-  capabilities   String   @db.Text // JSON: array of supported capabilities
-  schema         String?  @db.Text // JSON schema for configuration
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String   @id @default(uuid()) @db.Uuid
+  providerSlug String
+  name         String
+  description  String?
+  version      String   @default("1.0.0")
+  capabilities String   @db.Text // JSON: array of supported capabilities
+  schema       String?  @db.Text // JSON schema for configuration
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model ConnectorConfiguration {
@@ -3453,15 +3461,15 @@ model PluginLog {
 }
 
 model PluginSchedule {
-  id             String   @id @default(uuid()) @db.Uuid
-  pluginId       String   @db.Uuid
-  organizationId String   @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  pluginId       String    @db.Uuid
+  organizationId String    @db.Uuid
   cron           String
   action         String
-  enabled        Boolean  @default(true)
+  enabled        Boolean   @default(true)
   lastRunAt      DateTime?
   nextRunAt      DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   plugin       Plugin       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
@@ -3492,7 +3500,7 @@ model OAuthConnection {
   organizationId String   @db.Uuid
   provider       String
   clientId       String
-  clientSecret   String   // Should ideally be in vault
+  clientSecret   String // Should ideally be in vault
   status         String   @default("PENDING") // PENDING, CONNECTED, ERROR
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -3504,14 +3512,14 @@ model OAuthConnection {
 }
 
 model OAuthToken {
-  id             String   @id @default(uuid()) @db.Uuid
-  connectionId   String   @db.Uuid
-  accessToken    String   @db.Text // Should be in vault
-  refreshToken   String?  @db.Text // Should be in vault
-  expiresAt      DateTime?
-  scopes         String?  @db.Text
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String    @id @default(uuid()) @db.Uuid
+  connectionId String    @db.Uuid
+  accessToken  String    @db.Text // Should be in vault
+  refreshToken String?   @db.Text // Should be in vault
+  expiresAt    DateTime?
+  scopes       String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   connection OAuthConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
@@ -3544,8 +3552,8 @@ model ExternalAccount {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@index([organizationId])
   @@unique([provider, accountId])
+  @@index([organizationId])
 }
 
 model ExternalEvent {
@@ -3567,7 +3575,7 @@ model ConnectorHealth {
   id             String   @id @default(uuid()) @db.Uuid
   connectorId    String   @db.Uuid // Refers to Connector
   organizationId String   @db.Uuid
-  status         String   // HEALTHY, DEGRADED, DOWN
+  status         String // HEALTHY, DEGRADED, DOWN
   latencyMs      Int
   errorRate      Float
   lastCheckedAt  DateTime @default(now())
@@ -3657,22 +3665,525 @@ model ConnectorQuota {
 }
 
 model IntegrationCategory {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique
   description String?
 }
 
 model PluginMarketplaceEntry {
-  id             String   @id @default(uuid()) @db.Uuid
-  pluginId       String   @db.Uuid
-  categoryId     String   @db.Uuid
-  featured       Boolean  @default(false)
-  downloads      Int      @default(0)
-  rating         Float    @default(0.0)
-  publishedAt    DateTime @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  pluginId    String   @db.Uuid
+  categoryId  String   @db.Uuid
+  featured    Boolean  @default(false)
+  downloads   Int      @default(0)
+  rating      Float    @default(0.0)
+  publishedAt DateTime @default(now())
 
   plugin Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
 
   @@index([pluginId])
   @@index([categoryId])
+}
+
+// ==========================================
+// Phase 6.21 Observability Models
+// ==========================================
+
+model AlertHistory {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  alertId        String   @db.Uuid
+  action         String
+  details        String   @db.Text
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([alertId])
+}
+
+model AlertNotification {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  alertId        String   @db.Uuid
+  channel        String
+  status         String
+  error          String?  @db.Text
+  sentAt         DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([alertId])
+}
+
+model ServiceHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  serviceName   String
+  status        String
+  uptime        Float
+  memoryUsage   Float?
+  cpuUsage      Float?
+  lastCheckedAt DateTime @default(now())
+}
+
+model DependencyHealth {
+  id             String   @id @default(uuid()) @db.Uuid
+  dependencyName String
+  status         String
+  latencyMs      Int
+  lastCheckedAt  DateTime @default(now())
+}
+
+model QueueHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  queueName     String
+  status        String
+  activeJobs    Int
+  waitingJobs   Int
+  failedJobs    Int
+  lastCheckedAt DateTime @default(now())
+}
+
+model DatabaseHealth {
+  id              String   @id @default(uuid()) @db.Uuid
+  dbName          String
+  status          String
+  connectionCount Int
+  latencyMs       Int
+  lastCheckedAt   DateTime @default(now())
+}
+
+model RedisHealth {
+  id               String   @id @default(uuid()) @db.Uuid
+  status           String
+  usedMemory       Float
+  connectedClients Int
+  latencyMs        Int
+  lastCheckedAt    DateTime @default(now())
+}
+
+model WorkerHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  workerId      String
+  status        String
+  currentJobId  String?
+  lastHeartbeat DateTime @default(now())
+}
+
+model APIHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  endpoint      String
+  status        String
+  latencyMs     Int
+  errorRate     Float
+  lastCheckedAt DateTime @default(now())
+}
+
+model PluginHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  pluginId      String   @db.Uuid
+  status        String
+  latencyMs     Int
+  errorRate     Float
+  lastCheckedAt DateTime @default(now())
+}
+
+model AgentHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  agentId       String   @db.Uuid
+  status        String
+  latencyMs     Int
+  errorRate     Float
+  lastCheckedAt DateTime @default(now())
+}
+
+model WorkflowHealth {
+  id            String   @id @default(uuid()) @db.Uuid
+  workflowId    String   @db.Uuid
+  status        String
+  latencyMs     Int
+  errorRate     Float
+  lastCheckedAt DateTime @default(now())
+}
+
+model ConnectorHealthHistory {
+  id          String   @id @default(uuid()) @db.Uuid
+  connectorId String   @db.Uuid
+  status      String
+  latencyMs   Int
+  errorRate   Float
+  checkedAt   DateTime @default(now())
+}
+
+model PerformanceProfile {
+  id           String   @id @default(uuid()) @db.Uuid
+  type         String // CPU, MEMORY, EVENT_LOOP
+  snapshotData String   @db.Text
+  createdAt    DateTime @default(now())
+}
+
+model ErrorLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  traceId        String?
+  spanId         String?
+  correlationId  String?
+  errorCode      String
+  message        String   @db.Text
+  stack          String?  @db.Text
+  severity       String
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([traceId])
+}
+
+model ExceptionEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  exceptionClass String
+  message        String   @db.Text
+  stack          String?  @db.Text
+  serviceName    String
+  createdAt      DateTime @default(now())
+}
+
+model CrashReport {
+  id          String   @id @default(uuid()) @db.Uuid
+  serviceName String
+  exitCode    Int
+  reason      String   @db.Text
+  timestamp   DateTime @default(now())
+}
+
+model SlowQuery {
+  id         String   @id @default(uuid()) @db.Uuid
+  query      String   @db.Text
+  durationMs Int
+  tableName  String?
+  timestamp  DateTime @default(now())
+}
+
+model SlowRequest {
+  id         String   @id @default(uuid()) @db.Uuid
+  method     String
+  path       String
+  durationMs Int
+  traceId    String?
+  timestamp  DateTime @default(now())
+}
+
+model UsageAnalytics {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  metricName     String
+  value          Float
+  timestamp      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([metricName, timestamp])
+}
+
+model TokenAnalytics {
+  id               String   @id @default(uuid()) @db.Uuid
+  organizationId   String?  @db.Uuid
+  model            String
+  promptTokens     Int
+  completionTokens Int
+  totalTokens      Int
+  timestamp        DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model CostAnalytics {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @db.Uuid
+  service        String
+  costUsd        Float
+  timestamp      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// Phase 6.22 - Developer Platform & Gateway
+// ==========================================
+
+model DeveloperOAuthApplication {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  description    String?
+  clientId       String   @unique
+  clientSecret   String
+  redirectUris   String[]
+  scopes         String[]
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  Organization Organization @relation(fields: [organizationId], references: [id])
+}
+
+model DeveloperOAuthClient {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @db.Uuid
+  userId        String   @db.Uuid
+  createdAt     DateTime @default(now())
+}
+
+model DeveloperOAuthConsent {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @db.Uuid
+  userId        String   @db.Uuid
+  scopes        String[]
+  status        String   @default("GRANTED")
+  createdAt     DateTime @default(now())
+}
+
+model ApiGateway {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  endpoint  String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+}
+
+model ApiRoute {
+  id           String   @id @default(uuid()) @db.Uuid
+  gatewayId    String   @db.Uuid
+  path         String
+  method       String
+  targetUrl    String
+  authRequired Boolean  @default(true)
+  rateLimit    Int?
+  createdAt    DateTime @default(now())
+}
+
+model Developer {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model DeveloperOrganization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+}
+
+model DeveloperProject {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  createdAt      DateTime @default(now())
+}
+
+model DeveloperApplication {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @db.Uuid
+  name        String
+  description String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+}
+
+model ApiSubscription {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  planId         String   @db.Uuid
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now())
+}
+
+model ApiPlan {
+  id        String @id @default(uuid()) @db.Uuid
+  name      String
+  price     Float
+  currency  String @default("USD")
+  quota     Int
+  rateLimit Int
+  features  Json
+}
+
+model ApiQuota {
+  id             String   @id @default(uuid()) @db.Uuid
+  subscriptionId String   @db.Uuid
+  month          DateTime
+  used           Int      @default(0)
+  limit          Int
+}
+
+model ApiUsage {
+  id         String   @id @default(uuid()) @db.Uuid
+  apiKeyId   String   @db.Uuid
+  endpoint   String
+  method     String
+  statusCode Int
+  latencyMs  Int
+  createdAt  DateTime @default(now())
+}
+
+model ApiAnalytics {
+  id         String   @id @default(uuid()) @db.Uuid
+  apiKeyId   String   @db.Uuid
+  date       DateTime @db.Date
+  requests   Int      @default(0)
+  errors     Int      @default(0)
+  latencyAvg Float    @default(0)
+}
+
+model ApiMetric {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  value     Float
+  tags      Json
+  timestamp DateTime @default(now())
+}
+
+model ApiRequest {
+  id        String   @id @default(uuid()) @db.Uuid
+  requestId String   @unique
+  method    String
+  path      String
+  headers   Json?
+  query     Json?
+  body      Json?
+  createdAt DateTime @default(now())
+}
+
+model ApiResponse {
+  id         String   @id @default(uuid()) @db.Uuid
+  requestId  String   @unique
+  statusCode Int
+  headers    Json?
+  body       Json?
+  latencyMs  Int
+  createdAt  DateTime @default(now())
+}
+
+model ApiError {
+  id        String   @id @default(uuid()) @db.Uuid
+  requestId String   @unique
+  errorCode String
+  message   String
+  stack     String?
+  createdAt DateTime @default(now())
+}
+
+model ApiAudit {
+  id         String   @id @default(uuid()) @db.Uuid
+  action     String
+  entityType String
+  entityId   String
+  actorId    String
+  details    Json
+  createdAt  DateTime @default(now())
+}
+
+model ApiWebhook {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @db.Uuid
+  url           String
+  events        String[]
+  secret        String
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now())
+}
+
+model ApiWebhookDelivery {
+  id         String   @id @default(uuid()) @db.Uuid
+  webhookId  String   @db.Uuid
+  eventId    String
+  payload    Json
+  statusCode Int?
+  status     String // SUCCESS, FAILED
+  error      String?
+  createdAt  DateTime @default(now())
+}
+
+model ApiWebhookRetry {
+  id          String   @id @default(uuid()) @db.Uuid
+  deliveryId  String   @db.Uuid
+  attempt     Int
+  nextRetryAt DateTime
+  status      String // PENDING, SUCCESS, FAILED
+}
+
+model ApiDocumentation {
+  id          String   @id @default(uuid()) @db.Uuid
+  version     String
+  content     String   @db.Text
+  format      String // OPENAPI, MARKDOWN
+  publishedAt DateTime @default(now())
+}
+
+model ApiSdk {
+  id          String   @id @default(uuid()) @db.Uuid
+  language    String
+  version     String
+  url         String
+  publishedAt DateTime @default(now())
+}
+
+model ApiRelease {
+  id          String   @id @default(uuid()) @db.Uuid
+  version     String
+  notes       String   @db.Text
+  releaseDate DateTime @default(now())
+}
+
+model ApiChangelog {
+  id      String   @id @default(uuid()) @db.Uuid
+  date    DateTime @default(now())
+  changes Json
+}
+
+model ApiDeprecation {
+  id          String   @id @default(uuid()) @db.Uuid
+  endpoint    String
+  announcedAt DateTime @default(now())
+  sunsetAt    DateTime
+  alternative String?
+}
+
+model ApiPolicy {
+  id     String @id @default(uuid()) @db.Uuid
+  name   String
+  type   String
+  rules  Json
+  status String @default("ACTIVE")
+}
+
+model ApiCache {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique
+  value     String   @db.Text
+  expiresAt DateTime
+}
+
+model ApiTransformation {
+  id      String @id @default(uuid()) @db.Uuid
+  routeId String @db.Uuid
+  type    String // REQUEST, RESPONSE
+  config  Json
+}
+
+model ApiMockServer {
+  id     String @id @default(uuid()) @db.Uuid
+  name   String
+  routes Json
+  status String @default("ACTIVE")
+}
+
+model ApiVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  version   String   @unique
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
 }

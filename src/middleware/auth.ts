@@ -54,12 +54,12 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
     }
 
     // Attach to request
-    const permissions = user.role?.permissions?.map(p => `${p.resource}:${p.action}`) || [];
-    (req as any).user = {
+    const permissions = user.role?.permissions?.map((p: any) => `${p.resource}:${p.action}`) || [];
+    req.user = {
       ...user,
       permissions
     };
-    (req as any).sessionId = sessionId;
+    req.sessionId = sessionId;
 
     next();
   } catch (error: any) {
@@ -75,12 +75,12 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
 
 export const authorize = (requiredPermissions: string[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
-    const user = (req as any).user;
+    const user = req.user;
     if (!user || !user.permissions) {
       return next(new AuthenticationError('User not authenticated properly'));
     }
 
-    const hasPermission = requiredPermissions.every(p => user.permissions.includes(p));
+    const hasPermission = requiredPermissions.every(p => user.permissions!.includes(p));
     
     if (!hasPermission) {
       return next(new AuthorizationError('You do not have the required permissions to perform this action'));

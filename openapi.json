@@ -1,0 +1,25 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Enterprise AI Agent Platform API",
+    "version": "1.0.0",
+    "description": "Public APIs for the Enterprise AI Agent Platform"
+  },
+  "servers": [
+    {
+      "url": "https://api.enterprise-agent.com/v1"
+    }
+  ],
+  "paths": {
+    "/agents": {
+      "get": {
+        "summary": "List agents",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@ export class WorkflowController {
   
   async createWorkflow(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = (req as any).user;
+      const user = req.user!;
       const { name, slug, description } = req.body;
       const wf = await workflowService.createWorkflow(user.organizationId, user.id, name, slug, description);
       res.status(211).json(wf); // 211 or 201 Created
@@ -44,7 +44,7 @@ export class WorkflowController {
 
   async getWorkflows(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = (req as any).user;
+      const user = req.user!;
       const workflows = await prisma.workflow.findMany({
         where: { organizationId: user.organizationId, deletedAt: null },
         include: { versions: true }
@@ -95,7 +95,7 @@ export class WorkflowController {
 
   async cloneWorkflow(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = (req as any).user;
+      const user = req.user!;
       const { id } = req.params;
       const { name, slug } = req.body;
       const cloned = await workflowService.duplicateWorkflow(id, name, slug);
@@ -132,7 +132,7 @@ export class WorkflowController {
 
   async getExecutions(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = (req as any).user;
+      const user = req.user!;
       const executions = await prisma.workflowExecution.findMany({
         where: { organizationId: user.organizationId },
         orderBy: { startedAt: 'desc' }
@@ -145,7 +145,7 @@ export class WorkflowController {
 
   async getTemplates(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = (req as any).user;
+      const user = req.user!;
       const templates = await templateEngine.listTemplates(user.organizationId);
       res.json(templates);
     } catch (err) {
