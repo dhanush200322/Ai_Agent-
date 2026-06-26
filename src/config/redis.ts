@@ -31,27 +31,36 @@ export class RedisConnectionManager {
   }
 
   public static getClient(): Redis {
-    if (this.isShuttingDown) {
-      throw new Error('RedisConnectionManager is shutting down.');
-    }
-
-    if (!this.instance) {
-      const url = process.env.REDIS_URL;
-      const options = this.getConnectionOptions();
-
-      this.instance = url ? new Redis(url, options) : new Redis(options);
-      
-      this.instance.on('connect', () => console.log('[Redis] Connected'));
-      this.instance.on('error', (err) => console.error('[Redis] Error:', err));
-      this.instance.on('reconnecting', () => console.warn('[Redis] Reconnecting...'));
-      this.instance.on('close', () => console.log('[Redis] Connection closed'));
-
-      this.setupGracefulShutdown();
-    }
-    
-    return this.instance;
+  if (this.isShuttingDown) {
+    throw new Error('RedisConnectionManager is shutting down.');
   }
 
+ if (
+  !this.instance ||
+  this.instance.status === 'end' ||
+  this.instance.status === 'close'
+) {
+    const url = process.env.REDIS_URL;
+    const options = this.getConnectionOptions();
+
+    this.instance = url ? new Redis(url, options) : new Redis(options);
+
+    this.instance.on('connect', () => console.log('[Redis] Connected'));
+    this.instance.on('error', (err) => console.error('[Redis] Error:', err));
+    this.instance.on('reconnecting', () => console.warn('[Redis] Reconnecting...'));
+    this.instance.on('close', () => console.log('[Redis] Connection closed'));
+
+    this.setupGracefulShutdown();
+  }
+
+  console.log('================ REDIS DEBUG ================');
+  console.log('Redis Status       :', this.instance?.status);
+  console.log('Is Shutting Down   :', this.isShuttingDown);
+  console.log('Instance Exists    :', !!this.instance);
+  console.log('=============================================');
+
+  return this.instance;
+}
   public static async ping(): Promise<string> {
     const client = this.getClient();
     return await client.ping();
