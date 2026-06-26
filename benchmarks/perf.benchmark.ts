@@ -83,5 +83,35 @@ export async function runBenchmarks() {
 }
 
 if (require.main === module) {
-  runBenchmarks().then(res => console.log(JSON.stringify(res, null, 2)));
+  runBenchmarks()
+    .then(async res => {
+      console.log(JSON.stringify(res, null, 2));
+      
+      try {
+        const client = RedisConnectionManager.getClient();
+        if (client) {
+          await client.quit();
+        }
+      } catch (err) {}
+
+      const hasFail = res.database?.status === 'FAIL' || res.redis?.status === 'FAIL';
+      
+      const timeout = setTimeout(() => {
+        const handles = (process as any)._getActiveHandles();
+        if (handles && handles.length > 0) {
+          console.error('[Diagnostic] Process did not exit cleanly. Remaining active Node.js handles:');
+          console.error(handles.map((h: any) => h.constructor.name));
+        }
+        process.exit(hasFail ? 1 : 0);
+      }, 500);
+      timeout.unref(); // allow process to exit naturally if it's clean
+    })
+    .catch(async err => {
+      console.error('❌ Unhandled Benchmark Error:', err);
+      try {
+        const client = RedisConnectionManager.getClient();
+        if (client) await client.quit();
+      } catch (e) {}
+      process.exit(1);
+    });
 }

@@ -3,10 +3,21 @@ import dotenv from 'dotenv';
 dotenv.config();
 import jwt from 'jsonwebtoken';
 import { RedisConnectionManager } from './src/config/redis';
+import app from './src/app';
+import * as http from 'http';
 
 const prisma = new PrismaClient();
+let server: http.Server | undefined;
+let startedServer = false;
 
 async function cleanup() {
+  if (startedServer && server) {
+    try {
+      await new Promise<void>((resolve) => {
+        server!.close(() => resolve());
+      });
+    } catch (e) {}
+  }
   try {
     await prisma.$disconnect();
   } catch (e) {}
@@ -36,6 +47,24 @@ process.on("unhandledRejection", async (err)=>{
 
 async function run() {
   try {
+    let backendRunning = false;
+
+try {
+  const health = await fetch('http://localhost:3000/health/live');
+  backendRunning = health.ok;
+} catch {
+  backendRunning = false;
+}
+
+if (backendRunning) {
+  console.log('Using existing backend on port 3000');
+} else {
+  server = app.listen(3000, () => {
+    console.log('Test HTTP server started on port 3000');
+  });
+  startedServer = true;
+}
+
     const user = await prisma.user.findFirst();
     const agent = await prisma.agent.findFirst();
 
@@ -154,6 +183,7 @@ async function run() {
       }
     }
 
+    console.log('\nAll Chat verification scenarios PASS');
     await cleanup();
     process.exit(0);
   } catch (err: any) {

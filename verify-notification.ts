@@ -174,7 +174,9 @@ async function main() {
     where: { id: orgPref.id },
     data: {
       enabledChannels: '["EMAIL", "SMS", "PUSH", "WEBHOOK", "IN_APP", "WHATSAPP", "SLACK", "DISCORD"]',
-      disabledChannels: '[]'
+      disabledChannels: '[]',
+      quietHoursStart: null,
+      quietHoursEnd: null
     }
   });
 
@@ -449,6 +451,12 @@ async function main() {
     where: { organizationId: orgId1 }
   });
   assert(events.length > 0, 'Billing: Emitted UsageEvent after notification delivery');
+  if (events.length === 0) {
+    throw new Error(
+      "Notification verification failed: expected at least one UsageEvent but found 0. " +
+      "Delivery may have been postponed due to quiet hours or another delivery condition."
+    );
+  }
   assert(events[0].type.endsWith('_SENT'), 'Billing: Correct event type format (e.g. EMAIL_SENT)');
 
   // --- 11. RBAC and Cross-Tenant Isolation ---
@@ -574,19 +582,22 @@ async function main() {
 
   console.log('\n🎉 Phase 6.16 Integration Validation Suite Complete!');
   console.log(`Assertions: ✅ ${passCount} Passed | ❌ ${failCount} Failed`);
-
-  // Clean up connection
-  try {
-    await RedisConnectionManager.getClient().disconnect();
-  } catch {}
-  
-  if (failCount > 0) {
-    process.exit(1);
-  }
-  process.exit(0);
 }
 
-main().catch((err) => {
-  console.error('Validation Suite Crashed:', err);
-  process.exit(1);
-});
+main()
+  .then(() => {
+    process.exitCode = failCount > 0 ? 1 : 0;
+  })
+  .catch((err) => {
+    console.error('Validation Suite Crashed:', err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    try {
+      await RedisConnectionManager.getClient().quit();
+    } catch {}
+    try {
+      await prisma.$disconnect();
+    } catch {}
+    process.exit(process.exitCode || 0);
+  });
