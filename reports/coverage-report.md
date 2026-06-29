@@ -1,6 +1,6 @@
 # API & Controller Test Coverage Report
 
-Generated: 2026-06-26 09:09:07 UTC
+Generated: 2026-06-29 07:04:40 UTC
 Overall Status: PASS
 
 ## Code Coverage Metrics (by layer)

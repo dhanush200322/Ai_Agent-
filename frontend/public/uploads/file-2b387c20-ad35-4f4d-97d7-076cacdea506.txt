@@ -1,0 +1,1 @@
+Acme Corp Deployment Policy: All servers must use Ubuntu 24.04 LTS. The primary region is us-east-1.

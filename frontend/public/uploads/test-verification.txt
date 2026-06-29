@@ -1,0 +1,4 @@
+Enterprise AI is transforming how organizations work.
+It uses advanced agents to retrieve knowledge, automate workflows, and answer questions.
+This is a test document demonstrating knowledge base ingestion and semantic search capabilities.
+Authentication relies on secure JWT tokens.

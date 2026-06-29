@@ -12,7 +12,7 @@ const ALLOWED_MIME_TYPES = [
 const documentStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     // Reusing the same public/uploads directory as the existing StorageService
-    cb(null, path.join(__dirname, '../../../../public/uploads'));
+    cb(null, path.join(__dirname, '../../../../public/uploads/documents'));
   },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
