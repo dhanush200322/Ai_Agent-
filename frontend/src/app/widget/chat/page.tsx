@@ -18,6 +18,7 @@ export default function WidgetChatPage() {
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
+  const streamingContentRef = useRef('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,19 +39,17 @@ export default function WidgetChatPage() {
 
 
   const handleComplete = (currentConvId: string) => {
-    setStreamingContent(currentContent => {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          conversationId: currentConvId,
-          role: 'ASSISTANT',
-          content: currentContent,
-          createdAt: new Date().toISOString()
-        }
-      ]);
-      return '';
-    });
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        conversationId: currentConvId,
+        role: 'ASSISTANT',
+        content: streamingContentRef.current,
+        createdAt: new Date().toISOString()
+      }
+    ]);
+    setStreamingContent('');
     setIsStreaming(false);
   };
 
@@ -72,6 +71,7 @@ export default function WidgetChatPage() {
 
     setMessages(prev => [...prev, newUserMessage]);
     setIsStreaming(true);
+    streamingContentRef.current = '';
     setStreamingContent('');
 
     try {
@@ -86,7 +86,8 @@ export default function WidgetChatPage() {
         { agentId, conversationId: currentConvId, message: userMsg, isWidget: true },
         {
           onToken: (token) => {
-            setStreamingContent(prev => prev + token);
+            streamingContentRef.current += token;
+            setStreamingContent(streamingContentRef.current);
           },
           onSources: () => {},
           onMetrics: () => {},
