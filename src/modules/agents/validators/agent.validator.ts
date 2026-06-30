@@ -11,6 +11,7 @@ export const createAgentSchema = z.object({
     topP: z.preprocess((val) => Number(val), z.number().min(0).max(1).optional()),
     maxTokens: z.preprocess((val) => Number(val), z.number().min(1).optional()),
     visibility: z.enum(['PRIVATE', 'ORGANIZATION', 'PUBLIC']).optional(),
+    themeConfig: z.any().optional(),
   })
 });
 
@@ -25,5 +26,6 @@ export const updateAgentSchema = z.object({
     maxTokens: z.preprocess((val) => Number(val), z.number().min(1).optional()),
     visibility: z.enum(['PRIVATE', 'ORGANIZATION', 'PUBLIC']).optional(),
     status: z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']).optional(),
+    themeConfig: z.any().optional(),
   })
 });

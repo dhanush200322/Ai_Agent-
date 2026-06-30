@@ -44,7 +44,10 @@ export class ChatController {
 
     try {
       // 1. Validation & Isolation
-      const agent = await prisma.agent.findUnique({ where: { id: body.agentId } });
+      const agent = await prisma.agent.findUnique({ 
+        where: { id: body.agentId },
+        include: { knowledgeBases: true }
+      });
       if (!agent || agent.organizationId !== user.organizationId) {
         throw new AppError('Invalid Agent or unauthorized', 404);
       }
@@ -84,11 +87,16 @@ export class ChatController {
 
       // 5. Knowledge Retrieval
       metrics.startTimer('Knowledge Retrieval Time');
-      const chunks = await this.retrievalService.retrieveContext(
-        user.organizationId,
-        body.message,
-        { knowledgeBaseIds: body.knowledgeBaseIds, topK: 5 }
-      );
+      const attachedKbIds = agent.knowledgeBases.map((akb: any) => akb.knowledgeBaseId);
+      let chunks: any[] = [];
+      
+      if (attachedKbIds.length > 0) {
+        chunks = await this.retrievalService.retrieveContext(
+          user.organizationId,
+          body.message,
+          { knowledgeBaseIds: attachedKbIds, topK: 5 }
+        );
+      }
       metrics.stopTimer('Knowledge Retrieval Time');
       metrics.setMetric('Chunks Retrieved Count', chunks.length);
       metrics.setMetric('Grounded Answer', chunks.length > 0 ? 'YES' : 'NO');
@@ -250,7 +258,10 @@ export class ChatController {
 
     try {
       // 1. Validation & Isolation
-      const agent = await prisma.agent.findUnique({ where: { id: body.agentId } });
+      const agent = await prisma.agent.findUnique({ 
+        where: { id: body.agentId },
+        include: { knowledgeBases: true }
+      });
       if (!agent) {
         throw new AppError('Invalid Agent', 404);
       }
@@ -295,11 +306,16 @@ export class ChatController {
 
       // 5. Knowledge Retrieval
       metrics.startTimer('Knowledge Retrieval Time');
-      const chunks = await this.retrievalService.retrieveContext(
-        agent.organizationId,
-        body.message,
-        { knowledgeBaseIds: body.knowledgeBaseIds, topK: 5 }
-      );
+      const attachedKbIds = agent.knowledgeBases.map((akb: any) => akb.knowledgeBaseId);
+      let chunks: any[] = [];
+
+      if (attachedKbIds.length > 0) {
+        chunks = await this.retrievalService.retrieveContext(
+          agent.organizationId,
+          body.message,
+          { knowledgeBaseIds: attachedKbIds, topK: 5 }
+        );
+      }
       metrics.stopTimer('Knowledge Retrieval Time');
       metrics.setMetric('Chunks Retrieved Count', chunks.length);
       metrics.setMetric('Grounded Answer', chunks.length > 0 ? 'YES' : 'NO');
