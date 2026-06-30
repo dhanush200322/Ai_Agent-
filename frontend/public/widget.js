@@ -37,8 +37,8 @@
       return;
     }
 
-    // Fetch agent appearance settings
-    fetch(`${hostUrl}/api/v1/chat/widget/agents/${agentId}`)
+    // Fetch agent appearance settings via Next.js proxy route to bypass backend CORS
+    fetch(`${hostUrl}/api/widget-agents/${agentId}`)
       .then(res => res.json())
       .then(response => {
         let botColor = '#eab308'; // Default yellow
