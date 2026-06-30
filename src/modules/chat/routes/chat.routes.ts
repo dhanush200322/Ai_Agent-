@@ -30,4 +30,8 @@ router.post('/conversations/:id/restore', authenticate, authorize('chat:update')
 // Messages History
 router.get('/messages/:conversationId', authenticate, authorize('chat:read'), conversationController.getConversationHistory);
 
+// Public Widget Routes
+router.post('/widget/conversations', conversationController.createWidgetConversation);
+router.post('/widget/completions', chatController.streamWidgetChatCompletion);
+
 export default router;

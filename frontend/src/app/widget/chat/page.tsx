@@ -83,13 +83,13 @@ export default function WidgetChatPage() {
     try {
       let currentConvId = conversationId;
       if (!currentConvId) {
-        const conv = await chatService.createConversation(agentId);
+        const conv = await chatService.createConversation(agentId, undefined, true);
         currentConvId = conv.id;
         setConversationId(conv.id);
       }
 
       await chatService.streamChatCompletion(
-        { agentId, conversationId: currentConvId, message: userMsg },
+        { agentId, conversationId: currentConvId, message: userMsg, isWidget: true },
         {
           onToken: (token) => {
             setStreamingContent(prev => prev + token);

@@ -3,8 +3,9 @@ import { Conversation, ConversationListResponse, Message, ChatCompletionRequest,
 import { useAuthStore } from '@/features/auth/store';
 
 export const chatService = {
-  createConversation: async (agentId: string, sessionId?: string): Promise<Conversation> => {
-    const response = await api.post('/chat/conversations', { agentId, sessionId });
+  createConversation: async (agentId: string, sessionId?: string, isWidget?: boolean): Promise<Conversation> => {
+    const endpoint = isWidget ? '/chat/widget/conversations' : '/chat/conversations';
+    const response = await api.post(endpoint, { agentId, sessionId });
     return response.data.data;
   },
 
@@ -46,7 +47,7 @@ export const chatService = {
   },
 
   streamChatCompletion: async (
-    payload: ChatCompletionRequest,
+    payload: ChatCompletionRequest & { isWidget?: boolean },
     callbacks: {
       onToken: (token: string) => void;
       onSources: (sources: Citation[]) => void;
@@ -57,16 +58,24 @@ export const chatService = {
     signal?: AbortSignal
   ) => {
     const token = useAuthStore.getState().accessToken;
-    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/chat/completions`;
+    const endpoint = payload.isWidget ? '/chat/widget/completions' : '/chat/completions';
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}${endpoint}`;
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (!payload.isWidget && token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Remove isWidget from payload before sending
+    const { isWidget, ...requestPayload } = payload;
 
     try {
       let response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+        headers,
+        body: JSON.stringify(requestPayload),
         signal,
       });
 
@@ -77,13 +86,13 @@ export const chatService = {
           const newToken = useAuthStore.getState().accessToken;
           
           // Retry the stream with the new token
+          if (!payload.isWidget) {
+            headers['Authorization'] = `Bearer ${newToken}`;
+          }
           response = await fetch(url, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${newToken}`,
-            },
-            body: JSON.stringify(payload),
+            headers,
+            body: JSON.stringify(requestPayload),
             signal,
           });
         } catch (refreshErr) {
