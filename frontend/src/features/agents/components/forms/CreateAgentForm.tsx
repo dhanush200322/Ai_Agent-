@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useCreateAgent } from '../../hooks/useAgents';
 import { MagneticButton } from '@/components/ui/MagneticButton';
-import { ArrowLeft, ArrowRight, Bot, Loader2, Sparkles, Sliders, AlignLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bot, Loader2, Sparkles, Sliders, AlignLeft, CheckCircle, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { AgentVisibility } from '../../types/agent';
 
@@ -22,6 +22,11 @@ const createAgentSchema = z.object({
   maxTokens: z.number().min(1).optional(),
   visibility: z.enum(['PRIVATE', 'ORGANIZATION', 'PUBLIC']).optional(),
   avatar: z.any().optional(), // File
+  themeConfig: z.object({
+    botColor: z.string().optional(),
+    theme: z.enum(['dark', 'light']).optional(),
+    customCss: z.string().optional(),
+  }).optional(),
 });
 
 type CreateAgentValues = z.infer<typeof createAgentSchema>;
@@ -30,6 +35,7 @@ const STEPS = [
   { id: 'general', title: 'General', icon: Bot },
   { id: 'config', title: 'Configuration', icon: Sliders },
   { id: 'prompt', title: 'Prompt', icon: AlignLeft },
+  { id: 'appearance', title: 'Appearance', icon: Palette },
   { id: 'review', title: 'Review', icon: CheckCircle }
 ];
 
@@ -72,7 +78,11 @@ export function CreateAgentForm() {
 
   const onSubmit = async (data: CreateAgentValues) => {
     try {
-      const response = await createAgent(data);
+      const payload: any = { ...data };
+      if (payload.themeConfig) {
+        payload.themeConfig = JSON.stringify(payload.themeConfig);
+      }
+      const response = await createAgent(payload);
       toast.success('Agent created successfully!');
       router.push(`/dashboard/agents/${response.id}`);
     } catch (error: any) {
@@ -275,8 +285,59 @@ export function CreateAgentForm() {
           </div>
         )}
 
-        {/* Step 3: Review */}
+        {/* Step 3: Appearance */}
         {currentStep === 3 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-white mb-2">Widget Appearance</h2>
+              <p className="text-gray-400">Customize how this agent looks in the chat widget on your website.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Chat Theme</label>
+                <select
+                  {...register('themeConfig.theme')}
+                  className="w-full bg-[#111] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#D4AF37] transition-colors"
+                >
+                  <option value="dark">Dark Theme (Default)</option>
+                  <option value="light">Light Theme</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Bot Icon Color (Hex)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    {...register('themeConfig.botColor')}
+                    defaultValue="#eab308"
+                    className="w-12 h-12 rounded-lg bg-transparent border-none cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    {...register('themeConfig.botColor')}
+                    placeholder="#eab308"
+                    className="w-full bg-[#111] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#D4AF37] transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Custom CSS (Advanced)</label>
+              <textarea
+                {...register('themeConfig.customCss')}
+                rows={6}
+                className="w-full bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-white font-mono text-xs focus:outline-none focus:border-[#D4AF37] transition-colors resize-none"
+                placeholder="/* Add custom styles for the chat widget here */\n.message-bubble { border-radius: 8px; }"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Review */}
+        {currentStep === 4 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">Review & Create</h2>

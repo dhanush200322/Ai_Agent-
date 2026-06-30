@@ -25,6 +25,8 @@ export interface Agent {
   toolCallingEnabled: boolean;
   plannerModel: string | null;
 
+  themeConfig?: any;
+
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -52,6 +54,7 @@ export interface CreateAgentDTO {
   maxTokens?: number;
   visibility?: AgentVisibility;
   avatar?: File;
+  themeConfig?: any;
 }
 
 export interface UpdateAgentDTO extends Partial<CreateAgentDTO> {

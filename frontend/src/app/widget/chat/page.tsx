@@ -10,6 +10,8 @@ import { Message } from '@/features/chat/types/chat';
 export default function WidgetChatPage() {
   const searchParams = useSearchParams();
   const agentId = searchParams.get('agentId');
+  const theme = searchParams.get('theme') || 'dark';
+  const botColor = searchParams.get('color') || '#eab308';
   
   const [agent, setAgent] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,29 +36,22 @@ export default function WidgetChatPage() {
   }, [messages, streamingContent]);
 
 
-  // We need to fix the capture of streamingContent onComplete
-  // Instead of relying on closure state, we let useEffect handle it or we can just append it locally.
-  // A simple fix is to track the ref of streamingContent if we need it inside onComplete.
-  const streamingContentRef = useRef('');
-  useEffect(() => {
-    streamingContentRef.current = streamingContent;
-  }, [streamingContent]);
 
-  // Patching handleSubmit onComplete to use the ref:
   const handleComplete = (currentConvId: string) => {
-    setMessages(prev => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        conversationId: currentConvId,
-        role: 'ASSISTANT',
-        content: streamingContentRef.current,
-        createdAt: new Date().toISOString()
-      }
-    ]);
+    setStreamingContent(currentContent => {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          conversationId: currentConvId,
+          role: 'ASSISTANT',
+          content: currentContent,
+          createdAt: new Date().toISOString()
+        }
+      ]);
+      return '';
+    });
     setIsStreaming(false);
-    setStreamingContent('');
-    streamingContentRef.current = '';
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -78,7 +73,6 @@ export default function WidgetChatPage() {
     setMessages(prev => [...prev, newUserMessage]);
     setIsStreaming(true);
     setStreamingContent('');
-    streamingContentRef.current = '';
 
     try {
       let currentConvId = conversationId;
@@ -120,10 +114,10 @@ export default function WidgetChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-950 text-white font-sans overflow-hidden">
+    <div className="flex flex-col h-screen font-sans overflow-hidden transition-colors duration-300" style={{ backgroundColor: theme === 'light' ? '#ffffff' : '#09090b', color: theme === 'light' ? '#18181b' : '#ffffff' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-zinc-800 bg-zinc-900/50">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+      <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', backgroundColor: theme === 'light' ? '#f4f4f5' : 'rgba(24,24,27,0.5)' }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: botColor }}>
           {agent?.avatarUrl ? (
             <img src={agent.avatarUrl} alt={agent.name} className="w-10 h-10 rounded-full object-cover" />
           ) : (
@@ -140,11 +134,11 @@ export default function WidgetChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-950/50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundColor: theme === 'light' ? '#ffffff' : 'rgba(9,9,11,0.5)' }}>
         {messages.length === 0 && !isStreaming && (
           <div className="flex flex-col items-center justify-center h-full opacity-50 text-center space-y-3">
-            <Bot className="w-8 h-8 text-yellow-500" />
-            <p className="text-sm text-zinc-400">
+            <Bot className="w-8 h-8" style={{ color: botColor }} />
+            <p className="text-sm" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }}>
               {agent ? `Hi! I'm ${agent.name}. How can I help you today?` : 'Initializing agent...'}
             </p>
           </div>
@@ -152,10 +146,12 @@ export default function WidgetChatPage() {
 
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-3 ${msg.role === 'USER' ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'USER' ? 'bg-zinc-800' : 'bg-yellow-500/20 text-yellow-500'}`}>
-              {msg.role === 'USER' ? <User className="w-4 h-4 text-zinc-400" /> : <Bot className="w-4 h-4" />}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'USER' ? '' : ''}`}
+                 style={{ backgroundColor: msg.role === 'USER' ? (theme === 'light' ? '#e4e4e7' : '#27272a') : `${botColor}33`, color: msg.role === 'USER' ? '' : botColor }}>
+              {msg.role === 'USER' ? <User className="w-4 h-4" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }} /> : <Bot className="w-4 h-4" />}
             </div>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'USER' ? 'bg-yellow-500 text-black rounded-tr-sm' : 'bg-zinc-900 border border-zinc-800 rounded-tl-sm text-zinc-300'}`}>
+            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'USER' ? 'rounded-tr-sm' : 'border rounded-tl-sm'}`}
+                 style={msg.role === 'USER' ? { backgroundColor: botColor, color: '#ffffff' } : { backgroundColor: theme === 'light' ? '#f4f4f5' : '#18181b', borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', color: theme === 'light' ? '#18181b' : '#d4d4d8' }}>
               {msg.content}
             </div>
           </div>
@@ -163,12 +159,13 @@ export default function WidgetChatPage() {
 
         {isStreaming && streamingContent && (
           <div className="flex gap-3">
-             <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center shrink-0">
+             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${botColor}33`, color: botColor }}>
                 <Bot className="w-4 h-4" />
              </div>
-             <div className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm bg-zinc-900 border border-zinc-800 rounded-tl-sm text-zinc-300">
+             <div className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm border rounded-tl-sm"
+                  style={{ backgroundColor: theme === 'light' ? '#f4f4f5' : '#18181b', borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', color: theme === 'light' ? '#18181b' : '#d4d4d8' }}>
                 {streamingContent}
-                <span className="inline-block w-1.5 h-4 ml-1 bg-yellow-500 animate-pulse align-middle"></span>
+                <span className="inline-block w-1.5 h-4 ml-1 animate-pulse align-middle" style={{ backgroundColor: botColor }}></span>
              </div>
           </div>
         )}
@@ -182,7 +179,7 @@ export default function WidgetChatPage() {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
+      <div className="p-4 border-t" style={{ borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', backgroundColor: theme === 'light' ? '#f4f4f5' : 'rgba(24,24,27,0.5)' }}>
         <form onSubmit={handleSend} className="relative">
           <input
             type="text"
@@ -190,18 +187,20 @@ export default function WidgetChatPage() {
             onChange={(e) => setInput(e.target.value)}
             disabled={!agent || isStreaming}
             placeholder={isStreaming ? "Agent is typing..." : "Type your message..."}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-full pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 disabled:opacity-50 transition-all placeholder:text-zinc-600"
+            className="w-full border rounded-full pl-4 pr-12 py-3 text-sm focus:outline-none disabled:opacity-50 transition-all"
+            style={{ backgroundColor: theme === 'light' ? '#ffffff' : '#09090b', borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', color: theme === 'light' ? '#18181b' : '#ffffff' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || !agent || isStreaming}
-            className="absolute right-1.5 top-1.5 bottom-1.5 aspect-square bg-yellow-500 hover:bg-yellow-400 text-black rounded-full flex items-center justify-center disabled:opacity-50 disabled:hover:bg-yellow-500 transition-colors"
+            className="absolute right-1.5 top-1.5 bottom-1.5 aspect-square rounded-full flex items-center justify-center disabled:opacity-50 transition-colors"
+            style={{ backgroundColor: botColor, color: '#ffffff' }}
           >
             {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 -ml-0.5" />}
           </button>
         </form>
         <div className="text-center mt-2">
-          <span className="text-[10px] text-zinc-600 flex items-center justify-center gap-1">
+          <span className="text-[10px] flex items-center justify-center gap-1" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }}>
             <Sparkles className="w-3 h-3" />
             Powered by Enterprise AI
           </span>

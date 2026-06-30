@@ -43,6 +43,7 @@ export class AgentService {
     if (data.maxTokens !== undefined) agentData.maxTokens = Number(data.maxTokens);
     if (data.visibility !== undefined) agentData.visibility = data.visibility;
     if (data.avatar !== undefined) agentData.avatar = data.avatar;
+    if (data.themeConfig !== undefined) agentData.themeConfig = typeof data.themeConfig === 'string' ? JSON.parse(data.themeConfig) : data.themeConfig;
 
     console.log('AGENT_CREATE_DATA', JSON.stringify(agentData, null, 2));
     const agent = await this.agentRepo.createAgent(agentData);
@@ -66,6 +67,7 @@ export class AgentService {
     if (data.visibility !== undefined) updateData.visibility = data.visibility;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
+    if (data.themeConfig !== undefined) updateData.themeConfig = typeof data.themeConfig === 'string' ? JSON.parse(data.themeConfig) : data.themeConfig;
 
     const updated = await this.agentRepo.updateAgent(organizationId, id, updateData);
     AuditLogger.log('AGENT_UPDATED', 'agent', { agentId: id, organizationId });

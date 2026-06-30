@@ -333,6 +333,7 @@ model Agent {
   assignedTasks    AgentTask[]       @relation("AssignedTasks")
   sentMessages     AgentMessage[]    @relation("SentMessages")
   receivedMessages AgentMessage[]    @relation("ReceivedMessages")
+  knowledgeBases   AgentKnowledgeBase[]
 
   // Phase 6.19 Agent Runtime
   runtimeConfig   AgentRuntimeConfiguration?
@@ -344,6 +345,8 @@ model Agent {
   state           AgentState?
   events          AgentEvent[]
   heartbeat       AgentHeartbeat?
+
+  themeConfig     Json?
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -391,10 +394,25 @@ model KnowledgeBase {
   createdBy   User   @relation("CreatedKnowledgeBases", fields: [createdById], references: [id], onDelete: Restrict)
 
   documents KnowledgeDocument[]
+  agents    AgentKnowledgeBase[]
 
   @@index([organizationId])
   @@index([createdById])
   @@index([organizationId, deletedAt])
+}
+
+model AgentKnowledgeBase {
+  id              String   @id @default(uuid()) @db.Uuid
+  agentId         String   @db.Uuid
+  knowledgeBaseId String   @db.Uuid
+  createdAt       DateTime @default(now())
+
+  agent         Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, knowledgeBaseId])
+  @@index([agentId])
+  @@index([knowledgeBaseId])
 }
 
 model KnowledgeDocument {

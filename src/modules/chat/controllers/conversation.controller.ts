@@ -52,6 +52,28 @@ export class ConversationController {
     }
   };
 
+  public getWidgetAgent = async (req: Request, res: Response) => {
+    try {
+      const { agentId } = req.params;
+      const { PrismaClient } = require('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      const agent = await prisma.agent.findUnique({ 
+        where: { id: agentId },
+        select: { id: true, name: true, description: true, avatar: true, themeConfig: true }
+      });
+      
+      if (!agent) {
+        res.status(404).json({ success: false, message: 'Agent not found' });
+        return;
+      }
+      
+      res.status(200).json({ success: true, data: agent });
+    } catch (err: any) {
+      res.status(err.statusCode || 500).json({ success: false, message: err.message });
+    }
+  };
+
   public listConversations = async (req: Request, res: Response) => {
     try {
       const skip = parseInt(req.query.skip as string) || 0;
