@@ -85,8 +85,12 @@ export const ConversationSidebar: React.FC<{
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 hover:bg-zinc-800 transition-colors ${selectedAgent?.id === agent.id ? 'bg-zinc-800/50' : ''}`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                    <span className="text-yellow-500 text-xs">{agent.name.charAt(0)}</span>
+                  <div className="w-6 h-6 rounded-full bg-yellow-500/10 flex items-center justify-center overflow-hidden shrink-0">
+                    {agent.avatar ? (
+                      <img src={agent.avatar} alt={agent.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-yellow-500 text-xs">{agent.name.charAt(0)}</span>
+                    )}
                   </div>
                   <div className="text-left">
                     <p className="text-sm text-white">{agent.name}</p>

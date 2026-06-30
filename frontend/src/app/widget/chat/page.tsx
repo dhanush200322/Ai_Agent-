@@ -117,9 +117,9 @@ export default function WidgetChatPage() {
     <div className="flex flex-col h-screen font-sans overflow-hidden transition-colors duration-300" style={{ backgroundColor: theme === 'light' ? '#ffffff' : '#09090b', color: theme === 'light' ? '#18181b' : '#ffffff' }}>
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', backgroundColor: theme === 'light' ? '#f4f4f5' : 'rgba(24,24,27,0.5)' }}>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: botColor }}>
-          {agent?.avatarUrl ? (
-            <img src={agent.avatarUrl} alt={agent.name} className="w-10 h-10 rounded-full object-cover" />
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg overflow-hidden shrink-0" style={{ backgroundColor: botColor }}>
+          {agent?.avatar ? (
+            <img src={agent.avatar} alt={agent.name} className="w-10 h-10 rounded-full object-cover" />
           ) : (
             <Bot className="w-5 h-5 text-black" />
           )}
@@ -137,7 +137,11 @@ export default function WidgetChatPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundColor: theme === 'light' ? '#ffffff' : 'rgba(9,9,11,0.5)' }}>
         {messages.length === 0 && !isStreaming && (
           <div className="flex flex-col items-center justify-center h-full opacity-50 text-center space-y-3">
-            <Bot className="w-8 h-8" style={{ color: botColor }} />
+            {agent?.avatar ? (
+              <img src={agent.avatar} alt={agent.name} className="w-16 h-16 rounded-full object-cover shadow-xl mb-2" />
+            ) : (
+              <Bot className="w-8 h-8" style={{ color: botColor }} />
+            )}
             <p className="text-sm" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }}>
               {agent ? `Hi! I'm ${agent.name}. How can I help you today?` : 'Initializing agent...'}
             </p>
@@ -146,9 +150,15 @@ export default function WidgetChatPage() {
 
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-3 ${msg.role === 'USER' ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'USER' ? '' : ''}`}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'USER' ? '' : 'overflow-hidden'}`}
                  style={{ backgroundColor: msg.role === 'USER' ? (theme === 'light' ? '#e4e4e7' : '#27272a') : `${botColor}33`, color: msg.role === 'USER' ? '' : botColor }}>
-              {msg.role === 'USER' ? <User className="w-4 h-4" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }} /> : <Bot className="w-4 h-4" />}
+              {msg.role === 'USER' ? (
+                <User className="w-4 h-4" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }} />
+              ) : agent?.avatar ? (
+                <img src={agent.avatar} alt={agent.name} className="w-full h-full object-cover" />
+              ) : (
+                <Bot className="w-4 h-4" />
+              )}
             </div>
             <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'USER' ? 'rounded-tr-sm' : 'border rounded-tl-sm'}`}
                  style={msg.role === 'USER' ? { backgroundColor: botColor, color: '#ffffff' } : { backgroundColor: theme === 'light' ? '#f4f4f5' : '#18181b', borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', color: theme === 'light' ? '#18181b' : '#d4d4d8' }}>
@@ -159,8 +169,12 @@ export default function WidgetChatPage() {
 
         {isStreaming && streamingContent && (
           <div className="flex gap-3">
-             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${botColor}33`, color: botColor }}>
-                <Bot className="w-4 h-4" />
+             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden" style={{ backgroundColor: `${botColor}33`, color: botColor }}>
+                {agent?.avatar ? (
+                  <img src={agent.avatar} alt={agent.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Bot className="w-4 h-4" />
+                )}
              </div>
              <div className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm border rounded-tl-sm"
                   style={{ backgroundColor: theme === 'light' ? '#f4f4f5' : '#18181b', borderColor: theme === 'light' ? '#e4e4e7' : '#27272a', color: theme === 'light' ? '#18181b' : '#d4d4d8' }}>
