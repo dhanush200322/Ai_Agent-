@@ -29,7 +29,7 @@ class ConversationTitleService {
         ], { temperature: 0.3 });
         let finalTitle = '';
         for await (const chunk of responseStream) {
-            finalTitle += chunk;
+            finalTitle += chunk.choices[0]?.delta?.content || '';
         }
         finalTitle = finalTitle.trim().replace(/^["']|["']$/g, '');
         await prisma.conversation.update({

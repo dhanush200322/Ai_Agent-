@@ -1,5 +1,5 @@
 export class MetricsService {
-  private metrics: Record<string, number> = {};
+  private metrics: Record<string, number | string> = {};
   private startTimes: Record<string, number> = {};
   private globalStartTime: number = Date.now();
 
@@ -14,7 +14,7 @@ export class MetricsService {
     }
   }
 
-  setMetric(label: string, value: number) {
+  setMetric(label: string, value: number | string) {
     this.metrics[label] = value;
   }
 

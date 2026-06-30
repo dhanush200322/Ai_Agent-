@@ -25,11 +25,11 @@ const app: Express = express();
 
 // Request ID Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log("GLOBAL CONTENT TYPE:", req.headers["content-type"]);
   req.reqId = crypto.randomUUID();
   res.setHeader('X-Request-Id', req.reqId);
   next();
 });
+
 
 // Standard Security & Core Middlewares
 app.use(helmet());

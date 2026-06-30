@@ -16,6 +16,7 @@ router.post('/oauth/google', (0, asyncHandler_1.asyncHandler)(authController.oau
 router.post('/oauth/microsoft', (0, asyncHandler_1.asyncHandler)(authController.oauthMicrosoft));
 router.post('/mfa/verify', (0, asyncHandler_1.asyncHandler)(authController.mfaVerify));
 // Protected auth routes
+router.get('/me', auth_1.authenticate, (0, asyncHandler_1.asyncHandler)(authController.me));
 router.post('/logout', auth_1.authenticate, (0, asyncHandler_1.asyncHandler)(authController.logout));
 router.post('/password/change', auth_1.authenticate, (0, asyncHandler_1.asyncHandler)(authController.passwordChange));
 router.post('/mfa/setup', auth_1.authenticate, (0, asyncHandler_1.asyncHandler)(authController.mfaSetup));

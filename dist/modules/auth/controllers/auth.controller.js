@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const authentication_engine_1 = require("../engine/authentication.engine");
 const session_service_1 = require("../services/session.service");
+const auth_service_1 = require("../services/auth.service");
 const mfa_engine_1 = require("../engine/mfa.engine");
 const ApiResponse_1 = require("../../../shared/response/ApiResponse");
 const bullmq_1 = require("bullmq");
@@ -11,6 +12,7 @@ const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 class AuthController {
     authEngine = new authentication_engine_1.AuthenticationEngine();
+    authService = new auth_service_1.AuthService();
     sessionService = new session_service_1.SessionService();
     mfaEngine = new mfa_engine_1.MFAEngine();
     get authQueue() {
@@ -55,6 +57,10 @@ class AuthController {
         catch (e) {
             res.status(401).json(ApiResponse_1.ApiResponse.error('Invalid refresh token', 'Authentication failed', req.reqId));
         }
+    };
+    me = async (req, res) => {
+        const user = await this.authService.me(req.user.id);
+        res.status(200).json(ApiResponse_1.ApiResponse.success(user, 'User fetched successfully', req.reqId));
     };
     passwordReset = async (req, res) => {
         const { email } = req.body;

@@ -106,4 +106,42 @@ export class KnowledgeRepository {
       }
     });
   }
+
+  // Agent Connection methods
+
+  async getConnectedAgents(organizationId: string, knowledgeBaseId: string) {
+    return prisma.agentKnowledgeBase.findMany({
+      where: {
+        knowledgeBaseId,
+        agent: { organizationId, deletedAt: null }
+      },
+      include: {
+        agent: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async addConnectedAgents(knowledgeBaseId: string, agentIds: string[]) {
+    const data = agentIds.map(agentId => ({
+      agentId,
+      knowledgeBaseId
+    }));
+    return prisma.agentKnowledgeBase.createMany({
+      data,
+      skipDuplicates: true
+    });
+  }
+
+  async removeConnectedAgent(knowledgeBaseId: string, agentId: string) {
+    return prisma.agentKnowledgeBase.delete({
+      where: {
+        agentId_knowledgeBaseId: {
+          agentId,
+          knowledgeBaseId
+        }
+      }
+    });
+  }
 }
+

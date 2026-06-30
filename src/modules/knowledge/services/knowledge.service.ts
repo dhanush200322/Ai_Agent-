@@ -61,6 +61,43 @@ export class KnowledgeService {
     return { success: true };
   }
 
+  // Source methods
+
+  async createSource(organizationId: string, knowledgeBaseId: string, userId: string, payload: any) {
+    const kb = await this.knowledgeRepo.findKnowledgeBaseById(organizationId, knowledgeBaseId);
+    if (!kb) throw new NotFoundError('Knowledge Base not found');
+
+    const type = payload.type?.toUpperCase();
+    if (!['WEBSITE', 'FAQ', 'TEXT'].includes(type)) {
+      throw new Error(`Invalid source type: ${type}`);
+    }
+
+    let originalName = 'Unknown Source';
+    if (type === 'WEBSITE') originalName = payload.data.url || 'Website URL';
+    if (type === 'FAQ') originalName = payload.data.name || 'FAQ Import';
+    if (type === 'TEXT') originalName = payload.data.name || 'Manual Notes';
+
+    const docData = {
+      knowledgeBaseId,
+      organizationId,
+      uploadedById: userId,
+      originalName,
+      status: 'PENDING',
+      sourceType: type,
+      metadata: JSON.stringify(payload.data || {})
+    };
+
+    const source = await this.knowledgeRepo.createKnowledgeDocument(docData as any);
+    
+    // Fire and forget document processing
+    this.processingService.processDocument(source.id).catch(err => {
+      console.error(`Unhandled error in background processing for source ${source.id}`, err);
+    });
+
+    AuditLogger.log('KNOWLEDGE_SOURCE_CREATED', 'knowledge', { sourceId: source.id, knowledgeBaseId, organizationId });
+    return source;
+  }
+
   // Document methods
 
   async uploadDocument(organizationId: string, knowledgeBaseId: string, userId: string, file: any) {
@@ -76,7 +113,7 @@ export class KnowledgeService {
       mimeType: file.mimetype,
       extension: file.originalname.split('.').pop() || '',
       size: file.size,
-      storagePath: `/uploads/${file.filename}`,
+      storagePath: `/uploads/documents/${file.filename}`,
       status: 'PENDING'
     };
 
@@ -112,4 +149,27 @@ export class KnowledgeService {
     AuditLogger.log('KNOWLEDGE_DOCUMENT_DELETED', 'knowledge', { documentId: id, organizationId });
     return { success: true };
   }
+
+  // Agent Connection methods
+
+  async getConnectedAgents(organizationId: string, knowledgeBaseId: string) {
+    await this.getKnowledgeBase(organizationId, knowledgeBaseId);
+    const agentKbs = await this.knowledgeRepo.getConnectedAgents(organizationId, knowledgeBaseId);
+    return agentKbs.map(akb => akb.agent);
+  }
+
+  async addConnectedAgents(organizationId: string, knowledgeBaseId: string, agentIds: string[]) {
+    await this.getKnowledgeBase(organizationId, knowledgeBaseId);
+    await this.knowledgeRepo.addConnectedAgents(knowledgeBaseId, agentIds);
+    AuditLogger.log('KNOWLEDGE_BASE_AGENTS_ATTACHED', 'knowledge', { knowledgeBaseId, organizationId, agentIds });
+    return { success: true };
+  }
+
+  async removeConnectedAgent(organizationId: string, knowledgeBaseId: string, agentId: string) {
+    await this.getKnowledgeBase(organizationId, knowledgeBaseId);
+    await this.knowledgeRepo.removeConnectedAgent(knowledgeBaseId, agentId);
+    AuditLogger.log('KNOWLEDGE_BASE_AGENT_DETACHED', 'knowledge', { knowledgeBaseId, organizationId, agentId });
+    return { success: true };
+  }
 }
+

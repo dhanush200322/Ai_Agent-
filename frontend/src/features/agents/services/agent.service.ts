@@ -3,14 +3,19 @@ import { Agent, AgentListResponse, CreateAgentDTO, UpdateAgentDTO } from '../typ
 
 export const agentService = {
   getAgents: async (page = 1, limit = 10, search?: string): Promise<AgentListResponse> => {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-    if (search) params.append('search', search);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      if (search) params.append('search', search);
 
-    const response = await api.get(`/agents?${params.toString()}`);
-    return response.data.data;
+      const response = await api.get(`/agents?${params.toString()}`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.status === 403 || error.response?.status === 404) return { items: [], total: 0, page: 1, limit: 10, pages: 0 };
+      throw error;
+    }
   },
 
   getAgent: async (id: string): Promise<Agent> => {
@@ -60,5 +65,20 @@ export const agentService = {
 
   deleteAgent: async (id: string): Promise<void> => {
     await api.delete(`/agents/${id}`);
+  },
+
+  // Knowledge Base Association
+  getKnowledgeBases: async (id: string): Promise<any[]> => {
+    const response = await api.get(`/agents/${id}/knowledge`);
+    return response.data.data;
+  },
+
+  attachKnowledgeBases: async (id: string, knowledgeBaseIds: string[]): Promise<void> => {
+    await api.post(`/agents/${id}/knowledge`, { knowledgeBaseIds });
+  },
+
+  detachKnowledgeBase: async (id: string, kbId: string): Promise<void> => {
+    await api.delete(`/agents/${id}/knowledge/${kbId}`);
   }
 };
+

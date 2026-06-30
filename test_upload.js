@@ -1,36 +1,36 @@
-const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const fs = require('fs');
-
-const token = jwt.sign(
-  { id: '123e4567-e89b-12d3-a456-426614174000', organizationId: '123e4567-e89b-12d3-a456-426614174001', role: 'admin' },
-  'super-secret-access-key-replace-in-production',
-  { expiresIn: '1h' }
-);
+const FormData = require('form-data');
 
 async function testUpload() {
   try {
-    fs.writeFileSync('sample.pdf', 'fake pdf content');
+    const login = await axios.post('http://localhost:5000/api/v1/auth/login', {
+      email: 'admin@cybercorp.com',
+      password: 'password123'
+    });
+    const token = login.data.data.accessToken;
 
-    const formData = new FormData();
-    const blob = new Blob([fs.readFileSync('sample.pdf')], { type: 'application/pdf' });
-    formData.append('file', blob, 'sample.pdf');
+    const kbRes = await axios.post('http://localhost:5000/api/v1/knowledge', {
+      name: 'Test Upload KB 2'
+    }, { headers: { Authorization: `Bearer ${token}` } });
+    
+    const kbId = kbRes.data.data.id;
+    console.log('Created KB:', kbId);
 
-    const response = await fetch(
-      'http://localhost:3000/api/v1/knowledge/123e4567-e89b-12d3-a456-426614174000/documents',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+    fs.writeFileSync('test.pdf', 'Dummy PDF content');
+    const form = new FormData();
+    form.append('file', fs.createReadStream('test.pdf'));
+
+    console.log('Uploading file...');
+    const uploadRes = await axios.post(`http://localhost:5000/api/v1/knowledge/${kbId}/documents`, form, {
+      headers: {
+        ...form.getHeaders(),
+        Authorization: `Bearer ${token}`
       }
-    );
-
-    const data = await response.json();
-    console.log('Status:', response.status);
-    console.log('Data:', data);
-  } catch (err) {
-    console.error('Error:', err);
+    });
+    console.log('Upload success:', uploadRes.data);
+  } catch (error) {
+    console.error('Test failed:', error.response?.data || error.message);
   }
 }
 

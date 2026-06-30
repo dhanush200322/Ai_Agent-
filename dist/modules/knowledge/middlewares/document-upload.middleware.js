@@ -7,6 +7,7 @@ exports.documentUpload = void 0;
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = __importDefault(require("crypto"));
+const fs_1 = __importDefault(require("fs"));
 const ALLOWED_MIME_TYPES = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -16,7 +17,14 @@ const ALLOWED_MIME_TYPES = [
 const documentStorage = multer_1.default.diskStorage({
     destination: (_req, _file, cb) => {
         // Reusing the same public/uploads directory as the existing StorageService
-        cb(null, path_1.default.join(__dirname, '../../../../public/uploads'));
+        const uploadPath = path_1.default.join(__dirname, '../../../../public/uploads/documents');
+        try {
+            fs_1.default.mkdirSync(uploadPath, { recursive: true });
+            cb(null, uploadPath);
+        }
+        catch (err) {
+            cb(err, uploadPath);
+        }
     },
     filename: (_req, file, cb) => {
         const ext = path_1.default.extname(file.originalname);

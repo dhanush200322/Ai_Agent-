@@ -28,6 +28,21 @@ class KnowledgeController {
         await this.knowledgeService.softDeleteKnowledgeBase(req.user.organizationId, req.params.id);
         res.status(200).json(ApiResponse_1.ApiResponse.success(null, 'Knowledge Base deleted successfully', req.reqId));
     };
+    // Source methods
+    createSource = async (req, res) => {
+        let payload = req.body;
+        // Support multipart/form-data where payload is sent as a stringified JSON field `data` or we just take `type` from body
+        if (req.file) {
+            payload = {
+                type: 'bulk',
+                data: {
+                    file: req.file
+                }
+            };
+        }
+        const source = await this.knowledgeService.createSource(req.user.organizationId, req.params.knowledgeBaseId, req.user.id, payload);
+        res.status(201).json(ApiResponse_1.ApiResponse.success(source, 'Source ingested successfully', req.reqId));
+    };
     // Document methods
     uploadDocument = async (req, res) => {
         console.log("[DEBUG controller] req.file =", req.file);

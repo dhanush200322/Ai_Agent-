@@ -74,4 +74,41 @@ export class AgentRepository {
       }
     });
   }
+
+  async getKnowledgeBases(organizationId: string, agentId: string) {
+    return prisma.agentKnowledgeBase.findMany({
+      where: {
+        agentId,
+        knowledgeBase: { organizationId, deletedAt: null }
+      },
+      include: {
+        knowledgeBase: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async addKnowledgeBases(agentId: string, knowledgeBaseIds: string[]) {
+    // Bulk insert ignore conflicts
+    const data = knowledgeBaseIds.map(kbId => ({
+      agentId,
+      knowledgeBaseId: kbId
+    }));
+    return prisma.agentKnowledgeBase.createMany({
+      data,
+      skipDuplicates: true
+    });
+  }
+
+  async removeKnowledgeBase(agentId: string, knowledgeBaseId: string) {
+    return prisma.agentKnowledgeBase.delete({
+      where: {
+        agentId_knowledgeBaseId: {
+          agentId,
+          knowledgeBaseId
+        }
+      }
+    });
+  }
 }
+

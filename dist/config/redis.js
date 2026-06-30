@@ -38,7 +38,9 @@ class RedisConnectionManager {
         if (this.isShuttingDown) {
             throw new Error('RedisConnectionManager is shutting down.');
         }
-        if (!this.instance) {
+        if (!this.instance ||
+            this.instance.status === 'end' ||
+            this.instance.status === 'close') {
             const url = process.env.REDIS_URL;
             const options = this.getConnectionOptions();
             this.instance = url ? new ioredis_1.default(url, options) : new ioredis_1.default(options);
@@ -48,6 +50,11 @@ class RedisConnectionManager {
             this.instance.on('close', () => console.log('[Redis] Connection closed'));
             this.setupGracefulShutdown();
         }
+        console.log('================ REDIS DEBUG ================');
+        console.log('Redis Status       :', this.instance?.status);
+        console.log('Is Shutting Down   :', this.isShuttingDown);
+        console.log('Instance Exists    :', !!this.instance);
+        console.log('=============================================');
         return this.instance;
     }
     static async ping() {

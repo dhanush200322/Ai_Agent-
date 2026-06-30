@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthenticationEngine } from '../engine/authentication.engine';
 import { SessionService } from '../services/session.service';
+import { AuthService } from '../services/auth.service';
 import { MFAEngine } from '../engine/mfa.engine';
 import { ApiResponse } from '../../../shared/response/ApiResponse';
 import { Queue } from 'bullmq';
@@ -11,6 +12,7 @@ const prisma = new PrismaClient();
 
 export class AuthController {
   private authEngine = new AuthenticationEngine();
+  private authService = new AuthService();
   private sessionService = new SessionService();
   private mfaEngine = new MFAEngine();
   
@@ -61,6 +63,11 @@ export class AuthController {
     } catch (e: any) {
       res.status(401).json(ApiResponse.error('Invalid refresh token', 'Authentication failed', req.reqId));
     }
+  };
+
+  me = async (req: Request, res: Response) => {
+    const user = await this.authService.me(req.user!.id);
+    res.status(200).json(ApiResponse.success(user, 'User fetched successfully', req.reqId));
   };
 
   passwordReset = async (req: Request, res: Response) => {

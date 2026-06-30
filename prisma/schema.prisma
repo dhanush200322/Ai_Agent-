@@ -404,12 +404,14 @@ model KnowledgeDocument {
   uploadedById    String @db.Uuid
 
   originalName String
-  fileName     String
-  mimeType     String
-  extension    String
-  size         Int
-  storagePath  String
+  fileName     String?
+  mimeType     String?
+  extension    String?
+  size         Int?
+  storagePath  String?
   status       String @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  sourceType   String @default("DOCUMENT") // DOCUMENT, WEBSITE, FAQ, TEXT
+  metadata     String? @db.Text // JSON payload
 
   processedAt    DateTime?
   chunkCount     Int?

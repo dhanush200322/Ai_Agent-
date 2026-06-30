@@ -16,6 +16,9 @@ router.get('/:id', (0, authorize_1.authorize)('knowledge:view'), (0, asyncHandle
 router.post('/', (0, authorize_1.authorize)('knowledge:create'), (0, validate_1.validate)(knowledge_validator_1.createKnowledgeBaseSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.createKnowledgeBase));
 router.patch('/:id', (0, authorize_1.authorize)('knowledge:update'), (0, validate_1.validate)(knowledge_validator_1.updateKnowledgeBaseSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.updateKnowledgeBase));
 router.delete('/:id', (0, authorize_1.authorize)('knowledge:delete'), (0, asyncHandler_1.asyncHandler)(knowledgeController.deleteKnowledgeBase));
+// Source routes
+router.post('/:knowledgeBaseId/sources', (0, authorize_1.authorize)('knowledge:create'), document_upload_middleware_1.documentUpload.single('file'), // allow file upload for bulk imports
+(0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.createSource));
 // Document routes
 router.post('/:knowledgeBaseId/documents', (0, authorize_1.authorize)('knowledge:create'), (req, _res, next) => {
     console.log("UPLOAD ROUTE VERSION 6.2");

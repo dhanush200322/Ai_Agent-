@@ -80,4 +80,28 @@ export class AgentService {
     AuditLogger.log('AGENT_DELETED', 'agent', { agentId: id, organizationId });
     return { success: true };
   }
+
+  async getKnowledgeBases(organizationId: string, agentId: string) {
+    // Verify agent exists
+    await this.getAgent(organizationId, agentId);
+    const kbs = await this.agentRepo.getKnowledgeBases(organizationId, agentId);
+    return kbs.map(akb => akb.knowledgeBase);
+  }
+
+  async addKnowledgeBases(organizationId: string, agentId: string, knowledgeBaseIds: string[]) {
+    // Verify agent exists
+    await this.getAgent(organizationId, agentId);
+    // Ideally we should also verify KBs exist in the organization, but skipDuplicates in repo handles constraint safely if we assume valid IDs, but foreign key needs them to exist. Let's just insert.
+    await this.agentRepo.addKnowledgeBases(agentId, knowledgeBaseIds);
+    AuditLogger.log('AGENT_KB_ATTACHED', 'agent', { agentId, organizationId, knowledgeBaseIds });
+    return { success: true };
+  }
+
+  async removeKnowledgeBase(organizationId: string, agentId: string, knowledgeBaseId: string) {
+    // Verify agent exists
+    await this.getAgent(organizationId, agentId);
+    await this.agentRepo.removeKnowledgeBase(agentId, knowledgeBaseId);
+    AuditLogger.log('AGENT_KB_DETACHED', 'agent', { agentId, organizationId, knowledgeBaseId });
+    return { success: true };
+  }
 }

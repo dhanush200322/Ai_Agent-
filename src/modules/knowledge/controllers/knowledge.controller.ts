@@ -34,6 +34,30 @@ export class KnowledgeController {
     res.status(200).json(ApiResponse.success(null, 'Knowledge Base deleted successfully', req.reqId));
   };
 
+  // Source methods
+
+  createSource = async (req: Request, res: Response) => {
+    let payload = req.body;
+    
+    // Support multipart/form-data where payload is sent as a stringified JSON field `data` or we just take `type` from body
+    if (req.file) {
+      payload = {
+        type: 'bulk',
+        data: {
+          file: req.file
+        }
+      };
+    }
+
+    const source = await this.knowledgeService.createSource(
+      req.user!.organizationId,
+      req.params.knowledgeBaseId,
+      req.user!.id,
+      payload
+    );
+    res.status(201).json(ApiResponse.success(source, 'Source ingested successfully', req.reqId));
+  };
+
   // Document methods
 
   uploadDocument = async (req: Request, res: Response): Promise<void> => {
@@ -61,5 +85,23 @@ export class KnowledgeController {
   deleteDocument = async (req: Request, res: Response) => {
     await this.knowledgeService.softDeleteDocument(req.user!.organizationId, req.params.id);
     res.status(200).json(ApiResponse.success(null, 'Document deleted successfully', req.reqId));
+  };
+
+  // Agent Connection methods
+
+  getConnectedAgents = async (req: Request, res: Response) => {
+    const agents = await this.knowledgeService.getConnectedAgents(req.user!.organizationId, req.params.id);
+    res.status(200).json(ApiResponse.success(agents, 'Connected agents fetched successfully', req.reqId));
+  };
+
+  addConnectedAgents = async (req: Request, res: Response) => {
+    const { agentIds } = req.body;
+    await this.knowledgeService.addConnectedAgents(req.user!.organizationId, req.params.id, agentIds);
+    res.status(200).json(ApiResponse.success(null, 'Agents attached successfully', req.reqId));
+  };
+
+  removeConnectedAgent = async (req: Request, res: Response) => {
+    await this.knowledgeService.removeConnectedAgent(req.user!.organizationId, req.params.id, req.params.agentId);
+    res.status(200).json(ApiResponse.success(null, 'Agent detached successfully', req.reqId));
   };
 }

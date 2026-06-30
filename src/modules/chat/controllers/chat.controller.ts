@@ -91,6 +91,35 @@ export class ChatController {
       );
       metrics.stopTimer('Knowledge Retrieval Time');
       metrics.setMetric('Chunks Retrieved Count', chunks.length);
+      metrics.setMetric('Grounded Answer', chunks.length > 0 ? 'YES' : 'NO');
+
+      // 5.5 Retrieval Validation
+      if (chunks.length === 0) {
+        const fallbackMsg = "I couldn't find this information in the current knowledge base.";
+        // Simulate a token stream
+        res.write(`data: ${JSON.stringify({ type: 'token', content: fallbackMsg })}\n\n`);
+        
+        const finalMetrics = metrics.getMetrics();
+        res.write(`data: ${JSON.stringify({ type: 'metrics', content: finalMetrics })}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+
+        const assistantMessage = await this.messageService.saveMessage({
+          conversationId: conversation.id,
+          role: 'ASSISTANT',
+          content: fallbackMsg,
+          model: agent.model,
+          temperature: agent.temperature,
+          latency: 0,
+          streaming: true
+        });
+
+        this.titleService.generateTitleIfMissing(conversation.id, body.message);
+        
+        // @ts-ignore
+        metrics.logMetrics(req.id || 'CHAT-STREAM');
+        return;
+      }
 
       // 6. Merge Context (Summary + Memories + Knowledge)
       const contextString = this.contextBuilder.buildContext(

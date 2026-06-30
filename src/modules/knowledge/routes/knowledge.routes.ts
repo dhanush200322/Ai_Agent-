@@ -19,6 +19,14 @@ router.post('/', authorize('knowledge:create'), validate(createKnowledgeBaseSche
 router.patch('/:id', authorize('knowledge:update'), validate(updateKnowledgeBaseSchema), asyncHandler(knowledgeController.updateKnowledgeBase));
 router.delete('/:id', authorize('knowledge:delete'), asyncHandler(knowledgeController.deleteKnowledgeBase));
 
+// Source routes
+router.post('/:knowledgeBaseId/sources',
+  authorize('knowledge:create'),
+  documentUpload.single('file'), // allow file upload for bulk imports
+  validate(documentParamsSchema),
+  asyncHandler(knowledgeController.createSource)
+);
+
 // Document routes
 router.post('/:knowledgeBaseId/documents', 
   authorize('knowledge:create'),
@@ -44,4 +52,11 @@ router.get('/:knowledgeBaseId/documents', authorize('knowledge:view'), validate(
 router.get('/documents/:id', authorize('knowledge:view'), validate(documentParamsSchema), asyncHandler(knowledgeController.getDocument));
 router.delete('/documents/:id', authorize('knowledge:delete'), validate(documentParamsSchema), asyncHandler(knowledgeController.deleteDocument));
 
+// Agent connection routes
+router.get('/:id/agents', authorize('knowledge:view'), asyncHandler(knowledgeController.getConnectedAgents));
+router.post('/:id/agents', authorize('knowledge:update'), asyncHandler(knowledgeController.addConnectedAgents));
+router.delete('/:id/agents/:agentId', authorize('knowledge:update'), asyncHandler(knowledgeController.removeConnectedAgent));
+
 export default router;
+
+

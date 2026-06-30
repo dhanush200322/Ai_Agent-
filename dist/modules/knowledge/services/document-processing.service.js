@@ -41,10 +41,40 @@ class DocumentProcessingService {
                 where: { id: documentId },
                 data: { status: 'PROCESSING' },
             });
-            // 2. Parse Document
-            console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Parsing ${document.originalName}`);
-            const absolutePath = path_1.default.join(__dirname, '../../../../public', document.storagePath);
-            const parsed = await document_parser_service_1.DocumentParserService.parse(absolutePath, document.mimeType);
+            // 2. Parse Source
+            console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Parsing ${document.originalName} (${document.sourceType})`);
+            let parsed = { text: '', metadata: { pages: 1 } };
+            if (document.sourceType === 'DOCUMENT' || !document.sourceType) {
+                if (!document.storagePath || !document.mimeType) {
+                    throw new Error('DOCUMENT source missing storagePath or mimeType');
+                }
+                const absolutePath = path_1.default.join(__dirname, '../../../../public', document.storagePath);
+                parsed = await document_parser_service_1.DocumentParserService.parse(absolutePath, document.mimeType);
+            }
+            else if (document.sourceType === 'WEBSITE') {
+                const meta = JSON.parse(document.metadata || '{}');
+                if (!meta.url)
+                    throw new Error('WEBSITE source missing URL');
+                console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Fetching URL ${meta.url}`);
+                const response = await fetch(meta.url);
+                const html = await response.text();
+                // Basic HTML stripping, can be improved later
+                parsed.text = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+                    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+                    .replace(/<[^>]+>/g, ' ');
+            }
+            else if (document.sourceType === 'FAQ') {
+                const meta = JSON.parse(document.metadata || '{}');
+                const questions = meta.questions || [];
+                parsed.text = questions.map((q) => `Q: ${q.question}\nA: ${q.answer}\nCategory: ${q.category || 'General'}\nTags: ${(q.tags || []).join(', ')}`).join('\n\n');
+            }
+            else if (document.sourceType === 'TEXT') {
+                const meta = JSON.parse(document.metadata || '{}');
+                parsed.text = meta.content || '';
+            }
+            else {
+                throw new Error(`Unsupported source type: ${document.sourceType}`);
+            }
             // 3. Clean Text
             console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Cleaning text`);
             const cleanedText = text_cleaner_1.TextCleaner.clean(parsed.text);
@@ -90,7 +120,7 @@ class DocumentProcessingService {
                     chunkIndex: chunk.index,
                     content: chunk.content,
                     fileName: document.originalName,
-                    mimeType: document.mimeType,
+                    mimeType: document.mimeType || 'text/plain',
                     page: parsed.metadata.pages > 1 ? Math.floor((i / chunks.length) * parsed.metadata.pages) + 1 : 1, // Rough estimate if per-page chunking isn't exact
                     createdAt: Date.now(),
                 };

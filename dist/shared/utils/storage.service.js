@@ -9,7 +9,7 @@ const path_1 = __importDefault(require("path"));
 const crypto_1 = __importDefault(require("crypto"));
 const storage = multer_1.default.diskStorage({
     destination: (_req, _file, cb) => {
-        cb(null, path_1.default.join(__dirname, '../../../../public/uploads'));
+        cb(null, path_1.default.join(__dirname, '../../../public/uploads'));
     },
     filename: (_req, file, cb) => {
         const ext = path_1.default.extname(file.originalname);

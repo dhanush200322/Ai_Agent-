@@ -43,11 +43,46 @@ export class DocumentProcessingService {
         data: { status: 'PROCESSING' },
       });
 
-      // 2. Parse Document
-      console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Parsing ${document.originalName}`);
+      // 2. Parse Source
+      console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Parsing ${document.originalName} (${document.sourceType})`);
       
-      const absolutePath = path.join(__dirname, '../../../../public', document.storagePath);
-      const parsed = await DocumentParserService.parse(absolutePath, document.mimeType);
+      let parsed = { text: '', metadata: { pages: 1 } };
+      
+      if (document.sourceType === 'DOCUMENT' || !document.sourceType) {
+        if (!document.storagePath || !document.mimeType) {
+          throw new Error('DOCUMENT source missing storagePath or mimeType');
+        }
+        const absolutePath = path.join(__dirname, '../../../../public', document.storagePath);
+        parsed = await DocumentParserService.parse(absolutePath, document.mimeType);
+      } else if (document.sourceType === 'WEBSITE') {
+        const meta = JSON.parse(document.metadata || '{}');
+        if (!meta.url) throw new Error('WEBSITE source missing URL');
+        console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Fetching URL ${meta.url} via Jina Reader`);
+        
+        // Use Jina Reader API to get clean markdown from any URL, including SPAs
+        const jinaUrl = `https://r.jina.ai/${meta.url}`;
+        const response = await fetch(jinaUrl);
+        
+        if (!response.ok) {
+           console.warn(`Jina Reader failed (${response.status}). Falling back to raw fetch...`);
+           const fallbackResponse = await fetch(meta.url);
+           const html = await fallbackResponse.text();
+           parsed.text = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+                             .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+                             .replace(/<[^>]+>/g, ' ');
+        } else {
+           parsed.text = await response.text();
+        }
+      } else if (document.sourceType === 'FAQ') {
+        const meta = JSON.parse(document.metadata || '{}');
+        const questions = meta.questions || [];
+        parsed.text = questions.map((q: any) => `Q: ${q.question}\nA: ${q.answer}\nCategory: ${q.category || 'General'}\nTags: ${(q.tags || []).join(', ')}`).join('\n\n');
+      } else if (document.sourceType === 'TEXT') {
+        const meta = JSON.parse(document.metadata || '{}');
+        parsed.text = meta.content || '';
+      } else {
+        throw new Error(`Unsupported source type: ${document.sourceType}`);
+      }
 
       // 3. Clean Text
       console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Cleaning text`);
@@ -102,7 +137,7 @@ export class DocumentProcessingService {
           chunkIndex: chunk.index,
           content: chunk.content,
           fileName: document.originalName,
-          mimeType: document.mimeType,
+          mimeType: document.mimeType || 'text/plain',
           page: parsed.metadata.pages > 1 ? Math.floor((i / chunks.length) * parsed.metadata.pages) + 1 : 1, // Rough estimate if per-page chunking isn't exact
           createdAt: Date.now(),
         };

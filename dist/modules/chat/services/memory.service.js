@@ -4,6 +4,7 @@ exports.MemoryService = void 0;
 const client_1 = require("@prisma/client");
 const embedding_service_1 = require("../../knowledge/services/embedding.service");
 const vector_service_1 = require("../../knowledge/services/vector.service");
+const crypto_1 = require("crypto");
 const prisma = new client_1.PrismaClient();
 const embeddingService = new embedding_service_1.EmbeddingService();
 const vectorService = new vector_service_1.VectorService();
@@ -48,6 +49,7 @@ class MemoryService {
         const embeddings = await embeddingService.generateEmbeddings([data.content]);
         const vector = embeddings[0];
         // 3. Save to Prisma
+        const vectorId = (0, crypto_1.randomUUID)();
         const memory = await prisma.conversationMemory.create({
             data: {
                 conversationId: data.conversationId,
@@ -56,16 +58,10 @@ class MemoryService {
                 messageId: data.messageId,
                 content: data.content,
                 embeddingModel: 'Xenova/all-MiniLM-L6-v2', // Match embedding service model
-                vectorId: '', // Will update
+                vectorId,
                 memoryType: data.memoryType || 'SHORT_TERM',
                 importance
             }
-        });
-        // We use the Prisma ID as the Vector UUID
-        const vectorId = memory.id;
-        await prisma.conversationMemory.update({
-            where: { id: memory.id },
-            data: { vectorId }
         });
         // 4. Save to Qdrant
         await vectorService.storeChunks([{

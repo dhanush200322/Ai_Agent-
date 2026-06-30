@@ -10,9 +10,13 @@ import { MagneticButton } from '@/components/ui/MagneticButton';
 import { toast } from 'sonner';
 import { 
   Bot, Settings, AlignLeft, Database, Plug, 
-  BarChart, ScrollText, ArrowLeft, Loader2, Save, Trash2
+  BarChart, ScrollText, ArrowLeft, Loader2, Save, Trash2, X
 } from 'lucide-react';
 import Link from 'next/link';
+import { PlaceholderTab } from '@/components/ui/PlaceholderTab';
+import { useAgentKnowledgeBases, useDetachKnowledgeBase } from '@/features/agents/hooks/useAgentKnowledge';
+import { AttachKnowledgeDialog } from '@/features/agents/components/AttachKnowledgeDialog';
+
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: Bot },
@@ -32,10 +36,15 @@ export default function AgentDetailsPage() {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAttachKbOpen, setIsAttachKbOpen] = useState(false);
   
+
   const { data: agent, isLoading, error } = useAgent(id);
   const { mutateAsync: updateAgent, isPending: isUpdating } = useUpdateAgent(id);
   const { mutateAsync: deleteAgent, isPending: isDeleting } = useDeleteAgent();
+
+  const { data: knowledgeBases, isLoading: isLoadingKbs } = useAgentKnowledgeBases(id);
+  const { mutateAsync: detachKb, isPending: isDetachingKb } = useDetachKnowledgeBase(id);
 
   // Local state for edits
   const [editForm, setEditForm] = useState<any>({});
@@ -95,18 +104,15 @@ export default function AgentDetailsPage() {
     }
   };
 
-  const PlaceholderTab = ({ name }: { name: string }) => (
-    <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-[rgba(255,255,255,0.1)] rounded-2xl bg-[rgba(255,255,255,0.01)] mt-6">
-      <div className="w-16 h-16 rounded-2xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] flex items-center justify-center mb-6">
-        <Bot className="w-8 h-8 text-gray-500" />
-      </div>
-      <h3 className="text-xl font-semibold text-white mb-2">{name} (Coming Soon)</h3>
-      <p className="text-gray-400 max-w-md mb-4">
-        This feature is backend ready but the frontend UI is a placeholder for future phases.
-      </p>
-      <span className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded text-xs">Phase 4+ Integration</span>
-    </div>
-  );
+  const handleDetachKb = async (kbId: string) => {
+    try {
+      await detachKb(kbId);
+      toast.success('Knowledge Base detached successfully');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to detach Knowledge Base');
+    }
+  };
+
 
   return (
     <ContentWrapper>
@@ -278,8 +284,62 @@ export default function AgentDetailsPage() {
           </div>
         )}
 
-        {['knowledge', 'integrations', 'analytics', 'logs', 'settings'].includes(activeTab) && (
-          <PlaceholderTab name={TABS.find(t => t.id === activeTab)?.label || ''} />
+        {activeTab === 'knowledge' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Attached Knowledge Bases</h3>
+              <MagneticButton onClick={() => setIsAttachKbOpen(true)} variant="primary" className="px-4 py-2">
+                <Plug className="w-4 h-4 mr-2" />
+                Attach Knowledge Base
+              </MagneticButton>
+            </div>
+
+            {isLoadingKbs ? (
+              <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin" /></div>
+            ) : knowledgeBases?.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-[rgba(255,255,255,0.1)] rounded-2xl bg-[rgba(255,255,255,0.01)]">
+                <div className="w-16 h-16 rounded-2xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] flex items-center justify-center mb-6">
+                  <Database className="w-8 h-8 text-[#D4AF37]" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">No Knowledge Attached</h3>
+                <p className="text-sm text-gray-500 max-w-sm mb-6">
+                  Attach knowledge bases to provide this agent with domain-specific context and documents.
+                </p>
+                <MagneticButton onClick={() => setIsAttachKbOpen(true)} variant="secondary" className="px-5 py-2">
+                  <Plug className="w-4 h-4 mr-2" />
+                  Browse Knowledge
+                </MagneticButton>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {knowledgeBases?.map((kb: any) => (
+                  <div key={kb.id} className="p-4 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-xl flex items-start justify-between group">
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 rounded-lg bg-[rgba(212,175,55,0.1)] border border-[rgba(212,175,55,0.2)]">
+                        <Database className="w-4 h-4 text-[#D4AF37]" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium text-sm">{kb.name}</h4>
+                        {kb.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{kb.description}</p>}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleDetachKb(kb.id)}
+                      disabled={isDetachingKb}
+                      className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                      title="Detach"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {['integrations', 'analytics', 'logs', 'settings'].includes(activeTab) && (
+          <PlaceholderTab name={TABS.find(t => t.id === activeTab)?.label || ''} icon={TABS.find(t => t.id === activeTab)?.icon || Bot} />
         )}
 
       </div>
@@ -290,6 +350,12 @@ export default function AgentDetailsPage() {
         onConfirm={handleDelete}
         agentName={agent.name}
         isDeleting={isDeleting}
+      />
+
+      <AttachKnowledgeDialog
+        isOpen={isAttachKbOpen}
+        onClose={() => setIsAttachKbOpen(false)}
+        agentId={id}
       />
     </ContentWrapper>
   );

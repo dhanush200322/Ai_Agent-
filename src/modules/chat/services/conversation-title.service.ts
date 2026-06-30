@@ -32,8 +32,8 @@ export class ConversationTitleService {
     ], { temperature: 0.3 });
 
     let finalTitle = '';
-    for await (const chunk of responseStream) {
-      finalTitle += chunk;
+    for await (const chunk of responseStream as any) {
+      finalTitle += chunk.choices[0]?.delta?.content || '';
     }
 
     finalTitle = finalTitle.trim().replace(/^["']|["']$/g, '');

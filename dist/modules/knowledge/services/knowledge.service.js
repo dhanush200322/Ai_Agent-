@@ -58,6 +58,39 @@ class KnowledgeService {
         auditLogger_1.AuditLogger.log('KNOWLEDGE_BASE_DELETED', 'knowledge', { knowledgeBaseId: id, organizationId });
         return { success: true };
     }
+    // Source methods
+    async createSource(organizationId, knowledgeBaseId, userId, payload) {
+        const kb = await this.knowledgeRepo.findKnowledgeBaseById(organizationId, knowledgeBaseId);
+        if (!kb)
+            throw new AppError_1.NotFoundError('Knowledge Base not found');
+        const type = payload.type?.toUpperCase();
+        if (!['WEBSITE', 'FAQ', 'TEXT'].includes(type)) {
+            throw new Error(`Invalid source type: ${type}`);
+        }
+        let originalName = 'Unknown Source';
+        if (type === 'WEBSITE')
+            originalName = payload.data.url || 'Website URL';
+        if (type === 'FAQ')
+            originalName = payload.data.name || 'FAQ Import';
+        if (type === 'TEXT')
+            originalName = payload.data.name || 'Manual Notes';
+        const docData = {
+            knowledgeBaseId,
+            organizationId,
+            uploadedById: userId,
+            originalName,
+            status: 'PENDING',
+            sourceType: type,
+            metadata: JSON.stringify(payload.data || {})
+        };
+        const source = await this.knowledgeRepo.createKnowledgeDocument(docData);
+        // Fire and forget document processing
+        this.processingService.processDocument(source.id).catch(err => {
+            console.error(`Unhandled error in background processing for source ${source.id}`, err);
+        });
+        auditLogger_1.AuditLogger.log('KNOWLEDGE_SOURCE_CREATED', 'knowledge', { sourceId: source.id, knowledgeBaseId, organizationId });
+        return source;
+    }
     // Document methods
     async uploadDocument(organizationId, knowledgeBaseId, userId, file) {
         const kb = await this.knowledgeRepo.findKnowledgeBaseById(organizationId, knowledgeBaseId);
@@ -72,7 +105,7 @@ class KnowledgeService {
             mimeType: file.mimetype,
             extension: file.originalname.split('.').pop() || '',
             size: file.size,
-            storagePath: `/uploads/${file.filename}`,
+            storagePath: `/uploads/documents/${file.filename}`,
             status: 'PENDING'
         };
         const document = await this.knowledgeRepo.createKnowledgeDocument(docData);

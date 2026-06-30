@@ -1,6 +1,7 @@
 import { PrismaClient, MemoryType } from '@prisma/client';
 import { EmbeddingService } from '../../knowledge/services/embedding.service';
 import { VectorService } from '../../knowledge/services/vector.service';
+import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 const embeddingService = new EmbeddingService();
@@ -59,6 +60,7 @@ export class MemoryService {
     const vector = embeddings[0];
 
     // 3. Save to Prisma
+    const vectorId = randomUUID();
     const memory = await prisma.conversationMemory.create({
       data: {
         conversationId: data.conversationId,
@@ -67,17 +69,10 @@ export class MemoryService {
         messageId: data.messageId,
         content: data.content,
         embeddingModel: 'Xenova/all-MiniLM-L6-v2', // Match embedding service model
-        vectorId: '', // Will update
+        vectorId,
         memoryType: data.memoryType || 'SHORT_TERM',
         importance
       }
-    });
-
-    // We use the Prisma ID as the Vector UUID
-    const vectorId = memory.id;
-    await prisma.conversationMemory.update({
-      where: { id: memory.id },
-      data: { vectorId }
     });
 
     // 4. Save to Qdrant

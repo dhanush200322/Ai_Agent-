@@ -20,7 +20,7 @@ export class RetrievalService {
     }
   ): Promise<RetrievalResult[]> {
     const topK = options?.topK || 5;
-    const minScore = options?.minScore || 0.2;
+    const minScore = options?.minScore || 0.05;
 
     // 1. Generate Query Embedding
     const queryVectors = await this.embeddingService.generateEmbeddings([query]);
@@ -37,6 +37,8 @@ export class RetrievalService {
         limit: fetchLimit
       }
     );
+
+    console.log('[RetrievalService] Qdrant Results:', qdrantResults.map(r => ({ score: r.score, text: (r.payload as any)?.content?.substring(0, 50) })));
 
     // 3. Score Filtering
     const filteredResults = qdrantResults.filter(res => res.score >= minScore);
