@@ -59,5 +59,9 @@ export const useChatStore = create<ChatState>((set) => ({
     streamingMetrics: null
   }),
 
-  setSelectedAgent: (agent) => set({ selectedAgent: agent }),
+  setSelectedAgent: (agent) => set({ 
+    selectedAgent: agent,
+    activeConversation: null,
+    messages: []
+  }),
 }));
