@@ -1,9 +1,21 @@
 import React from 'react';
 import { MessageSquarePlus, Sparkles, Database, FileText } from 'lucide-react';
+import { useChatStore } from '../store/useChatStore';
 
 export const WelcomeScreen: React.FC<{ onNewChat: () => void }> = ({ onNewChat }) => {
+  const { isMobileSidebarOpen, setMobileSidebarOpen } = useChatStore();
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400">
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400 relative">
+      <button 
+        onClick={() => setMobileSidebarOpen(!isMobileSidebarOpen)}
+        className="absolute top-4 left-4 p-2 text-zinc-400 hover:text-white rounded-lg md:hidden"
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
       <div className="w-16 h-16 bg-zinc-800/50 rounded-2xl flex items-center justify-center mb-6 border border-zinc-700/50">
         <Sparkles className="w-8 h-8 text-yellow-500" />
       </div>

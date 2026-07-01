@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useDashboard } from '@/hooks/useDashboard';
 import { NavigationMenu } from '../navigation/NavigationMenu';
@@ -9,6 +9,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function Sidebar() {
   const { isSidebarCollapsed, toggleSidebar, isMobileMenuOpen, setMobileMenuOpen } = useDashboard();
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isMobileMenuOpen, setMobileMenuOpen]);
 
   return (
     <>
@@ -20,7 +30,7 @@ export function Sidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
           />
         )}
       </AnimatePresence>
@@ -32,7 +42,7 @@ export function Sidebar() {
           fixed top-0 left-0 bottom-0 z-50 
           bg-[rgba(10,10,10,0.95)] backdrop-blur-xl border-r border-[rgba(255,255,255,0.05)]
           flex flex-col shadow-2xl transition-all duration-300 ease-in-out
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           ${isSidebarCollapsed ? 'w-[80px]' : 'w-[280px]'}
         `}
       >

@@ -14,7 +14,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       
       <div 
         className={`flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'lg:pl-[80px]' : 'lg:pl-[280px]'
+          isSidebarCollapsed ? 'md:pl-[80px]' : 'md:pl-[280px]'
         }`}
       >
         <TopNavigation />

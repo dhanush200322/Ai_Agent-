@@ -114,7 +114,7 @@ export default function KnowledgeBaseDetails() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center space-x-1 border-b border-[rgba(255,255,255,0.05)] mb-8 overflow-x-auto pb-px">
+      <div className="flex items-center space-x-1 border-b border-[rgba(255,255,255,0.05)] mb-8 overflow-x-auto pb-px [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -206,7 +206,7 @@ export default function KnowledgeBaseDetails() {
                   <div key={agent.id} className="p-4 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-xl flex items-start justify-between group">
                     <div className="flex items-start space-x-3">
                       <div className="w-10 h-10 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden shrink-0">
-                        {agent.avatar ? <img src={agent.avatar} className="w-full h-full object-cover" /> : <Users className="w-5 h-5 text-gray-400" />}
+                        {agent.avatar ? <img src={agent.avatar} alt={agent.name || 'Agent avatar'} className="w-full h-full object-cover" /> : <Users className="w-5 h-5 text-gray-400" />}
                       </div>
                       <div>
                         <h4 className="text-white font-medium text-sm">{agent.name}</h4>

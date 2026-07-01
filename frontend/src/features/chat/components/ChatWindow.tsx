@@ -16,7 +16,9 @@ export const ChatWindow: React.FC = () => {
     setStreamingMetrics, 
     clearStreaming, 
     addMessage, 
-    selectedAgent 
+    selectedAgent,
+    isContextPanelOpen,
+    setContextPanelOpen
   } = useChatStore();
 
   const handleSend = async (messageContent: string) => {
@@ -70,8 +72,8 @@ export const ChatWindow: React.FC = () => {
   if (!activeConversation) return null;
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <div className="flex-1 flex flex-col min-w-0 bg-zinc-950">
+    <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-w-0 bg-zinc-950 h-full">
         <ConversationHeader />
         <MessageList />
         <MessageComposer 
@@ -79,7 +81,18 @@ export const ChatWindow: React.FC = () => {
           isStreaming={isStreaming} 
         />
       </div>
-      <ContextPanel />
+      
+      {/* Mobile Context Panel Backdrop */}
+      {isContextPanelOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setContextPanelOpen(false)}
+        />
+      )}
+      
+      <div className={`fixed inset-y-0 right-0 z-50 transform transition-transform duration-300 lg:relative lg:translate-x-0 ${isContextPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <ContextPanel />
+      </div>
     </div>
   );
 };

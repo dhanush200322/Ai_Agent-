@@ -164,11 +164,11 @@ function SecretsList({ secrets, isLoading }: { secrets?: VaultSecret[], isLoadin
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/10 bg-black/20 text-slate-400 text-sm">
-                <th className="p-4 font-medium">Secret Name</th>
+                <th className="p-4 font-medium sticky left-0 z-10 bg-black/40 backdrop-blur-xl min-w-[200px]">Secret Name</th>
                 <th className="p-4 font-medium">Category</th>
                 <th className="p-4 font-medium">Provider</th>
-                <th className="p-4 font-medium">Created Date</th>
-                <th className="p-4 font-medium">Updated Date</th>
+                <th className="p-4 font-medium hidden md:table-cell">Created Date</th>
+                <th className="p-4 font-medium hidden md:table-cell">Updated Date</th>
                 <th className="p-4 w-12"></th>
               </tr>
             </thead>
@@ -176,11 +176,11 @@ function SecretsList({ secrets, isLoading }: { secrets?: VaultSecret[], isLoadin
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-white/5">
-                    <td className="p-4"><div className="w-32 h-4 bg-white/5 rounded animate-pulse" /></td>
+                    <td className="p-4 sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl"><div className="w-32 h-4 bg-white/5 rounded animate-pulse" /></td>
                     <td className="p-4"><div className="w-20 h-5 bg-white/5 rounded-full animate-pulse" /></td>
                     <td className="p-4"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /></td>
+                    <td className="p-4 hidden md:table-cell"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /></td>
+                    <td className="p-4 hidden md:table-cell"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /></td>
                     <td className="p-4"></td>
                   </tr>
                 ))
@@ -201,25 +201,25 @@ function SecretsList({ secrets, isLoading }: { secrets?: VaultSecret[], isLoadin
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     key={secret.id} 
-                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    className="border-b border-white/5 hover:bg-white/[0.05] transition-colors cursor-pointer group"
                     onClick={() => router.push(`/dashboard/vault/${secret.id}`)}
                   >
-                    <td className="p-4">
+                    <td className="p-4 sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl group-hover:bg-[#151515]/90 transition-colors">
                       <div className="font-medium text-white flex items-center gap-2">
-                        <Lock className="w-4 h-4 text-slate-400" /> {secret.name}
+                        <Lock className="w-4 h-4 text-slate-400 shrink-0" /> <span className="truncate">{secret.name}</span>
                       </div>
                       {secret.description && <div className="text-xs text-slate-500 mt-1 truncate max-w-[200px]">{secret.description}</div>}
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       <CategoryBadge category={secret.category} />
                     </td>
-                    <td className="p-4 text-slate-300 text-sm">
+                    <td className="p-4 text-slate-300 text-sm whitespace-nowrap">
                       {secret.provider}
                     </td>
-                    <td className="p-4 text-sm text-slate-400">
+                    <td className="p-4 text-sm text-slate-400 hidden md:table-cell whitespace-nowrap">
                       <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(secret.createdAt).toLocaleDateString()}</div>
                     </td>
-                    <td className="p-4 text-sm text-slate-400">
+                    <td className="p-4 text-sm text-slate-400 hidden md:table-cell whitespace-nowrap">
                       <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {new Date(secret.updatedAt).toLocaleDateString()}</div>
                     </td>
                     <td className="p-4 text-right">

@@ -10,7 +10,10 @@ interface ChatState {
   streamingSources: Citation[];
   streamingMetrics: ChatMetrics | null;
   selectedAgent: Agent | null;
-  
+  isMobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (isOpen: boolean) => void;
+  isContextPanelOpen: boolean;
+  setContextPanelOpen: (isOpen: boolean) => void;
   // Actions
   setActiveConversation: (conversation: Conversation | null) => void;
   setConversations: (conversations: Conversation[]) => void;
@@ -38,7 +41,11 @@ export const useChatStore = create<ChatState>((set) => ({
   streamingSources: [],
   streamingMetrics: null,
   selectedAgent: null,
+  isMobileSidebarOpen: false,
+  isContextPanelOpen: false,
 
+  setContextPanelOpen: (isOpen) => set({ isContextPanelOpen: isOpen }),
+  setMobileSidebarOpen: (isOpen) => set({ isMobileSidebarOpen: isOpen }),
   setActiveConversation: (conversation) => set({ activeConversation: conversation }),
   setConversations: (conversations) => set({ conversations }),
   addConversation: (conversation) => set((state) => ({ conversations: [conversation, ...state.conversations] })),
@@ -62,6 +69,7 @@ export const useChatStore = create<ChatState>((set) => ({
   setSelectedAgent: (agent) => set({ 
     selectedAgent: agent,
     activeConversation: null,
-    messages: []
+    messages: [],
+    isMobileSidebarOpen: false
   }),
 }));

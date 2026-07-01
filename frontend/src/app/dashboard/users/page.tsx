@@ -140,7 +140,7 @@ export default function UsersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/10 bg-black/20 text-slate-400 text-sm">
-                <th className="p-4 w-12">
+                <th className="p-4 w-12 sticky left-0 z-10 bg-black/40 backdrop-blur-xl">
                   <input 
                     type="checkbox" 
                     checked={(usersData?.data?.length || 0) > 0 && selectedUsers.length === (usersData?.data?.length || 0)}
@@ -148,10 +148,10 @@ export default function UsersPage() {
                     className="rounded border-white/20 bg-black/50 text-indigo-500 focus:ring-indigo-500"
                   />
                 </th>
-                <th className="p-4 font-medium">User</th>
+                <th className="p-4 font-medium sticky left-12 z-10 bg-black/40 backdrop-blur-xl min-w-[200px]">User</th>
                 <th className="p-4 font-medium">Role</th>
                 <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium">Last Login</th>
+                <th className="p-4 font-medium hidden md:table-cell">Last Login</th>
                 <th className="p-4 w-12"></th>
               </tr>
             </thead>
@@ -159,14 +159,14 @@ export default function UsersPage() {
               {isLoadingUsers ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-white/5">
-                    <td className="p-4"><div className="w-4 h-4 bg-white/5 rounded animate-pulse" /></td>
-                    <td className="p-4 flex gap-3">
+                    <td className="p-4 sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl"><div className="w-4 h-4 bg-white/5 rounded animate-pulse" /></td>
+                    <td className="p-4 flex gap-3 sticky left-12 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl min-w-[200px]">
                       <div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />
                       <div className="space-y-2"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /><div className="w-32 h-3 bg-white/5 rounded animate-pulse" /></div>
                     </td>
                     <td className="p-4"><div className="w-20 h-5 bg-white/5 rounded animate-pulse" /></td>
                     <td className="p-4"><div className="w-16 h-5 bg-white/5 rounded animate-pulse" /></td>
-                    <td className="p-4"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /></td>
+                    <td className="p-4 hidden md:table-cell"><div className="w-24 h-4 bg-white/5 rounded animate-pulse" /></td>
                     <td className="p-4"></td>
                   </tr>
                 ))
@@ -187,13 +187,13 @@ export default function UsersPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     key={user.id} 
-                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    className="border-b border-white/5 hover:bg-white/[0.05] transition-colors cursor-pointer group"
                     onClick={(e) => {
                       if ((e.target as HTMLElement).closest('input[type="checkbox"]')) return;
                       router.push(`/dashboard/users/${user.id}`);
                     }}
                   >
-                    <td className="p-4">
+                    <td className="p-4 sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl group-hover:bg-[#151515]/90 transition-colors">
                       <input 
                         type="checkbox" 
                         checked={selectedUsers.includes(user.id)}
@@ -202,28 +202,28 @@ export default function UsersPage() {
                         onClick={e => e.stopPropagation()}
                       />
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 sticky left-12 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl group-hover:bg-[#151515]/90 transition-colors min-w-[200px]">
                       <div className="flex items-center gap-3">
                         {user.avatar ? (
                           <img src={user.avatar} alt={user.firstName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-medium border border-indigo-500/30">
+                          <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-medium border border-indigo-500/30 shrink-0">
                             {user.firstName?.[0]}{user.lastName?.[0]}
                           </div>
                         )}
-                        <div>
-                          <div className="font-medium text-white">{user.firstName} {user.lastName} {user.isOwner && <span className="ml-2 text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full">Owner</span>}</div>
-                          <div className="text-sm text-slate-400">{user.email}</div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-white truncate">{user.firstName} {user.lastName} {user.isOwner && <span className="ml-2 text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full">Owner</span>}</div>
+                          <div className="text-sm text-slate-400 truncate">{user.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-slate-300">
                         <Shield className="w-3.5 h-3.5" />
                         {user.role?.name || 'No Role'}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                         user.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
                         user.status === 'SUSPENDED' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 
@@ -235,7 +235,7 @@ export default function UsersPage() {
                         {user.status}
                       </div>
                     </td>
-                    <td className="p-4 text-sm text-slate-400">
+                    <td className="p-4 text-sm text-slate-400 whitespace-nowrap hidden md:table-cell">
                       {user.lastLogin ? (
                         <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {new Date(user.lastLogin).toLocaleDateString()}</div>
                       ) : (

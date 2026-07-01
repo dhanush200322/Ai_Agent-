@@ -128,7 +128,7 @@ export const ConnectAgentDialog: React.FC<ConnectAgentDialogProps> = ({ isOpen, 
                   </div>
                   <div className="ml-3 flex-1 flex items-center space-x-3">
                     <div className="w-8 h-8 rounded-md bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden shrink-0">
-                      {agent.avatar ? <img src={agent.avatar} className="w-full h-full object-cover" /> : <Bot className="w-4 h-4 text-gray-400" />}
+                      {agent.avatar ? <img src={agent.avatar} alt={agent.name || 'Agent avatar'} className="w-full h-full object-cover" /> : <Bot className="w-4 h-4 text-gray-400" />}
                     </div>
                     <div>
                       <span className="block text-sm font-medium text-white">{agent.name}</span>

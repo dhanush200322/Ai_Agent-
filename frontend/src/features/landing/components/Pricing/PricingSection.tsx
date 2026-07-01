@@ -55,7 +55,7 @@ export const PricingSection = () => {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan, i) => (
             <motion.div
               key={i}
@@ -64,7 +64,9 @@ export const PricingSection = () => {
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
               whileHover={{ y: -10, scale: 1.02 }}
-              className={`p-10 rounded-[2rem] relative bg-white/[0.02] backdrop-blur-2xl border transition-all duration-300 group overflow-hidden ${plan.popular ? 'border-[#4F8CFF]/50 shadow-[0_0_50px_rgba(79,140,255,0.15)]' : 'border-white/[0.08] hover:border-white/[0.15]'}`}
+              className={`p-10 rounded-[2rem] relative bg-white/[0.02] backdrop-blur-2xl border transition-all duration-300 group overflow-hidden ${
+                plan.popular ? 'border-[#4F8CFF]/50 shadow-[0_0_50px_rgba(79,140,255,0.15)]' : 'border-white/[0.08] hover:border-white/[0.15]'
+              } ${i === 2 ? 'md:col-span-2 lg:col-span-1 md:mx-auto md:w-1/2 lg:w-full' : ''}`}
             >
               {plan.popular && (
                 <div className="absolute inset-0 bg-gradient-to-br from-[#4F8CFF]/[0.05] to-transparent pointer-events-none" />

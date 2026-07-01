@@ -18,7 +18,7 @@ export function TopNavigation() {
       <div className="flex items-center gap-4">
         <button 
           onClick={toggleMobileMenu}
-          className="p-2 -ml-2 text-gray-400 hover:text-white rounded-lg lg:hidden"
+          className="p-2 -ml-2 text-gray-400 hover:text-white rounded-lg md:hidden"
         >
           <Menu className="w-5 h-5" />
         </button>

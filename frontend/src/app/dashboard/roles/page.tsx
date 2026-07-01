@@ -173,7 +173,7 @@ function PermissionMatrix({ roles, permissions, isLoading }: { roles: any, permi
         <table className="w-full text-left border-collapse">
           <thead>
             <tr>
-              <th className="p-4 bg-black/20 border-b border-r border-white/10 min-w-[150px]">
+              <th className="p-4 bg-black/40 backdrop-blur-xl border-b border-r border-white/10 min-w-[150px] sticky left-0 z-20">
                 <span className="text-slate-400 font-medium">Resources</span>
               </th>
               {roles?.map((role: any) => (
@@ -189,7 +189,7 @@ function PermissionMatrix({ roles, permissions, isLoading }: { roles: any, permi
               <React.Fragment key={resource}>
                 {/* Resource Header Row */}
                 <tr className="bg-white/[0.02]">
-                  <td colSpan={roles?.length + 1} className="p-3 border-b border-white/5 text-indigo-300 font-semibold uppercase text-xs tracking-wider">
+                  <td colSpan={roles?.length + 1} className="p-3 border-b border-white/5 text-indigo-300 font-semibold uppercase text-xs tracking-wider sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-[inset_-1px_0_0_rgba(255,255,255,0.05)]">
                     {resource}
                   </td>
                 </tr>
@@ -200,7 +200,7 @@ function PermissionMatrix({ roles, permissions, isLoading }: { roles: any, permi
                   
                   return (
                     <tr key={`${resource}-${action}`} className="border-b border-white/5 hover:bg-white/[0.01]">
-                      <td className="p-3 border-r border-white/5 pl-8 text-sm text-slate-300 capitalize">
+                      <td className="p-3 border-r border-white/5 pl-8 text-sm text-slate-300 capitalize sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl">
                         {action}
                       </td>
                       {roles?.map((role: any) => (

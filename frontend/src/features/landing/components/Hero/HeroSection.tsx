@@ -106,29 +106,31 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-wrap items-center gap-5 mb-16"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-5 mb-16 w-full sm:w-auto"
           >
-            <Link href="/register">
+            <Link href="/register" className="w-full sm:w-auto">
               <MagneticButton>
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-8 py-4 bg-white text-[#04070D] font-sans font-semibold rounded-full hover:bg-white/90 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)] hover:shadow-[0_0_50px_-10px_rgba(255,255,255,0.8)]"
+                  className="w-full sm:w-auto px-8 py-4 bg-white text-[#04070D] font-sans font-semibold rounded-full hover:bg-white/90 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)] hover:shadow-[0_0_50px_-10px_rgba(255,255,255,0.8)]"
                 >
                   Start Building
                 </motion.button>
               </MagneticButton>
             </Link>
             
-            <MagneticButton>
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-8 py-4 bg-white/[0.03] border border-white/[0.08] text-white font-sans font-medium rounded-full hover:bg-white/[0.08] transition-all backdrop-blur-xl"
-              >
-                Book Enterprise Demo
-              </motion.button>
-            </MagneticButton>
+            <div className="w-full sm:w-auto">
+              <MagneticButton>
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full sm:w-auto px-8 py-4 bg-white/[0.03] border border-white/[0.08] text-white font-sans font-medium rounded-full hover:bg-white/[0.08] transition-all backdrop-blur-xl"
+                >
+                  Book Enterprise Demo
+                </motion.button>
+              </MagneticButton>
+            </div>
           </motion.div>
 
           <motion.div 

@@ -23,7 +23,7 @@ export const AssistantBubble: React.FC<{
           )}
         </div>
         
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-white">{agentName || 'AI Agent'}</span>
             <span className="text-[10px] text-zinc-500">
@@ -31,7 +31,7 @@ export const AssistantBubble: React.FC<{
             </span>
           </div>
           
-          <div className="prose prose-invert prose-zinc max-w-none prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
+          <div className="prose prose-invert prose-zinc max-w-none prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800 prose-pre:max-w-full prose-pre:overflow-x-auto break-words">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}

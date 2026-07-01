@@ -32,7 +32,7 @@ export const StreamingBubble: React.FC<{
           <div className="absolute inset-0 bg-yellow-500/10 animate-pulse"></div>
         </div>
         
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-white">{agentName || 'AI Agent'}</span>
             <span className="text-[10px] text-yellow-500 animate-pulse flex items-center gap-1">
@@ -40,7 +40,7 @@ export const StreamingBubble: React.FC<{
             </span>
           </div>
           
-          <div className="prose prose-invert prose-zinc max-w-none prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
+          <div className="prose prose-invert prose-zinc max-w-none prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800 prose-pre:max-w-full prose-pre:overflow-x-auto break-words">
             {content ? (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}

@@ -236,31 +236,59 @@ function Flow({ workflowId }: { workflowId: string }) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [nodes, edges, undo, redo, setNodes, setEdges]);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   if (isLoading) return <div className="p-8 text-center text-zinc-500">Loading Canvas...</div>;
 
   return (
     <div className="flex w-full h-[calc(100vh-80px)] overflow-hidden bg-zinc-950 relative" ref={ref}>
-      {/* Node Library Sidebar */}
-      <div className="w-64 bg-zinc-900 border-r border-zinc-800 p-4 flex flex-col gap-4 overflow-y-auto z-10">
-        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-2">Node Library</h3>
-        {SUPPORTED_NODES.map(node => (
-          <div 
-            key={node.type}
-            className={`p-3 rounded-xl border cursor-grab hover:-translate-y-0.5 transition-transform bg-zinc-950 flex flex-col gap-2 ${node.color}`}
-            onDragStart={(event) => {
-              event.dataTransfer.setData('application/reactflow', node.type);
-              event.dataTransfer.effectAllowed = 'move';
-            }}
-            draggable
-          >
-            <div className="flex items-center gap-2">
-              <node.icon className="w-4 h-4" />
-              <span className="font-medium text-sm text-white">{node.label}</span>
-            </div>
-            <p className="text-xs text-zinc-500 line-clamp-2">{node.description}</p>
-          </div>
-        ))}
+      {/* Mobile warning overlay */}
+      <div className="md:hidden absolute inset-0 z-50 bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-6">
+          <svg className="w-8 h-8 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">Desktop Optimized</h2>
+        <p className="text-zinc-400 max-w-sm">
+          Workflow Builder is optimized for tablets and desktops. Please switch to a larger screen for the full editing experience.
+        </p>
       </div>
+
+      {/* Node Library Sidebar */}
+      <div className={`${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'} transition-all duration-300 shrink-0 bg-zinc-900 border-r border-zinc-800 flex flex-col z-10 relative`}>
+        <div className="p-4 flex flex-col gap-4 overflow-y-auto h-full min-w-[16rem]">
+          <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-2">Node Library</h3>
+          {SUPPORTED_NODES.map(node => (
+            <div 
+              key={node.type}
+              className={`p-3 rounded-xl border cursor-grab hover:-translate-y-0.5 transition-transform bg-zinc-950 flex flex-col gap-2 ${node.color}`}
+              onDragStart={(event) => {
+                event.dataTransfer.setData('application/reactflow', node.type);
+                event.dataTransfer.effectAllowed = 'move';
+              }}
+              draggable
+            >
+              <div className="flex items-center gap-2">
+                <node.icon className="w-5 h-5" />
+                <span className="font-medium text-sm text-white">{node.label}</span>
+              </div>
+              <p className="text-xs text-zinc-500 line-clamp-2">{node.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Sidebar Toggle Button */}
+      <button 
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-zinc-800 text-zinc-400 p-1.5 rounded-r-md border border-l-0 border-zinc-700 hover:text-white hidden md:block lg:hidden"
+        style={{ transform: `translate(${isSidebarOpen ? '256px' : '0'}, -50%)` }}
+      >
+        <svg className={`w-4 h-4 transition-transform ${isSidebarOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
 
       {/* Main Canvas */}
       <div className="flex-1 h-full relative" onDrop={onDrop} onDragOver={onDragOver}>
