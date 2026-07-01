@@ -63,6 +63,7 @@ export const chatService = {
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Bypass-Tunnel-Reminder': 'true'
     };
     if (!payload.isWidget && token) {
       headers['Authorization'] = `Bearer ${token}`;

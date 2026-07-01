@@ -12,7 +12,8 @@ export async function GET(
     // which only allows the frontend origin by default.
     const res = await fetch(`${backendUrl}/chat/widget/agents/${resolvedParams.agentId}`, {
       headers: {
-        'Origin': process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000'
+        'Origin': process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000',
+        'Bypass-Tunnel-Reminder': 'true'
       }
     });
 
