@@ -88,7 +88,7 @@ api.interceptors.response.use(
         processQueue(refreshError as Error, null);
         useAuthStore.getState().logout();
         if (typeof window !== 'undefined') {
-            window.location.href = '/login';
+            window.location.href = '/';
         }
         return Promise.reject(refreshError);
       } finally {

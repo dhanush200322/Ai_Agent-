@@ -18,9 +18,23 @@ export interface OrgStats {
   totalUsers: number;
   activeUsers: number;
   totalAgents: number;
-  totalWorkflows: number;
+  activeAgents: number;
+  totalConversations: number;
   totalKnowledgeBases: number;
-  storageUsedBytes: number;
+  workflowsRun: number;
+  storageUsageBytes: number;
+  apiUsageCost: number;
+}
+
+export interface AuditLog {
+  id: string;
+  organizationId: string;
+  userId: string;
+  action: string;
+  details?: string;
+  ip?: string;
+  userAgent?: string;
+  createdAt: string;
 }
 
 export const organizationKeys = {
@@ -75,6 +89,16 @@ export const useTransferOwnership = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: organizationKeys.detail() });
+    },
+  });
+};
+// Hook: Get Organization Activity
+export const useOrganizationActivity = () => {
+  return useQuery({
+    queryKey: [...organizationKeys.all, 'activity'],
+    queryFn: async (): Promise<AuditLog[]> => {
+      const response = await api.get('/organization/activity');
+      return response.data.data;
     },
   });
 };

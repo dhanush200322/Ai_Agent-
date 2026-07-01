@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
+import { FEATURE_FLAGS } from '@/config/features';
+import { ComingSoon } from '@/components/dashboard/ComingSoon';
 
 type SortField = 'name' | 'status' | 'updatedAt';
 type SortOrder = 'asc' | 'desc';
@@ -93,6 +95,14 @@ export default function WorkflowsDashboard() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  if (!FEATURE_FLAGS.workflowBuilder) {
+    return (
+      <ContentWrapper>
+        <ComingSoon title="Workflow Builder" />
+      </ContentWrapper>
+    );
+  }
 
   return (
     <ContentWrapper>

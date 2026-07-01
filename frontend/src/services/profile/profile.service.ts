@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/api';
+import { useAuthStore } from '@/features/auth/store';
 
 export interface UserSession {
   id: string;
@@ -33,8 +34,12 @@ export const useUpdateProfile = () => {
       }
       return response.data.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      const currentStore = useAuthStore.getState();
+      if (currentStore.user && data) {
+        currentStore.setUser({ ...currentStore.user, ...data });
+      }
     },
   });
 };

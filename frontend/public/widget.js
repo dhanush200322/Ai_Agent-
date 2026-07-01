@@ -14,13 +14,13 @@
   }
 
   if (!scriptTag) {
-    console.error('Enterprise AI Widget: Could not find script tag. Make sure you included the data-agent-id attribute.');
+    console.error('Nexora AI Widget: Could not find script tag. Make sure you included the data-agent-id attribute.');
     return;
   }
 
   const agentId = scriptTag.getAttribute('data-agent-id');
   if (!agentId) {
-    console.error('Enterprise AI Widget: Missing data-agent-id attribute.');
+    console.error('Nexora AI Widget: Missing data-agent-id attribute.');
     return;
   }
 
@@ -179,7 +179,7 @@
         });
       })
       .catch(err => {
-        console.error('Enterprise AI Widget: Failed to load agent config', err);
+        console.error('Nexora AI Widget: Failed to load agent config', err);
       });
   };
 

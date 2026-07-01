@@ -1,2 +1,2 @@
-export const APP_NAME = "Enterprise AI Agent Platform";
+export const APP_NAME = "Nexora AI";
 export const API_VERSION = "v1";

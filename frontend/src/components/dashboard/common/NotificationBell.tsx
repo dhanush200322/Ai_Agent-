@@ -47,7 +47,7 @@ export function NotificationBell() {
               
               {/* Placeholder Notification */}
               <div className="px-4 py-3 hover:bg-[rgba(255,255,255,0.02)] transition-colors cursor-pointer border-l-2 border-[#D4AF37]">
-                <p className="text-sm text-gray-200">Welcome to Enterprise AI</p>
+                <p className="text-sm text-gray-200">Welcome to Nexora AI</p>
                 <p className="text-xs text-gray-500 mt-1">Your workspace is ready.</p>
                 <p className="text-[10px] text-gray-600 mt-2">2 hours ago</p>
               </div>

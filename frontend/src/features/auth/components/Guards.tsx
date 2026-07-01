@@ -12,7 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true);
     if (status === 'unauthenticated') {
-      router.replace('/login');
+      router.replace('/');
     }
   }, [status, router]);
 

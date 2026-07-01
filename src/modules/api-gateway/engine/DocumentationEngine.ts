@@ -11,9 +11,9 @@ export class DocumentationEngine {
     return {
       openapi: '3.1.0',
       info: {
-        title: 'Enterprise AI Agent Platform API',
+        title: 'Nexora AI API',
         version: version,
-        description: 'Public APIs for the Enterprise AI Agent Platform'
+        description: 'Public APIs for the Nexora AI'
       },
       servers: [
         { url: 'https://api.enterprise-agent.com/v1' }

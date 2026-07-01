@@ -31,7 +31,7 @@ export const FeaturesSection = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="font-heading text-4xl md:text-6xl font-bold tracking-tight mb-6 text-white drop-shadow-md">
-              Enterprise AI Platform
+              Nexora AI
             </h2>
             <p className="font-sans text-xl text-white/50 max-w-2xl mx-auto font-light leading-relaxed">
               Everything you need to build, deploy, and manage production-grade AI agents at scale.

@@ -217,7 +217,7 @@ export default function WidgetChatPage() {
         <div className="text-center mt-2">
           <span className="text-[10px] flex items-center justify-center gap-1" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }}>
             <Sparkles className="w-3 h-3" />
-            Powered by Enterprise AI
+            Powered by Nexora AI
           </span>
         </div>
       </div>

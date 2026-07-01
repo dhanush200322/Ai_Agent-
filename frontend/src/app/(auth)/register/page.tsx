@@ -1,9 +1,9 @@
-import { AuthPanel } from '@/features/landing/components/auth/AuthPanel';
+import { RegisterForm } from '@/features/auth/forms/RegisterForm';
 
 export default function RegisterPage() {
   return (
-    <div className="w-full flex items-center justify-center">
-      <AuthPanel initialState="signup" />
+    <div className="w-full">
+      <RegisterForm />
     </div>
   );
 }

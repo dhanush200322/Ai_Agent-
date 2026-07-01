@@ -15,7 +15,7 @@ export const Footer = () => {
               <span className="font-bold text-xl tracking-tight text-white">AgentOS</span>
             </Link>
             <p className="text-white/50 mb-8 max-w-sm font-light leading-relaxed">
-              The operating system for Enterprise AI. Build, deploy, and scale autonomous agents with zero infrastructure overhead.
+              The operating system for Nexora AI. Build, deploy, and scale autonomous agents with zero infrastructure overhead.
             </p>
             <div className="flex gap-5">
               <Link href="#" className="text-white/40 hover:text-white transition-colors hover:-translate-y-1 transform duration-200"><Twitter className="w-5 h-5" /></Link>

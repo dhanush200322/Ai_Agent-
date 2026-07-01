@@ -1,4 +1,4 @@
-# Enterprise AI Agent Backend
+# Nexora AI Backend
 
 Enterprise-grade AI Agent backend system, structured to scale with clean architecture principles.
 

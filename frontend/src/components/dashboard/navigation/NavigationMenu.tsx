@@ -28,16 +28,15 @@ const NAVIGATION_ITEMS = [
   { label: 'Knowledge', href: '/dashboard/knowledge', icon: Database, section: 'Workspace' },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare, section: 'Workspace' },
   { label: 'Workflows', href: '/dashboard/workflows', icon: GitMerge, section: 'Workspace' },
-  { label: 'Marketplace', href: '/dashboard/marketplace', icon: Store, section: 'Workspace' },
-  { label: 'Vault', href: '/dashboard/vault', icon: Lock, section: 'Workspace' },
   
   { label: 'Organization', href: '/dashboard/organization', icon: Building2, section: 'Administration' },
   { label: 'Users', href: '/dashboard/users', icon: Users, section: 'Administration' },
   { label: 'Roles', href: '/dashboard/roles', icon: Shield, section: 'Administration' },
-  { label: 'Billing', href: '/dashboard/billing', icon: CreditCard, section: 'Administration' },
+  { label: 'Vault', href: '/dashboard/vault', icon: Lock, section: 'Administration' },
+  { label: 'Observability', href: '/dashboard/observability', icon: Activity, section: 'Administration' },
   
-  { label: 'Observability', href: '/dashboard/observability', icon: Activity, section: 'System' },
-  { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'System' },
+  { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'Platform' },
+  { label: 'Marketplace', href: '/dashboard/marketplace', icon: Store, section: 'Platform' },
 ];
 
 export function NavigationMenu() {

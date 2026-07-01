@@ -29,7 +29,7 @@ export const WorkflowTimeline = () => {
       
       <div className="container mx-auto px-6 mb-20 relative z-30">
         <h2 className="font-heading text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">
-          The Enterprise AI Workflow
+          The Nexora AI Workflow
         </h2>
         <p className="font-sans text-xl text-white/50 max-w-2xl font-light">
           From data ingestion to autonomous execution in seconds.

@@ -14,6 +14,7 @@ router.use(authenticate);
 router.get('/', authorize('organization:view'), asyncHandler(orgController.getOrganization));
 router.patch('/', authorize('organization:update'), validate(updateOrganizationSchema), asyncHandler(orgController.updateOrganization));
 router.get('/stats', authorize('organization:view'), asyncHandler(orgController.getStats));
+router.get('/activity', authorize('organization:view'), asyncHandler(orgController.getActivity));
 router.post('/transfer-ownership', authorize('organization:update'), validate(transferOwnershipSchema), asyncHandler(orgController.transferOwnership));
 
 export default router;

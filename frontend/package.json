@@ -21,6 +21,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dagre": "^0.8.5",
+    "date-fns": "^4.4.0",
     "embla-carousel": "^8.6.0",
     "framer-motion": "^11.0.0",
     "geist": "^1.7.2",

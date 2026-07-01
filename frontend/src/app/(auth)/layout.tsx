@@ -1,22 +1,24 @@
 import { GuestGuard } from '@/features/auth/components/Guards';
-import { AICoreScene } from '@/features/landing/components/scene/AICoreScene';
+import React from 'react';
+import { BrandPanel } from '@/features/auth/components/BrandPanel';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <GuestGuard>
-      <div className="relative min-h-screen w-full flex items-center justify-center bg-[#050505] overflow-hidden">
-        {/* Subtle Background Elements */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          {/* Reuse the 3D scene in the background but very subtle */}
-          <div className="absolute inset-0 opacity-40">
-            <AICoreScene />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/80 via-transparent to-[#050505] backdrop-blur-[2px]"></div>
+      <div className="min-h-screen w-full flex bg-[#050505]">
+        {/* Left Panel - Branding (Hidden on mobile) */}
+        <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] flex-col justify-between border-r border-[rgba(255,255,255,0.05)] bg-[#0B0B0B] p-12 relative overflow-hidden">
+          <BrandPanel />
         </div>
 
-        {/* Auth Content */}
-        <div className="relative z-10 w-full p-4">
-          {children}
+        {/* Right Panel - Auth Content */}
+        <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 xl:px-24 bg-[#050505] relative overflow-y-auto">
+          {/* subtle background glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#D4AF37]/[0.03] blur-[120px] rounded-full pointer-events-none" />
+          
+          <div className="w-full max-w-md mx-auto relative z-10">
+            {children}
+          </div>
         </div>
       </div>
     </GuestGuard>

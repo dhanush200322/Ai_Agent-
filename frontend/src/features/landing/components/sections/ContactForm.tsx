@@ -9,6 +9,7 @@ export function ContactForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [files, setFiles] = useState<File[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [inquiryType, setInquiryType] = useState("Company");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +62,7 @@ export function ContactForm() {
         <div className="mb-16 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Get in Touch</h2>
           <p className="text-[#B7B7B7] max-w-2xl mx-auto text-lg">
-            Have questions about our Enterprise AI agents? Want a custom demo? Send us a message.
+            Have questions about our Nexora AI agents? Want a custom demo? Send us a message.
           </p>
         </div>
 
@@ -114,15 +115,46 @@ export function ContactForm() {
                 <label className="text-sm font-medium text-white/80">Inquiry Type</label>
                 <div className="flex gap-6">
                   <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="radio" name="inquiryType" value="Company Name" defaultChecked className="accent-[#D4AF37] w-4 h-4 cursor-pointer" />
-                    <span className="text-[#B7B7B7] group-hover:text-white transition-colors">Company Name</span>
+                    <input type="radio" name="inquiryType" value="Company" checked={inquiryType === "Company"} onChange={(e) => setInquiryType(e.target.value)} className="accent-[#D4AF37] w-4 h-4 cursor-pointer" />
+                    <span className="text-[#B7B7B7] group-hover:text-white transition-colors">Company</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="radio" name="inquiryType" value="Personal Work" className="accent-[#D4AF37] w-4 h-4 cursor-pointer" />
+                    <input type="radio" name="inquiryType" value="Personal Work" checked={inquiryType === "Personal Work"} onChange={(e) => setInquiryType(e.target.value)} className="accent-[#D4AF37] w-4 h-4 cursor-pointer" />
                     <span className="text-[#B7B7B7] group-hover:text-white transition-colors">Personal Work</span>
                   </label>
                 </div>
               </div>
+
+              {/* Conditional Company Fields */}
+              {inquiryType === "Company" && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 md:p-6"
+                >
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#D4AF37]">Company Name</label>
+                    <input required name="companyName" type="text" className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37] transition-colors" placeholder="Acme Inc." />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#D4AF37]">How many Employee works</label>
+                    <div className="relative">
+                      <select required name="employeeCount" className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37] transition-colors appearance-none">
+                        <option value="" className="bg-[#0B0B0B]">Select an option</option>
+                        <option value="1-10" className="bg-[#0B0B0B]">1-10</option>
+                        <option value="11-50" className="bg-[#0B0B0B]">11-50</option>
+                        <option value="51-200" className="bg-[#0B0B0B]">51-200</option>
+                        <option value="201-500" className="bg-[#0B0B0B]">201-500</option>
+                        <option value="500+" className="bg-[#0B0B0B]">500+</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#B7B7B7]">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Subject */}
               <div className="space-y-2">

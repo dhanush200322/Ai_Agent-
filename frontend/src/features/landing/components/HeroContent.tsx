@@ -8,7 +8,7 @@ import CountUp from "react-countup";
 import Link from "next/link";
 
 export function HeroContent() {
-  const headline = "Build Enterprise AI Agents That Think. Learn. Automate.";
+  const headline = "Build Nexora AIs That Think. Learn. Automate.";
   const words = headline.split(" ");
 
   return (

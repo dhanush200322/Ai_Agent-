@@ -79,7 +79,7 @@ async function run() {
     
     // Sample text mimicking document
     const textContent = `
-Enterprise AI is transforming how organizations work.
+Nexora AI is transforming how organizations work.
 It uses advanced agents to retrieve knowledge, automate workflows, and answer questions.
 This is a test document demonstrating knowledge base ingestion and semantic search capabilities.
 Authentication relies on secure JWT tokens.
@@ -127,7 +127,7 @@ Authentication relies on secure JWT tokens.
       const vectorService = new VectorService();
       
       const queries = [
-        "What is Enterprise AI?",
+        "What is Nexora AI?",
         "How does authentication work?",
         "What does this document demonstrate?"
       ];

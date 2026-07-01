@@ -22,6 +22,17 @@ export class OrganizationController {
     res.status(200).json(ApiResponse.success(stats, 'Organization stats fetched successfully', req.reqId));
   };
   
+  getActivity = async (req: Request, res: Response) => {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const activity = await prisma.auditLog.findMany({
+      where: { organizationId: req.user!.organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+    res.status(200).json(ApiResponse.success(activity, 'Organization activity fetched successfully', req.reqId));
+  };
+  
   transferOwnership = async (req: Request, res: Response) => {
     const { newOwnerId } = req.body;
     await this.orgService.transferOwnership(req.user!.organizationId, req.user!.id, newOwnerId);

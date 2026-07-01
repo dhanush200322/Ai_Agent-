@@ -58,7 +58,7 @@ function SignupFormContent({ onSwitch }: { onSwitch: (state: AuthState) => void 
           </div>
           <h2 className="text-2xl font-bold text-white mb-4">Registration Disabled</h2>
           <p className="text-[#B7B7B7] max-w-sm leading-relaxed">
-            Account creation is managed by your organization. Please contact your administrator to provision an Enterprise AI Agent account.
+            Account creation is managed by your organization. Please contact your administrator to provision an Nexora AI account.
           </p>
         </div>
 

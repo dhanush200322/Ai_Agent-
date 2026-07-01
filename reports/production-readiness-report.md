@@ -1,6 +1,6 @@
 # Enterprise Production Readiness Report
 
-Project: Enterprise AI Agent Platform
+Project: Nexora AI
 Generated: 2026-06-29 07:04:40 UTC
 Production Readiness Score: 65%
 Overall Health: FAIL

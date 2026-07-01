@@ -43,12 +43,12 @@ export class AuthenticationEngine {
     // 3. Risk Engine
     const riskScore = await this.riskEngine.evaluateSessionRisk(user.id, ipAddress, userAgent);
     
-    // 4. MFA Validation
-    const isMfaRequired = await this.policyEngine.isMfaRequired(user.organizationId, user.id, user.role?.name === 'Admin');
-    if (isMfaRequired || riskScore > 50) {
-      // Require MFA challenge flow instead of full login
-      return { requireMfa: true, userId: user.id };
-    }
+    // 4. MFA Validation (Temporarily disabled for direct dashboard access)
+    // const isMfaRequired = await this.policyEngine.isMfaRequired(user.organizationId, user.id, user.role?.name === 'Admin');
+    // if (isMfaRequired || riskScore > 50) {
+    //   // Require MFA challenge flow instead of full login
+    //   return { requireMfa: true, userId: user.id };
+    // }
 
     // Record success
     await prisma.loginHistory.create({

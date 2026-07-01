@@ -1,6 +1,6 @@
 # Frontend_Phases.md
 
-# 🚀 Enterprise AI Agent Platform - Frontend Development Roadmap
+# 🚀 Nexora AI - Frontend Development Roadmap
 
 ## Project Status
 

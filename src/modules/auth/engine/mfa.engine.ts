@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 
 export class MFAEngine {
   async generateSecret(email: string): Promise<{ secret: string; qrCodeUrl: string }> {
-    const secret = speakeasy.generateSecret({ name: `EnterpriseAI (${email})` });
+    const secret = speakeasy.generateSecret({ name: `Nexora AI (${email})` });
     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
     return {
       secret: secret.base32,

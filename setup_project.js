@@ -259,7 +259,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata = {
-  title: 'Enterprise AI Agent Platform',
+  title: 'Nexora AI',
   description: 'Manage and orchestrate AI agents',
 };
 
@@ -367,7 +367,7 @@ const formatUtils = `export const formatDate = (date: string | Date) => {
 `;
 fs.writeFileSync(path.join(root, 'src', 'utils', 'format.ts'), formatUtils);
 
-const constantsIndex = `export const APP_NAME = "Enterprise AI Agent Platform";
+const constantsIndex = `export const APP_NAME = "Nexora AI";
 export const API_VERSION = "v1";
 `;
 fs.writeFileSync(path.join(root, 'src', 'constants', 'index.ts'), constantsIndex);

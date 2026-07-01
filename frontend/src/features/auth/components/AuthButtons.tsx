@@ -1,24 +1,34 @@
 import React from 'react';
 import Link from 'next/link';
+import { MagneticButton } from '@/components/ui/MagneticButton';
+import { Loader2 } from 'lucide-react';
 
 export function LoadingButton({ children, isLoading, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { isLoading?: boolean }) {
   return (
-    <button 
+    <MagneticButton 
+      variant="primary"
       disabled={isLoading || props.disabled}
-      className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-      {...props}
+      className="w-full relative group overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
+      {...(props as any)}
     >
-      {isLoading ? <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span> : null}
-      {children}
-    </button>
+      <div className="flex items-center justify-center">
+        {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+        <span className="font-semibold">{children}</span>
+      </div>
+      
+      {/* Shine effect */}
+      {!isLoading && !props.disabled && (
+        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
+      )}
+    </MagneticButton>
   );
 }
 
 export function ForgotPasswordLink() {
   return (
-    <div className="text-right mt-1">
-      <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline underline-offset-4">
-        Forgot password?
+    <div className="text-right mt-2">
+      <Link href="/forgot-password" className="text-sm font-medium text-zinc-400 hover:text-[#D4AF37] transition-colors">
+        Forgot Password?
       </Link>
     </div>
   );
@@ -26,9 +36,9 @@ export function ForgotPasswordLink() {
 
 export function BackToLoginButton() {
   return (
-    <div className="text-center mt-4">
-      <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary hover:underline underline-offset-4">
-        Back to Login
+    <div className="text-center mt-6">
+      <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-[#D4AF37] transition-colors">
+        Already have an account? Sign In
       </Link>
     </div>
   );

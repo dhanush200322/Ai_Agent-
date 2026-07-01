@@ -1,10 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Twitter, Github, Linkedin, ArrowRight } from "lucide-react";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import { toast } from "sonner";
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+    
+    // Simulate API call
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 1000)),
+      {
+        loading: 'Subscribing...',
+        success: () => {
+          setEmail("");
+          return "Thanks for subscribing to our newsletter!";
+        },
+        error: 'Failed to subscribe. Please try again.',
+      }
+    );
+  };
+
   return (
     <footer className="bg-[#050505] pt-24 pb-12 px-8 md:px-16 lg:px-24 border-t border-[rgba(255,255,255,0.05)] relative overflow-hidden">
       {/* Background Subtle Glow */}
@@ -15,23 +39,25 @@ export function Footer() {
           
           {/* Brand & Newsletter (Takes 2 cols) */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">Enterprise AI<span className="text-[#D4AF37]">.</span></h2>
+            <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">Nexora AI<span className="text-[#D4AF37]">.</span></h2>
             <p className="text-[#B7B7B7] mb-8 max-w-sm">
               The platform for building, deploying, and scaling autonomous AI agents.
             </p>
             
             <div className="mb-6">
               <h3 className="text-white font-medium mb-4">Subscribe to our newsletter</h3>
-              <div className="flex gap-2">
+              <form onSubmit={handleSubscribe} className="flex gap-2">
                 <input 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email" 
                   className="bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.1)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37] w-full"
                 />
-                <button className="bg-[rgba(212,175,55,0.1)] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#050505] px-4 rounded-xl transition-colors flex items-center justify-center">
+                <button type="submit" className="bg-[rgba(212,175,55,0.1)] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#050505] px-4 rounded-xl transition-colors flex items-center justify-center">
                   <ArrowRight className="w-5 h-5" />
                 </button>
-              </div>
+              </form>
             </div>
           </div>
 
@@ -75,7 +101,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-[rgba(255,255,255,0.05)] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[#B7B7B7] text-sm">
-            © {new Date().getFullYear()} Enterprise AI Inc. All rights reserved.
+            © {new Date().getFullYear()} Nexora AI Inc. All rights reserved.
           </p>
           
           <div className="flex gap-4">

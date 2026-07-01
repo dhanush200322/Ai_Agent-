@@ -109,7 +109,7 @@ function GlobalStatusBanner() {
            isHealthy ? <Activity className="w-6 h-6 text-emerald-400" /> : <AlertTriangle className="w-6 h-6 text-rose-400" />}
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white mb-1">Enterprise AI Platform</h2>
+          <h2 className="text-xl font-bold text-white mb-1">Nexora AI</h2>
           <p className="text-sm text-slate-300">
             Overall Status: <strong className={isLoading ? 'text-slate-400' : isHealthy ? 'text-emerald-400' : 'text-rose-400'}>
               {isLoading ? 'CHECKING...' : isHealthy ? 'HEALTHY' : 'DEGRADED'}

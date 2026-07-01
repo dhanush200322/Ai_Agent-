@@ -62,8 +62,8 @@ export default function OrganizationPage() {
                   <StatCard icon={<UserPlus className="w-5 h-5 text-green-400" />} label="Active Users" value={stats?.activeUsers || 0} />
                   <StatCard icon={<Bot className="w-5 h-5 text-purple-400" />} label="AI Agents" value={stats?.totalAgents || 0} />
                   <StatCard icon={<Database className="w-5 h-5 text-amber-400" />} label="Knowledge Bases" value={stats?.totalKnowledgeBases || 0} />
-                  <StatCard icon={<GitMerge className="w-5 h-5 text-rose-400" />} label="Workflows" value={stats?.totalWorkflows || 0} />
-                  <StatCard icon={<HardDrive className="w-5 h-5 text-cyan-400" />} label="Storage Used" value={`${((stats?.storageUsedBytes || 0) / (1024 * 1024)).toFixed(2)} MB`} />
+                  <StatCard icon={<GitMerge className="w-5 h-5 text-rose-400" />} label="Workflows Run" value={stats?.workflowsRun || 0} />
+                  <StatCard icon={<HardDrive className="w-5 h-5 text-cyan-400" />} label="Storage Used" value={`${((stats?.storageUsageBytes || 0) / (1024 * 1024)).toFixed(2)} MB`} />
                 </div>
                 
                 <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl">

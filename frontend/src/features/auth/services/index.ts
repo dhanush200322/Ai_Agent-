@@ -29,11 +29,25 @@ export const authService = {
   },
   
   register: async (data: any) => {
-    throw new Error("Self-registration is disabled. Please contact your administrator.");
+    const response = await api.post('/auth/register', data);
+    const { user, tokens } = response.data.data;
+    const { accessToken, refreshToken } = tokens;
+    
+    // Parse JWT to get sessionId
+    const payloadBase64 = accessToken.split('.')[1];
+    const decodedJson = atob(payloadBase64);
+    const decoded = JSON.parse(decodedJson);
+    const sessionId = decoded.sessionId;
+
+    return { tokens: { accessToken, refreshToken, sessionId }, user };
   },
   
   logout: async () => {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      // Gracefully ignore server errors on logout so local state clears without warnings
+    }
   },
   
   forgotPassword: async (data: ForgotPasswordFormValues) => {

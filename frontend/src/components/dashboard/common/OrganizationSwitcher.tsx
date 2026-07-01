@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/features/auth/store';
 import { ChevronsUpDown, Check, Building2, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

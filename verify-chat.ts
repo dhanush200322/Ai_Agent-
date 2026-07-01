@@ -130,7 +130,7 @@ if (backendRunning) {
       body: JSON.stringify({
         agentId: agent.id,
         conversationId: conversation.id,
-        message: 'What is Enterprise AI?'
+        message: 'What is Nexora AI?'
       })
     });
 

@@ -85,7 +85,7 @@ export const HeroSection = () => {
             </div>
             
             <h1 className="font-heading text-[56px] md:text-[80px] leading-[1.05] font-bold tracking-tight mb-8 text-white">
-              Build Enterprise AI Agents <br />
+              Build Nexora AIs <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F8CFF] via-[#6366F1] to-[#0EA5E9] drop-shadow-[0_0_30px_rgba(159,92,255,0.3)]">
                 That Think. Learn. Scale.
               </span>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/features/auth/store';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/features/auth/services';
 import { User, Settings, CreditCard, HelpCircle, LogOut, Key } from 'lucide-react';
@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
 export function UserMenu() {
-  const { user, clearAuth } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -30,9 +30,9 @@ export function UserMenu() {
     } catch (error) {
       console.error('Logout error', error);
     } finally {
-      clearAuth();
+      logout();
       toast.success('Logged out successfully');
-      router.push('/login');
+      router.push('/');
     }
   };
 

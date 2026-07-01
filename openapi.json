@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Enterprise AI Agent Platform API",
+    "title": "Nexora AI API",
     "version": "1.0.0",
-    "description": "Public APIs for the Enterprise AI Agent Platform"
+    "description": "Public APIs for Nexora AI"
   },
   "servers": [
     {

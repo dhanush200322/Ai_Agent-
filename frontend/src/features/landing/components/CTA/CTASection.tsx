@@ -18,7 +18,7 @@ export const CTASection = () => {
           className="text-5xl md:text-7xl font-bold tracking-tighter mb-10 max-w-4xl mx-auto leading-tight text-white"
         >
           Ready to Build <br/>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F8CFF] to-[#0EA5E9] drop-shadow-[0_0_30px_rgba(79,140,255,0.4)]">Enterprise AI?</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F8CFF] to-[#0EA5E9] drop-shadow-[0_0_30px_rgba(79,140,255,0.4)]">Nexora AI?</span>
         </motion.h2>
         
         <motion.div 

@@ -32,10 +32,10 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#8A6A16] flex items-center justify-center text-black font-bold text-lg shadow-[0_0_15px_rgba(212,175,55,0.4)] group-hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] transition-all">
-            E
+            N
           </div>
           <span className="text-xl font-bold text-white tracking-tight">
-            Enterprise AI<span className="text-[#D4AF37]">.</span>
+            Nexora AI<span className="text-[#D4AF37]">.</span>
           </span>
         </Link>
 

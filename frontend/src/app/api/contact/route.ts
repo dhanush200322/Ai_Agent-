@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     );
 
     const { data, error } = await resend.emails.send({
-      from: "Enterprise AI <onboarding@resend.dev>", // Using Resend's default test domain
+      from: "Nexora AI <onboarding@resend.dev>", // Using Resend's default test domain
       to: ["ro224313@gmail.com"], // Fixed to the requested email
       subject: `New Inquiry from ${firstName} ${lastName}: ${subject}`,
       html: `
