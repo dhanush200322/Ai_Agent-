@@ -12,6 +12,10 @@ const router = (0, express_1.Router)();
 const agentController = new agent_controller_1.AgentController();
 router.use(auth_1.authenticate);
 router.get('/', (0, authorize_1.authorize)('agent:view'), (0, asyncHandler_1.asyncHandler)(agentController.getAgents));
+// Agent Knowledge Base relations
+router.get('/:id/knowledge', (0, authorize_1.authorize)('agent:view'), (0, asyncHandler_1.asyncHandler)(agentController.getKnowledgeBases));
+router.post('/:id/knowledge', (0, authorize_1.authorize)('agent:update'), (0, asyncHandler_1.asyncHandler)(agentController.addKnowledgeBases));
+router.delete('/:id/knowledge/:kbId', (0, authorize_1.authorize)('agent:update'), (0, asyncHandler_1.asyncHandler)(agentController.removeKnowledgeBase));
 router.get('/:id', (0, authorize_1.authorize)('agent:view'), (0, asyncHandler_1.asyncHandler)(agentController.getAgent));
 router.post('/', (0, authorize_1.authorize)('agent:create'), storage_service_1.upload.single('avatar'), (0, validate_1.validate)(agent_validator_1.createAgentSchema), (0, asyncHandler_1.asyncHandler)(agentController.createAgent));
 router.patch('/:id', (0, authorize_1.authorize)('agent:update'), storage_service_1.upload.single('avatar'), (0, validate_1.validate)(agent_validator_1.updateAgentSchema), (0, asyncHandler_1.asyncHandler)(agentController.updateAgent));

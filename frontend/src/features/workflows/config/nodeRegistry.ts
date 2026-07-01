@@ -12,7 +12,7 @@ export interface NodeConfigDef {
   configFields: {
     name: string;
     label: string;
-    type: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'json';
+    type: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'json' | 'delayBuilder' | 'conditionBuilder';
     options?: { label: string; value: string }[];
     placeholder?: string;
     required?: boolean;
@@ -58,7 +58,7 @@ export const SUPPORTED_NODES: NodeConfigDef[] = [
     description: 'Makes an HTTP request',
     icon: Link,
     color: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-    defaultConfig: { url: '', method: 'GET', headers: {}, body: {} },
+    defaultConfig: { url: '', method: 'POST', headers: {}, body: {} },
     configFields: [
       { name: 'url', label: 'Endpoint URL', type: 'text', required: true },
       { name: 'method', label: 'HTTP Method', type: 'select', options: [
@@ -88,9 +88,9 @@ export const SUPPORTED_NODES: NodeConfigDef[] = [
     description: 'Branches workflow based on rules',
     icon: GitBranch,
     color: 'bg-pink-500/10 text-pink-500 border-pink-500/20',
-    defaultConfig: { conditionExpression: '' },
+    defaultConfig: { expression: '' },
     configFields: [
-      { name: 'conditionExpression', label: 'Expression', type: 'text', placeholder: 'e.g. outputs.node_1.result === "yes"' }
+      { name: 'expression', label: 'Condition Rules', type: 'conditionBuilder' }
     ]
   },
   {
@@ -99,9 +99,10 @@ export const SUPPORTED_NODES: NodeConfigDef[] = [
     description: 'Iterates over an array',
     icon: Repeat,
     color: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
-    defaultConfig: { arrayVariable: '' },
+    defaultConfig: { listVariable: '', itemVariable: 'currentItem' },
     configFields: [
-      { name: 'arrayVariable', label: 'Array Variable Path', type: 'text', placeholder: 'e.g. variables.emailList' }
+      { name: 'listVariable', label: 'List Variable (e.g. outputs.node_1.items)', type: 'text', required: true },
+      { name: 'itemVariable', label: 'Item Variable Name', type: 'text', required: true, placeholder: 'currentItem' }
     ]
   },
   {
@@ -110,9 +111,9 @@ export const SUPPORTED_NODES: NodeConfigDef[] = [
     description: 'Waits for a specific time',
     icon: Clock,
     color: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    defaultConfig: { durationMs: 1000 },
+    defaultConfig: { delayMs: 1000 },
     configFields: [
-      { name: 'durationMs', label: 'Duration (ms)', type: 'number', required: true }
+      { name: 'delayMs', label: 'Wait Duration', type: 'delayBuilder' }
     ]
   }
 ];

@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  { params }: { params: Promise<{ agentId: string }> }
 ) {
+  const resolvedParams = await params;
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
   
   try {
     // Fetch from backend, spoofing the origin to bypass backend CORS restriction
     // which only allows the frontend origin by default.
-    const res = await fetch(`${backendUrl}/chat/widget/agents/${params.agentId}`, {
+    const res = await fetch(`${backendUrl}/chat/widget/agents/${resolvedParams.agentId}`, {
       headers: {
         'Origin': process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000'
       }

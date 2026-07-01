@@ -21,4 +21,8 @@ router.post('/conversations/:id/archive', auth_1.authenticate, (0, authorize_1.a
 router.post('/conversations/:id/restore', auth_1.authenticate, (0, authorize_1.authorize)('chat:update'), conversationController.restoreConversation);
 // Messages History
 router.get('/messages/:conversationId', auth_1.authenticate, (0, authorize_1.authorize)('chat:read'), conversationController.getConversationHistory);
+// Public Widget Routes
+router.get('/widget/agents/:agentId', conversationController.getWidgetAgent);
+router.post('/widget/conversations', conversationController.createWidgetConversation);
+router.post('/widget/completions', chatController.streamWidgetChatCompletion);
 exports.default = router;

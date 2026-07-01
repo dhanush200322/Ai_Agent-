@@ -36,4 +36,8 @@ router.post('/:knowledgeBaseId/documents', (0, authorize_1.authorize)('knowledge
 router.get('/:knowledgeBaseId/documents', (0, authorize_1.authorize)('knowledge:view'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.getDocuments));
 router.get('/documents/:id', (0, authorize_1.authorize)('knowledge:view'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.getDocument));
 router.delete('/documents/:id', (0, authorize_1.authorize)('knowledge:delete'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.deleteDocument));
+// Agent connection routes
+router.get('/:id/agents', (0, authorize_1.authorize)('knowledge:view'), (0, asyncHandler_1.asyncHandler)(knowledgeController.getConnectedAgents));
+router.post('/:id/agents', (0, authorize_1.authorize)('knowledge:update'), (0, asyncHandler_1.asyncHandler)(knowledgeController.addConnectedAgents));
+router.delete('/:id/agents/:agentId', (0, authorize_1.authorize)('knowledge:update'), (0, asyncHandler_1.asyncHandler)(knowledgeController.removeConnectedAgent));
 exports.default = router;

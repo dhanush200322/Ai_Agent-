@@ -136,5 +136,23 @@ class KnowledgeService {
         auditLogger_1.AuditLogger.log('KNOWLEDGE_DOCUMENT_DELETED', 'knowledge', { documentId: id, organizationId });
         return { success: true };
     }
+    // Agent Connection methods
+    async getConnectedAgents(organizationId, knowledgeBaseId) {
+        await this.getKnowledgeBase(organizationId, knowledgeBaseId);
+        const agentKbs = await this.knowledgeRepo.getConnectedAgents(organizationId, knowledgeBaseId);
+        return agentKbs.map(akb => akb.agent);
+    }
+    async addConnectedAgents(organizationId, knowledgeBaseId, agentIds) {
+        await this.getKnowledgeBase(organizationId, knowledgeBaseId);
+        await this.knowledgeRepo.addConnectedAgents(knowledgeBaseId, agentIds);
+        auditLogger_1.AuditLogger.log('KNOWLEDGE_BASE_AGENTS_ATTACHED', 'knowledge', { knowledgeBaseId, organizationId, agentIds });
+        return { success: true };
+    }
+    async removeConnectedAgent(organizationId, knowledgeBaseId, agentId) {
+        await this.getKnowledgeBase(organizationId, knowledgeBaseId);
+        await this.knowledgeRepo.removeConnectedAgent(knowledgeBaseId, agentId);
+        auditLogger_1.AuditLogger.log('KNOWLEDGE_BASE_AGENT_DETACHED', 'knowledge', { knowledgeBaseId, organizationId, agentId });
+        return { success: true };
+    }
 }
 exports.KnowledgeService = KnowledgeService;

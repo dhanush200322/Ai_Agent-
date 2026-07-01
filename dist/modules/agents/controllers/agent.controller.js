@@ -39,5 +39,19 @@ class AgentController {
         await this.agentService.softDeleteAgent(req.user.organizationId, req.params.id);
         res.status(200).json(ApiResponse_1.ApiResponse.success(null, 'Agent deleted successfully', req.reqId));
     };
+    getKnowledgeBases = async (req, res) => {
+        const kbs = await this.agentService.getKnowledgeBases(req.user.organizationId, req.params.id);
+        res.status(200).json(ApiResponse_1.ApiResponse.success(kbs, 'Knowledge Bases fetched successfully', req.reqId));
+    };
+    addKnowledgeBases = async (req, res) => {
+        const { knowledgeBaseIds } = req.body;
+        await this.agentService.addKnowledgeBases(req.user.organizationId, req.params.id, knowledgeBaseIds);
+        res.status(200).json(ApiResponse_1.ApiResponse.success(null, 'Knowledge Bases attached successfully', req.reqId));
+    };
+    removeKnowledgeBase = async (req, res) => {
+        await this.agentService.removeKnowledgeBase(req.user.organizationId, req.params.id, req.params.kbId);
+        res.status(200).json(ApiResponse_1.ApiResponse.success(null, 'Knowledge Base detached successfully', req.reqId));
+    };
 }
 exports.AgentController = AgentController;
+// Trigger restart to clear PermissionCache

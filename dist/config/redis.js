@@ -50,11 +50,6 @@ class RedisConnectionManager {
             this.instance.on('close', () => console.log('[Redis] Connection closed'));
             this.setupGracefulShutdown();
         }
-        console.log('================ REDIS DEBUG ================');
-        console.log('Redis Status       :', this.instance?.status);
-        console.log('Is Shutting Down   :', this.isShuttingDown);
-        console.log('Instance Exists    :', !!this.instance);
-        console.log('=============================================');
         return this.instance;
     }
     static async ping() {

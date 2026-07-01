@@ -94,5 +94,38 @@ class KnowledgeRepository {
             }
         });
     }
+    // Agent Connection methods
+    async getConnectedAgents(organizationId, knowledgeBaseId) {
+        return prisma.agentKnowledgeBase.findMany({
+            where: {
+                knowledgeBaseId,
+                agent: { organizationId, deletedAt: null }
+            },
+            include: {
+                agent: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async addConnectedAgents(knowledgeBaseId, agentIds) {
+        const data = agentIds.map(agentId => ({
+            agentId,
+            knowledgeBaseId
+        }));
+        return prisma.agentKnowledgeBase.createMany({
+            data,
+            skipDuplicates: true
+        });
+    }
+    async removeConnectedAgent(knowledgeBaseId, agentId) {
+        return prisma.agentKnowledgeBase.delete({
+            where: {
+                agentId_knowledgeBaseId: {
+                    agentId,
+                    knowledgeBaseId
+                }
+            }
+        });
+    }
 }
 exports.KnowledgeRepository = KnowledgeRepository;

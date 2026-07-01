@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Play, FileText, CheckCircle, Clock, Zap, Plus, Search, Filter } from 'lucide-react';
+import { Play, FileText, CheckCircle, Clock, Zap, Plus, Search, Filter, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import { useWorkflows, useWorkflowExecutions, useCreateWorkflow } from '@/features/workflows/hooks/useWorkflows';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
+
+type SortField = 'name' | 'status' | 'updatedAt';
+type SortOrder = 'asc' | 'desc';
 
 export default function WorkflowsDashboard() {
   const { data: workflows = [], isLoading: workflowsLoading } = useWorkflows();
@@ -19,6 +22,12 @@ export default function WorkflowsDashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newWorkflowName, setNewWorkflowName] = useState('');
   const [newWorkflowDesc, setNewWorkflowDesc] = useState('');
+
+  // Pagination & Sorting State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>('updatedAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const pageSize = 10;
 
   const handleCreate = async () => {
     if (!newWorkflowName.trim()) return;
@@ -35,6 +44,15 @@ export default function WorkflowsDashboard() {
     }
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
   const activeWorkflows = workflows.filter((w: any) => w.status === 'ACTIVE').length;
   const draftWorkflows = workflows.filter((w: any) => w.status === 'DRAFT').length;
   const runningExecutions = executions.filter((e: any) => e.status === 'RUNNING').length;
@@ -44,9 +62,36 @@ export default function WorkflowsDashboard() {
     ? Math.round((completedExecutions / executions.length) * 100) 
     : 100;
 
-  const filteredWorkflows = workflows.filter((w: any) => 
-    w.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (w.description && w.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  const processedWorkflows = useMemo(() => {
+    // 1. Filter
+    let filtered = workflows.filter((w: any) => 
+      w.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (w.description && w.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    // 2. Sort
+    filtered.sort((a: any, b: any) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+
+      if (sortField === 'updatedAt') {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+      }
+
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [workflows, searchTerm, sortField, sortOrder]);
+
+  // 3. Paginate
+  const totalPages = Math.ceil(processedWorkflows.length / pageSize);
+  const paginatedWorkflows = processedWorkflows.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   return (
@@ -84,7 +129,7 @@ export default function WorkflowsDashboard() {
         </div>
 
         {/* Workflow List */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
           <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/50">
             <div className="relative">
               <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -92,7 +137,10 @@ export default function WorkflowsDashboard() {
                 type="text" 
                 placeholder="Search workflows..." 
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1); // Reset to first page on search
+                }}
                 className="pl-9 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-white focus:ring-1 focus:ring-yellow-500/50 focus:border-yellow-500/50 w-64 outline-none transition-shadow"
               />
             </div>
@@ -104,72 +152,116 @@ export default function WorkflowsDashboard() {
           {workflowsLoading ? (
             <div className="p-8 text-center text-zinc-500 text-sm">Loading workflows...</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-zinc-400">
-                <thead className="bg-zinc-900 text-zinc-500 border-b border-zinc-800">
-                  <tr>
-                    <th className="px-6 py-4 font-medium">Name</th>
-                    <th className="px-6 py-4 font-medium">Status</th>
-                    <th className="px-6 py-4 font-medium">Version</th>
-                    <th className="px-6 py-4 font-medium">Last Modified</th>
-                    <th className="px-6 py-4 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {filteredWorkflows.map((w: any) => (
-                    <motion.tr 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      key={w.id} 
-                      className="hover:bg-zinc-800/50 transition-colors group"
-                    >
-                      <td className="px-6 py-4">
-                        <Link href={`/dashboard/workflows/builder/${w.id}`} className="block">
-                          <span className="font-medium text-white block">{w.name}</span>
-                          {w.description && <span className="text-xs text-zinc-500 mt-1 line-clamp-1">{w.description}</span>}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                          w.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 
-                          w.status === 'DRAFT' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 
-                          'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                        }`}>
-                          {w.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-mono text-xs text-zinc-300">v{w.versions?.length || 0}</td>
-                      <td className="px-6 py-4 text-xs">
-                        {new Date(w.updatedAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Link 
-                            href={`/dashboard/workflows/builder/${w.id}`}
-                            className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            Builder
-                          </Link>
-                          <Link 
-                            href={`/dashboard/workflows/executions/${w.id}`}
-                            className="px-3 py-1.5 border border-zinc-700 hover:border-zinc-600 text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            History
-                          </Link>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                  {filteredWorkflows.length === 0 && (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-zinc-400">
+                  <thead className="bg-zinc-900 text-zinc-500 border-b border-zinc-800">
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 text-sm">
-                        No workflows found. Create one to get started.
-                      </td>
+                      <th className="px-6 py-4 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
+                        <div className="flex items-center gap-2">Name <ArrowUpDown className="w-3 h-3 opacity-50" /></div>
+                      </th>
+                      <th className="px-6 py-4 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('status')}>
+                        <div className="flex items-center gap-2">Status <ArrowUpDown className="w-3 h-3 opacity-50" /></div>
+                      </th>
+                      <th className="px-6 py-4 font-medium">Version</th>
+                      <th className="px-6 py-4 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('updatedAt')}>
+                        <div className="flex items-center gap-2">Last Modified <ArrowUpDown className="w-3 h-3 opacity-50" /></div>
+                      </th>
+                      <th className="px-6 py-4 font-medium text-right">Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {paginatedWorkflows.map((w: any) => (
+                      <motion.tr 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        key={w.id} 
+                        className="hover:bg-zinc-800/50 transition-colors group"
+                      >
+                        <td className="px-6 py-4">
+                          <Link href={`/dashboard/workflows/builder/${w.id}`} className="block">
+                            <span className="font-medium text-white block">{w.name}</span>
+                            {w.description && <span className="text-xs text-zinc-500 mt-1 line-clamp-1">{w.description}</span>}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                            w.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 
+                            w.status === 'DRAFT' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 
+                            'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                          }`}>
+                            {w.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-xs text-zinc-300">v{w.versions?.length || 0}</td>
+                        <td className="px-6 py-4 text-xs">
+                          {new Date(w.updatedAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Link 
+                              href={`/dashboard/workflows/builder/${w.id}`}
+                              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-medium transition-colors"
+                            >
+                              Builder
+                            </Link>
+                            <Link 
+                              href={`/dashboard/workflows/executions/${w.id}`}
+                              className="px-3 py-1.5 border border-zinc-700 hover:border-zinc-600 text-white rounded-lg text-xs font-medium transition-colors"
+                            >
+                              History
+                            </Link>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                    {paginatedWorkflows.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 text-sm">
+                          {searchTerm ? 'No workflows matched your search.' : 'No workflows found. Create one to get started.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="p-4 border-t border-zinc-800 bg-zinc-950/30 flex items-center justify-between text-sm text-zinc-400">
+                  <div>
+                    Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, processedWorkflows.length)} of {processedWorkflows.length} entries
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-1.5 rounded-md hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${
+                          currentPage === i + 1 ? 'bg-zinc-800 text-white font-medium' : 'hover:bg-zinc-800/50'
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-1.5 rounded-md hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

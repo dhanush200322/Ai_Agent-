@@ -66,5 +66,38 @@ class AgentRepository {
             }
         });
     }
+    async getKnowledgeBases(organizationId, agentId) {
+        return prisma.agentKnowledgeBase.findMany({
+            where: {
+                agentId,
+                knowledgeBase: { organizationId, deletedAt: null }
+            },
+            include: {
+                knowledgeBase: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async addKnowledgeBases(agentId, knowledgeBaseIds) {
+        // Bulk insert ignore conflicts
+        const data = knowledgeBaseIds.map(kbId => ({
+            agentId,
+            knowledgeBaseId: kbId
+        }));
+        return prisma.agentKnowledgeBase.createMany({
+            data,
+            skipDuplicates: true
+        });
+    }
+    async removeKnowledgeBase(agentId, knowledgeBaseId) {
+        return prisma.agentKnowledgeBase.delete({
+            where: {
+                agentId_knowledgeBaseId: {
+                    agentId,
+                    knowledgeBaseId
+                }
+            }
+        });
+    }
 }
 exports.AgentRepository = AgentRepository;

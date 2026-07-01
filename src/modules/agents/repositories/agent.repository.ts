@@ -66,11 +66,14 @@ export class AgentRepository {
   }
 
   async softDeleteAgent(_organizationId: string, id: string) {
+    const agent = await prisma.agent.findUnique({ where: { id } });
+    const deletedSlug = agent ? `${agent.slug}-deleted-${Date.now()}` : `deleted-${Date.now()}`;
     return prisma.agent.update({
       where: { id },
       data: { 
         deletedAt: new Date(),
-        status: 'ARCHIVED'
+        status: 'ARCHIVED',
+        slug: deletedSlug
       }
     });
   }

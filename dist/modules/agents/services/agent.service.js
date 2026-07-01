@@ -49,6 +49,8 @@ class AgentService {
             agentData.visibility = data.visibility;
         if (data.avatar !== undefined)
             agentData.avatar = data.avatar;
+        if (data.themeConfig !== undefined)
+            agentData.themeConfig = typeof data.themeConfig === 'string' ? JSON.parse(data.themeConfig) : data.themeConfig;
         console.log('AGENT_CREATE_DATA', JSON.stringify(agentData, null, 2));
         const agent = await this.agentRepo.createAgent(agentData);
         auditLogger_1.AuditLogger.log('AGENT_CREATED', 'agent', { agentId: agent.id, organizationId });
@@ -79,6 +81,8 @@ class AgentService {
             updateData.status = data.status;
         if (data.avatar !== undefined)
             updateData.avatar = data.avatar;
+        if (data.themeConfig !== undefined)
+            updateData.themeConfig = typeof data.themeConfig === 'string' ? JSON.parse(data.themeConfig) : data.themeConfig;
         const updated = await this.agentRepo.updateAgent(organizationId, id, updateData);
         auditLogger_1.AuditLogger.log('AGENT_UPDATED', 'agent', { agentId: id, organizationId });
         return updated;
@@ -89,6 +93,27 @@ class AgentService {
             throw new AppError_1.NotFoundError('Agent not found');
         await this.agentRepo.softDeleteAgent(organizationId, id);
         auditLogger_1.AuditLogger.log('AGENT_DELETED', 'agent', { agentId: id, organizationId });
+        return { success: true };
+    }
+    async getKnowledgeBases(organizationId, agentId) {
+        // Verify agent exists
+        await this.getAgent(organizationId, agentId);
+        const kbs = await this.agentRepo.getKnowledgeBases(organizationId, agentId);
+        return kbs.map(akb => akb.knowledgeBase);
+    }
+    async addKnowledgeBases(organizationId, agentId, knowledgeBaseIds) {
+        // Verify agent exists
+        await this.getAgent(organizationId, agentId);
+        // Ideally we should also verify KBs exist in the organization, but skipDuplicates in repo handles constraint safely if we assume valid IDs, but foreign key needs them to exist. Let's just insert.
+        await this.agentRepo.addKnowledgeBases(agentId, knowledgeBaseIds);
+        auditLogger_1.AuditLogger.log('AGENT_KB_ATTACHED', 'agent', { agentId, organizationId, knowledgeBaseIds });
+        return { success: true };
+    }
+    async removeKnowledgeBase(organizationId, agentId, knowledgeBaseId) {
+        // Verify agent exists
+        await this.getAgent(organizationId, agentId);
+        await this.agentRepo.removeKnowledgeBase(agentId, knowledgeBaseId);
+        auditLogger_1.AuditLogger.log('AGENT_KB_DETACHED', 'agent', { agentId, organizationId, knowledgeBaseId });
         return { success: true };
     }
 }

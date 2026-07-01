@@ -12,7 +12,7 @@ class RetrievalService {
      */
     async retrieveContext(organizationId, query, options) {
         const topK = options?.topK || 5;
-        const minScore = options?.minScore || 0.2;
+        const minScore = options?.minScore || 0.05;
         // 1. Generate Query Embedding
         const queryVectors = await this.embeddingService.generateEmbeddings([query]);
         const queryVector = queryVectors[0];
@@ -23,6 +23,7 @@ class RetrievalService {
             knowledgeBaseIds: options?.knowledgeBaseIds,
             limit: fetchLimit
         });
+        console.log('[RetrievalService] Qdrant Results:', qdrantResults.map(r => ({ score: r.score, text: r.payload?.content?.substring(0, 50) })));
         // 3. Score Filtering
         const filteredResults = qdrantResults.filter(res => res.score >= minScore);
         // 4. Duplicate Removal (Deduplicate by chunkId)

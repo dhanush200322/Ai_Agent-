@@ -13,6 +13,7 @@ exports.createAgentSchema = zod_1.z.object({
         topP: zod_1.z.preprocess((val) => Number(val), zod_1.z.number().min(0).max(1).optional()),
         maxTokens: zod_1.z.preprocess((val) => Number(val), zod_1.z.number().min(1).optional()),
         visibility: zod_1.z.enum(['PRIVATE', 'ORGANIZATION', 'PUBLIC']).optional(),
+        themeConfig: zod_1.z.any().optional(),
     })
 });
 exports.updateAgentSchema = zod_1.z.object({
@@ -26,5 +27,6 @@ exports.updateAgentSchema = zod_1.z.object({
         maxTokens: zod_1.z.preprocess((val) => Number(val), zod_1.z.number().min(1).optional()),
         visibility: zod_1.z.enum(['PRIVATE', 'ORGANIZATION', 'PUBLIC']).optional(),
         status: zod_1.z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']).optional(),
+        themeConfig: zod_1.z.any().optional(),
     })
 });

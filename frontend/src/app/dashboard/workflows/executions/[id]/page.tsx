@@ -1,123 +1,112 @@
 'use client';
 
-import React, { use } from 'react';
-import { useWorkflowHistory, useExecuteWorkflow, useWorkflow } from '@/features/workflows/hooks/useWorkflows';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Clock, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { useWorkflow, useWorkflowHistory } from '@/features/workflows/hooks/useWorkflows';
+import Link from 'next/link';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
-import { Clock, Play, CheckCircle, XCircle, AlertTriangle, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
+import WorkflowReplay from '@/features/workflows/components/WorkflowReplay';
 
-export default function ExecutionHistoryPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const { data: workflow } = useWorkflow(resolvedParams.id);
-  const { data: executions = [], isLoading } = useWorkflowHistory(resolvedParams.id);
+export default function WorkflowExecutionsPage({ params }: { params: { id: string } }) {
+  const { data: workflow, isLoading: workflowLoading } = useWorkflow(params.id);
+  const { data: history = [], isLoading: historyLoading } = useWorkflowHistory(params.id);
+  
+  const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null);
 
-  const getStatusIcon = (status: string) => {
-    switch(status) {
-      case 'COMPLETED': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'FAILED': return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'RUNNING': return <Play className="w-5 h-5 text-blue-500 animate-pulse" />;
-      case 'PAUSED': return <AlertTriangle className="w-5 h-5 text-orange-500" />;
-      default: return <Clock className="w-5 h-5 text-zinc-500" />;
-    }
-  };
+  const selectedExecution = history.find((h: any) => h.id === selectedExecutionId);
+  
+  // Find the exact version that was executed, or fallback to latest
+  const version = workflow?.versions?.find((v: any) => v.id === selectedExecution?.workflowVersionId) 
+    || workflow?.versions?.[0];
 
   return (
     <ContentWrapper>
       <PageHeader 
-        title={`Execution History: ${workflow?.name || resolvedParams.id}`}
-        description="Monitor past and running executions for this workflow."
+        title={`${workflow?.name || 'Workflow'} Executions`}
+        description="View execution history, debug node inputs and outputs, and monitor performance."
         actions={
           <Link 
-            href={`/dashboard/workflows/builder/${resolvedParams.id}`}
-            className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium"
+            href="/dashboard/workflows"
+            className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-white rounded-xl hover:bg-zinc-800 transition-colors flex items-center gap-2 font-medium"
           >
-            Back to Builder
+            <ArrowLeft className="w-4 h-4" />
+            Back to Workflows
           </Link>
         }
       />
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden mt-8">
-        <div className="p-4 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
-          <h2 className="font-medium text-white">Execution Logs</h2>
-        </div>
+      <div className="flex h-[calc(100vh-140px)] bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl mt-4">
         
-        {isLoading ? (
-          <div className="p-12 text-center text-zinc-500">Loading history...</div>
-        ) : executions.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500">No executions found for this workflow.</div>
-        ) : (
-          <div className="divide-y divide-zinc-800">
-            {executions.map((exec: any) => (
-              <details key={exec.id} className="group">
-                <summary className="p-4 flex items-center justify-between hover:bg-zinc-800/50 cursor-pointer list-none transition-colors">
-                  <div className="flex items-center gap-4">
-                    {getStatusIcon(exec.status)}
-                    <div>
-                      <div className="font-mono text-xs text-zinc-300 font-medium">Execution: {exec.id}</div>
-                      <div className="text-xs text-zinc-500 mt-0.5">
-                        {new Date(exec.startedAt).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs font-medium text-zinc-400 font-mono">
-                      {exec.finishedAt ? `${Math.round((new Date(exec.finishedAt).getTime() - new Date(exec.startedAt).getTime()) / 1000)}s` : '...'}
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-zinc-500 group-open:rotate-90 transition-transform" />
-                  </div>
-                </summary>
-                <div className="p-4 bg-zinc-950 border-t border-zinc-800 space-y-4">
-                  
-                  {/* Detailed Timeline */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Timeline</h4>
-                    <div className="space-y-3 pl-2">
-                      {exec.steps?.map((step: any, i: number) => (
-                        <div key={i} className="flex gap-4 relative">
-                          <div className="flex flex-col items-center">
-                            <div className={`w-2.5 h-2.5 rounded-full z-10 ${
-                              step.status === 'COMPLETED' ? 'bg-green-500' :
-                              step.status === 'FAILED' ? 'bg-red-500' :
-                              step.status === 'PAUSED' ? 'bg-orange-500' :
-                              'bg-blue-500 animate-pulse'
-                            }`} />
-                            {i < exec.steps.length - 1 && (
-                              <div className="w-px h-full bg-zinc-800 absolute top-2.5" />
-                            )}
-                          </div>
-                          <div className="pb-4">
-                            <div className="text-sm font-medium text-white flex items-center gap-2">
-                              {step.nodeId}
-                              <span className="text-[10px] text-zinc-500 font-mono">{new Date(step.startedAt).toLocaleTimeString()}</span>
-                            </div>
-                            {step.error && (
-                              <div className="text-xs text-red-400 mt-1 bg-red-500/10 p-2 rounded border border-red-500/20">
-                                {step.error}
-                              </div>
-                            )}
-                            {step.status === 'PAUSED' && (
-                              <div className="mt-2 flex gap-2">
-                                <button className="px-3 py-1 bg-green-500/20 text-green-500 text-xs font-medium rounded hover:bg-green-500/30 transition-colors">
-                                  Approve
-                                </button>
-                                <button className="px-3 py-1 bg-red-500/20 text-red-500 text-xs font-medium rounded hover:bg-red-500/30 transition-colors">
-                                  Reject
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-              </details>
-            ))}
+        {/* History List Sidebar */}
+        <div className="w-80 border-r border-zinc-800 flex flex-col bg-zinc-950/50">
+          <div className="p-4 border-b border-zinc-800 bg-zinc-900">
+            <h3 className="font-semibold text-white">Execution History</h3>
+            <p className="text-xs text-zinc-500 mt-1">{history.length} total runs</p>
           </div>
-        )}
+          
+          <div className="flex-1 overflow-y-auto">
+            {historyLoading ? (
+              <div className="p-8 text-center text-zinc-500 text-sm">Loading history...</div>
+            ) : history.length === 0 ? (
+              <div className="p-8 text-center text-zinc-500 text-sm">No executions found.</div>
+            ) : (
+              <div className="divide-y divide-zinc-800">
+                {history.map((exec: any) => (
+                  <button
+                    key={exec.id}
+                    onClick={() => setSelectedExecutionId(exec.id)}
+                    className={`w-full text-left p-4 hover:bg-zinc-800/50 transition-colors flex flex-col gap-2 ${selectedExecutionId === exec.id ? 'bg-zinc-800 border-l-2 border-yellow-500' : 'border-l-2 border-transparent'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        exec.status === 'COMPLETED' ? 'bg-green-500/10 text-green-500' :
+                        exec.status === 'FAILED' ? 'bg-red-500/10 text-red-500' :
+                        exec.status === 'RUNNING' ? 'bg-blue-500/10 text-blue-500' :
+                        'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {exec.status === 'COMPLETED' && <CheckCircle className="w-3 h-3" />}
+                        {exec.status === 'FAILED' && <XCircle className="w-3 h-3" />}
+                        {exec.status === 'RUNNING' && <Clock className="w-3 h-3" />}
+                        {exec.status}
+                      </span>
+                      <span className="text-xs text-zinc-500 font-mono">
+                        {new Date(exec.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="text-xs text-zinc-400">
+                      {new Date(exec.startedAt).toLocaleDateString()}
+                    </div>
+                    {exec.error && (
+                      <div className="text-xs text-red-400 flex items-start gap-1 mt-1 bg-red-500/5 p-2 rounded border border-red-500/10">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{exec.error}</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Visual Debugger Main Area */}
+        <div className="flex-1 bg-zinc-950 relative">
+          {workflowLoading || historyLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center text-zinc-500">Loading Canvas...</div>
+          ) : !selectedExecutionId ? (
+            <div className="absolute inset-0 flex items-center justify-center text-zinc-500 text-sm">
+              Select an execution from the list to view its visual replay and debug logs.
+            </div>
+          ) : version && selectedExecution ? (
+            <WorkflowReplay execution={selectedExecution} version={version} />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-zinc-500 text-sm">
+              Unable to load execution replay. Missing version data.
+            </div>
+          )}
+        </div>
       </div>
     </ContentWrapper>
   );

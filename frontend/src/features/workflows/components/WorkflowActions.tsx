@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
-import { Save, Rocket, Play, Loader2, X } from 'lucide-react';
+import { Save, Rocket, Play, Loader2, X, History, Layers } from 'lucide-react';
+import Link from 'next/link';
+
+import { Node, Edge, getIncomers, getOutgoers } from '@xyflow/react';
 
 export default function WorkflowActions({ 
   onSave, 
   onPublish, 
   onExecute, 
-  isSaving 
+  isSaving,
+  nodes,
+  edges,
+  workflowId
 }: { 
   onSave: () => void, 
   onPublish: () => void, 
   onExecute: (variables: any) => void,
-  isSaving: boolean 
+  isSaving: boolean,
+  nodes: Node[],
+  edges: Edge[],
+  workflowId: string
 }) {
   const [showExecuteModal, setShowExecuteModal] = useState(false);
   const [variablesJson, setVariablesJson] = useState('{\n  \n}');
@@ -31,9 +40,62 @@ export default function WorkflowActions({
     }
   };
 
+  const validateWorkflow = () => {
+    if (nodes.length === 0) return 'Workflow is empty.';
+    
+    const triggerNode = nodes.find(n => n.type === 'trigger');
+    if (!triggerNode) return 'A Trigger node is required to start the workflow.';
+
+    // Check for disconnected nodes (except trigger which might have no incomers, and ends which have no outgoers)
+    // A simple check: every node except trigger must have at least one incomer
+    for (const node of nodes) {
+      if (node.type === 'trigger') continue;
+      const incomers = getIncomers(node, nodes, edges);
+      if (incomers.length === 0) {
+        return `Node "${node.data.label}" is disconnected.`;
+      }
+    }
+
+    // Check for missing configs based on node types
+    for (const node of nodes) {
+      const config: any = node.data.config || {};
+      if (node.type === 'ai' && !config.prompt) return `AI Node "${node.data.label}" is missing a prompt.`;
+      if (node.type === 'webhook' && !config.url) return `Webhook Node "${node.data.label}" is missing a URL.`;
+      if (node.type === 'tool' && !config.toolName) return `Tool Node "${node.data.label}" is missing a Tool Name.`;
+      if (node.type === 'loop' && (!config.listVariable || !config.itemVariable)) return `Loop Node "${node.data.label}" is missing variables.`;
+      if (node.type === 'delay' && !config.delayMs) return `Delay Node "${node.data.label}" is missing duration.`;
+    }
+
+    return null;
+  };
+
+  const handlePublishClick = () => {
+    const error = validateWorkflow();
+    if (error) {
+      alert(`Validation Error:\n${error}`);
+      return;
+    }
+    onPublish();
+  };
+
   return (
     <>
       <div className="flex bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl overflow-hidden p-1 gap-1">
+        <Link 
+          href={`/dashboard/workflows/versions/${workflowId}`}
+          className="flex items-center gap-2 px-3 py-1.5 hover:bg-zinc-800 rounded-md text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+        >
+          <Layers className="w-4 h-4" />
+          Versions
+        </Link>
+        <Link 
+          href={`/dashboard/workflows/executions/${workflowId}`}
+          className="flex items-center gap-2 px-3 py-1.5 hover:bg-zinc-800 rounded-md text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+        >
+          <History className="w-4 h-4" />
+          History
+        </Link>
+        <div className="w-px bg-zinc-800 mx-1" />
         <button 
           onClick={onSave}
           disabled={isSaving}
@@ -44,7 +106,7 @@ export default function WorkflowActions({
         </button>
         <div className="w-px bg-zinc-800 mx-1" />
         <button 
-          onClick={onPublish}
+          onClick={handlePublishClick}
           className="flex items-center gap-2 px-3 py-1.5 hover:bg-zinc-800 rounded-md text-sm font-medium text-white transition-colors"
         >
           <Rocket className="w-4 h-4 text-purple-500" />

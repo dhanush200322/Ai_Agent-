@@ -21,6 +21,52 @@ class ConversationController {
             res.status(err.statusCode || 500).json({ success: false, message: err.message });
         }
     };
+    createWidgetConversation = async (req, res) => {
+        try {
+            const { sessionId, agentId } = req.body;
+            const { PrismaClient } = require('@prisma/client');
+            const prisma = new PrismaClient();
+            const agent = await prisma.agent.findUnique({ where: { id: agentId } });
+            if (!agent) {
+                res.status(404).json({ success: false, message: 'Agent not found' });
+                return;
+            }
+            const user = await prisma.user.findFirst({ where: { organizationId: agent.organizationId } });
+            if (!user) {
+                res.status(404).json({ success: false, message: 'Organization owner not found' });
+                return;
+            }
+            const conversation = await conversationService.createConversation({
+                sessionId,
+                agentId,
+                organizationId: agent.organizationId,
+                userId: user.id
+            });
+            res.status(201).json({ success: true, data: conversation });
+        }
+        catch (err) {
+            res.status(err.statusCode || 500).json({ success: false, message: err.message });
+        }
+    };
+    getWidgetAgent = async (req, res) => {
+        try {
+            const { agentId } = req.params;
+            const { PrismaClient } = require('@prisma/client');
+            const prisma = new PrismaClient();
+            const agent = await prisma.agent.findUnique({
+                where: { id: agentId },
+                select: { id: true, name: true, description: true, avatar: true, themeConfig: true }
+            });
+            if (!agent) {
+                res.status(404).json({ success: false, message: 'Agent not found' });
+                return;
+            }
+            res.status(200).json({ success: true, data: agent });
+        }
+        catch (err) {
+            res.status(err.statusCode || 500).json({ success: false, message: err.message });
+        }
+    };
     listConversations = async (req, res) => {
         try {
             const skip = parseInt(req.query.skip) || 0;

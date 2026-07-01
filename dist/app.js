@@ -27,7 +27,6 @@ const AppError_1 = require("./shared/errors/AppError");
 const app = (0, express_1.default)();
 // Request ID Middleware
 app.use((req, res, next) => {
-    console.log("GLOBAL CONTENT TYPE:", req.headers["content-type"]);
     req.reqId = crypto_1.default.randomUUID();
     res.setHeader('X-Request-Id', req.reqId);
     next();

@@ -1,89 +1,72 @@
 'use client';
 
 import React from 'react';
-import { useWorkflowTemplates, useCreateWorkflow } from '@/features/workflows/hooks/useWorkflows';
+import { motion } from 'framer-motion';
+import { Construction, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
-import { FileText, Plus, Copy } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 
-export default function TemplatesPage() {
-  const { data: templates = [], isLoading } = useWorkflowTemplates();
-  const createMutation = useCreateWorkflow();
-  const router = useRouter();
-
-  const handleClone = async (template: any) => {
-    try {
-      const result = await createMutation.mutateAsync({
-        name: `${template.name} (Clone)`,
-        slug: `${template.slug}-clone-${Date.now()}`,
-        description: template.description
-      });
-      // The template clone API logic might differ depending on backend, 
-      // but assuming the create creates an empty one, then we would update it with template nodes.
-      // If the backend has a /clone endpoint, it's used on existing workflows, not templates.
-      // So this is just a mockup for creating from template.
-      router.push(`/dashboard/workflows/builder/${result.id}`);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
+export default function WorkflowTemplatesDashboard() {
   return (
     <ContentWrapper>
       <PageHeader 
         title="Workflow Templates"
-        description="Jumpstart your automation with pre-built enterprise templates."
+        description="Pre-built workflows for common enterprise scenarios."
+        actions={
+          <Link 
+            href="/dashboard/workflows"
+            className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-white rounded-xl hover:bg-zinc-800 transition-colors flex items-center gap-2 font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Workflows
+          </Link>
+        }
       />
 
-      <div className="mt-8">
-        {isLoading ? (
-          <div className="text-center text-zinc-500 py-12">Loading templates...</div>
-        ) : templates.length === 0 ? (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center flex flex-col items-center">
-            <div className="w-12 h-12 bg-zinc-950 border border-zinc-800 rounded-2xl flex items-center justify-center mb-4">
-              <FileText className="w-6 h-6 text-zinc-600" />
-            </div>
-            <h3 className="text-lg font-medium text-white mb-2">No Templates Available</h3>
-            <p className="text-zinc-500 max-w-sm">
-              Your organization currently doesn't have any workflow templates available. Create a new workflow from scratch instead.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {templates.map((tpl: any, i: number) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                key={tpl.id}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 group hover:border-zinc-700 transition-colors flex flex-col h-full"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-zinc-400" />
-                  </div>
-                  <span className="px-2 py-1 bg-zinc-950 border border-zinc-800 rounded text-[10px] uppercase font-semibold text-zinc-500">
-                    {tpl.category || 'General'}
-                  </span>
-                </div>
-                
-                <h3 className="font-semibold text-white mb-2">{tpl.name}</h3>
-                <p className="text-sm text-zinc-500 mb-6 flex-1">{tpl.description}</p>
-                
-                <button 
-                  onClick={() => handleClone(tpl)}
-                  disabled={createMutation.isPending}
-                  className="w-full py-2.5 bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  Use Template
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        )}
+      <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", bounce: 0.5 }}
+          className="w-24 h-24 bg-yellow-500/10 rounded-full flex items-center justify-center mb-6"
+        >
+          <Construction className="w-12 h-12 text-yellow-500" />
+        </motion.div>
+        
+        <motion.h2 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="text-2xl font-bold text-white mb-3"
+        >
+          Templates Coming Soon
+        </motion.h2>
+        
+        <motion.p 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-zinc-400 max-w-md mx-auto"
+        >
+          The template gallery requires a backend API update which is currently in development. 
+          Soon, you'll be able to instantly clone pre-configured enterprise workflows.
+        </motion.p>
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8 p-4 bg-zinc-900 border border-zinc-800 rounded-xl inline-flex flex-col gap-2 text-left"
+        >
+          <div className="text-sm font-semibold text-white">Planned Categories:</div>
+          <ul className="text-sm text-zinc-500 space-y-1">
+            <li>• AI Lead Qualification & CRM Sync</li>
+            <li>• Customer Support Triage & Auto-Reply</li>
+            <li>• Invoice Extraction & Approval Routing</li>
+            <li>• Knowledge Base Document Processing</li>
+          </ul>
+        </motion.div>
       </div>
     </ContentWrapper>
   );

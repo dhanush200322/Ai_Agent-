@@ -55,13 +55,21 @@ class DocumentProcessingService {
                 const meta = JSON.parse(document.metadata || '{}');
                 if (!meta.url)
                     throw new Error('WEBSITE source missing URL');
-                console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Fetching URL ${meta.url}`);
-                const response = await fetch(meta.url);
-                const html = await response.text();
-                // Basic HTML stripping, can be improved later
-                parsed.text = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-                    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
-                    .replace(/<[^>]+>/g, ' ');
+                console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Fetching URL ${meta.url} via Jina Reader`);
+                // Use Jina Reader API to get clean markdown from any URL, including SPAs
+                const jinaUrl = `https://r.jina.ai/${meta.url}`;
+                const response = await fetch(jinaUrl);
+                if (!response.ok) {
+                    console.warn(`Jina Reader failed (${response.status}). Falling back to raw fetch...`);
+                    const fallbackResponse = await fetch(meta.url);
+                    const html = await fallbackResponse.text();
+                    parsed.text = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+                        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+                        .replace(/<[^>]+>/g, ' ');
+                }
+                else {
+                    parsed.text = await response.text();
+                }
             }
             else if (document.sourceType === 'FAQ') {
                 const meta = JSON.parse(document.metadata || '{}');

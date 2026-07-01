@@ -67,5 +67,19 @@ class KnowledgeController {
         await this.knowledgeService.softDeleteDocument(req.user.organizationId, req.params.id);
         res.status(200).json(ApiResponse_1.ApiResponse.success(null, 'Document deleted successfully', req.reqId));
     };
+    // Agent Connection methods
+    getConnectedAgents = async (req, res) => {
+        const agents = await this.knowledgeService.getConnectedAgents(req.user.organizationId, req.params.id);
+        res.status(200).json(ApiResponse_1.ApiResponse.success(agents, 'Connected agents fetched successfully', req.reqId));
+    };
+    addConnectedAgents = async (req, res) => {
+        const { agentIds } = req.body;
+        await this.knowledgeService.addConnectedAgents(req.user.organizationId, req.params.id, agentIds);
+        res.status(200).json(ApiResponse_1.ApiResponse.success(null, 'Agents attached successfully', req.reqId));
+    };
+    removeConnectedAgent = async (req, res) => {
+        await this.knowledgeService.removeConnectedAgent(req.user.organizationId, req.params.id, req.params.agentId);
+        res.status(200).json(ApiResponse_1.ApiResponse.success(null, 'Agent detached successfully', req.reqId));
+    };
 }
 exports.KnowledgeController = KnowledgeController;
