@@ -138,7 +138,7 @@
         toggleBtn.id = 'enterprise-ai-widget-toggle';
         
         // Chat icon SVG
-        let avatarUrl = response.data.avatar;
+        let avatarUrl = response.data ? response.data.avatar : null;
         if (avatarUrl && avatarUrl.startsWith('/')) {
           avatarUrl = `${hostUrl}${avatarUrl}`;
         }
