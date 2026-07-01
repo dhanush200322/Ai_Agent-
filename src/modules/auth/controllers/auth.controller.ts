@@ -8,7 +8,13 @@ import { Queue } from 'bullmq';
 import { RedisConnectionManager } from '../../../config/redis';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: "postgresql://nexora_db_q198_user:rXWMUgmnT8bkpVH9gFtZ1pShDKYhiREe@dpg-d92i2k3tqb8s73fh9vcg-a.oregon-postgres.render.com/nexora_db_q198?sslmode=no-verify"
+    }
+  }
+});
 
 export class AuthController {
   private authEngine = new AuthenticationEngine();
