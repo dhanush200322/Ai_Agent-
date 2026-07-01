@@ -106,6 +106,8 @@ export function HeroContent() {
           <span className="text-sm text-[#B7B7B7]">Integrations</span>
         </div>
       </motion.div>
+
+
     </div>
   );
 }

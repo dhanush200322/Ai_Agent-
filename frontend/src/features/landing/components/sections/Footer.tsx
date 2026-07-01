@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Twitter, Github, Linkedin, ArrowRight } from "lucide-react";
+import { Globe, Store, Linkedin, ArrowRight } from "lucide-react";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { toast } from "sonner";
 
@@ -105,13 +105,13 @@ export function Footer() {
           </p>
           
           <div className="flex gap-4">
-            <a href="#" className="text-[#B7B7B7] hover:text-[#D4AF37] transition-colors p-2 bg-[rgba(255,255,255,0.02)] rounded-full">
-              <Twitter className="w-5 h-5" />
+            <a href="https://portfoilo22-chi.vercel.app" target="_blank" rel="noopener noreferrer" className="text-[#B7B7B7] hover:text-[#D4AF37] transition-colors p-2 bg-[rgba(255,255,255,0.02)] rounded-full">
+              <Globe className="w-5 h-5" />
             </a>
-            <a href="#" className="text-[#B7B7B7] hover:text-[#D4AF37] transition-colors p-2 bg-[rgba(255,255,255,0.02)] rounded-full">
-              <Github className="w-5 h-5" />
+            <a href="https://gumroad.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-[#B7B7B7] hover:text-[#D4AF37] transition-colors p-2 bg-[rgba(255,255,255,0.02)] rounded-full">
+              <Store className="w-5 h-5" />
             </a>
-            <a href="#" className="text-[#B7B7B7] hover:text-[#D4AF37] transition-colors p-2 bg-[rgba(255,255,255,0.02)] rounded-full">
+            <a href="https://www.linkedin.com/in/dhanush-av-618271378" target="_blank" rel="noopener noreferrer" className="text-[#B7B7B7] hover:text-[#D4AF37] transition-colors p-2 bg-[rgba(255,255,255,0.02)] rounded-full">
               <Linkedin className="w-5 h-5" />
             </a>
           </div>

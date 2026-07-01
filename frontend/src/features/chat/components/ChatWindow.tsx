@@ -81,7 +81,7 @@ export const ChatWindow: React.FC = () => {
           isStreaming={isStreaming} 
         />
       </div>
-      
+
       {/* Mobile Context Panel Backdrop */}
       {isContextPanelOpen && (
         <div 

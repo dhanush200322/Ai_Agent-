@@ -42,7 +42,7 @@ export function MagneticButton({ children, className, variant = "primary", ...pr
         "relative flex items-center justify-center px-8 py-4 rounded-full font-medium transition-colors duration-300 overflow-hidden group",
         isPrimary 
           ? "bg-gradient-to-r from-[#D4AF37] via-[#F7D774] to-[#D4AF37] text-[#050505] shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)]" 
-          : "bg-[rgba(255,255,255,0.02)] border border-[rgba(212,175,55,0.2)] text-[#D4AF37] hover:bg-[rgba(212,175,55,0.05)] hover:border-[rgba(212,175,55,0.5)]",
+          : "bg-[rgba(5,5,5,0.6)] backdrop-blur-sm border border-[rgba(212,175,55,0.4)] text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] hover:border-[rgba(212,175,55,0.7)]",
         className
       )}
       {...props}
