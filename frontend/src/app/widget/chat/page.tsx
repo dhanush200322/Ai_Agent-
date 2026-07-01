@@ -26,9 +26,16 @@ export default function WidgetChatPage() {
 
   useEffect(() => {
     if (agentId) {
-      agentService.getAgent(agentId)
-        .then(setAgent)
-        .catch(err => setError('Failed to load agent. Please ensure you are logged in to the Enterprise Dashboard.'));
+      fetch(`/api/widget-agents/${agentId}`)
+        .then(res => res.json())
+        .then(response => {
+          if (response.success && response.data) {
+            setAgent(response.data);
+          } else {
+            setError('Failed to load agent configuration.');
+          }
+        })
+        .catch(err => setError('Network error while loading agent.'));
     }
   }, [agentId]);
 
