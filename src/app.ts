@@ -50,6 +50,11 @@ app.use(morgan('combined', {
   }
 }));
 
+// Root endpoint for Render Health Check
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).send('OK');
+});
+
 // Health check endpoint
 app.use('/health', healthRoutes);
 
