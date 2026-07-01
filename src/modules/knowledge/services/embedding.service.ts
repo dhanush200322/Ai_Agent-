@@ -7,20 +7,21 @@ env.allowLocalModels = true;
 
 export class EmbeddingService {
   public readonly model = 'Xenova/all-MiniLM-L6-v2';
-  private extractorPromise: Promise<any>;
+  private static extractorPromise: Promise<any> | null = null;
 
-  constructor() {
-    // Initialize the pipeline once as a singleton promise
-    this.extractorPromise = pipeline('feature-extraction', this.model, {
-      quantized: true, // Use quantized model for speed and lower memory
-    });
-  }
+  constructor() {}
 
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     if (!texts || texts.length === 0) return [];
 
     try {
-      const extractor = await this.extractorPromise;
+      if (!EmbeddingService.extractorPromise) {
+        EmbeddingService.extractorPromise = pipeline('feature-extraction', this.model, {
+          quantized: true,
+        });
+      }
+      
+      const extractor = await EmbeddingService.extractorPromise;
       
       const embeddings: number[][] = [];
       
