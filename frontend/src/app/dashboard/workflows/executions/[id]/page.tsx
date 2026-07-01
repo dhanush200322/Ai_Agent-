@@ -8,10 +8,13 @@ import Link from 'next/link';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import WorkflowReplay from '@/features/workflows/components/WorkflowReplay';
+import { useParams } from 'next/navigation';
 
-export default function WorkflowExecutionsPage({ params }: { params: { id: string } }) {
-  const { data: workflow, isLoading: workflowLoading } = useWorkflow(params.id);
-  const { data: history = [], isLoading: historyLoading } = useWorkflowHistory(params.id);
+export default function WorkflowExecutionsPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const { data: workflow, isLoading: workflowLoading } = useWorkflow(id);
+  const { data: history = [], isLoading: historyLoading } = useWorkflowHistory(id);
   
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null);
 

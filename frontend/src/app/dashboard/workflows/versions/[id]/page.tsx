@@ -10,11 +10,13 @@ import { ReactFlow, Background, BackgroundVariant, Controls, Panel } from '@xyfl
 import '@xyflow/react/dist/style.css';
 import { SUPPORTED_NODES } from '@/features/workflows/config/nodeRegistry';
 import CustomNode from '@/features/workflows/components/nodes/CustomNode';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
-export default function WorkflowVersionsPage({ params }: { params: { id: string } }) {
-  const { data: workflow, isLoading } = useWorkflow(params.id);
-  const updateMutation = useUpdateWorkflow(params.id);
+export default function WorkflowVersionsPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const { data: workflow, isLoading } = useWorkflow(id);
+  const updateMutation = useUpdateWorkflow(id);
   const router = useRouter();
   
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
