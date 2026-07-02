@@ -1,6 +1,6 @@
 import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import { PolicyEngine } from './policy.engine';
 import { RiskEngine } from './risk.engine';
 import { MFAEngine } from './mfa.engine';

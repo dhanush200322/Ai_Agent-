@@ -31,10 +31,27 @@ export class AuthController {
       const ip = req.ip || req.connection?.remoteAddress || 'unknown';
       const userAgent = req.headers['user-agent'] || 'unknown';
       
+      // Create session and real JWT tokens so the user is fully authenticated
+      const session = await this.sessionService.createSession(result.user.id, ip, userAgent);
+      const { JWTEngine } = require('../engine/jwt.engine');
+      const jwtEngine = new JWTEngine();
+      const accessToken = await jwtEngine.generateAccessToken({ 
+        userId: result.user.id, 
+        sessionId: session.id, 
+        organizationId: result.user.organizationId 
+      });
+      const refreshToken = await jwtEngine.generateRefreshToken(session.id);
+      
+      const responsePayload = {
+        ...result,
+        tokens: { accessToken, refreshToken },
+        sessionId: session.id
+      };
+
       await this.authQueue.add('login', { userId: result.user.id, ip, userAgent });
       await this.auditQueue.add('audit', { action: 'REGISTER', userId: result.user.id });
 
-      res.status(201).json(ApiResponse.success(result, 'Registration successful', req.reqId));
+      res.status(201).json(ApiResponse.success(responsePayload, 'Registration successful', req.reqId));
     } catch (e: any) {
       if (e.name === 'ConflictError') {
         res.status(409).json(ApiResponse.error(e.message, 'Registration failed', req.reqId));
