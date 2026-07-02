@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+
 
 export class ApiKeyEngine {
   /**

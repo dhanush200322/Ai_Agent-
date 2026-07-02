@@ -1,16 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConversationTitleService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const groq_service_1 = require("./groq.service");
-const prisma = new client_1.PrismaClient();
 const groqService = new groq_service_1.GroqService();
 class ConversationTitleService {
     /**
      * Generates a title if the conversation does not have one yet
      */
     async generateTitleIfMissing(conversationId, firstMessageContent) {
-        const conversation = await prisma.conversation.findUnique({
+        const conversation = await prisma_1.prisma.conversation.findUnique({
             where: { id: conversationId }
         });
         if (!conversation || conversation.title) {
@@ -32,7 +31,7 @@ class ConversationTitleService {
             finalTitle += chunk.choices[0]?.delta?.content || '';
         }
         finalTitle = finalTitle.trim().replace(/^["']|["']$/g, '');
-        await prisma.conversation.update({
+        await prisma_1.prisma.conversation.update({
             where: { id: conversationId },
             data: { title: finalTitle }
         });

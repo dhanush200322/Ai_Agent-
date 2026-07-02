@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, SessionStatus } from '@prisma/client';
 import { RedisConnectionManager } from '../../../config/redis';
 import { REDIS_CONSTANTS } from '../../../config/redis.constants';
 import * as crypto from 'crypto';
 
-const prisma = new PrismaClient();
+
 
 export class SessionService {
   private get redis() {

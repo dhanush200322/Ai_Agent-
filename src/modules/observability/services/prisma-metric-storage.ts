@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { MetricStorageInterface } from './metric-storage.interface';
 
-const prisma = new PrismaClient();
+
 
 export class PrismaMetricStorage implements MetricStorageInterface {
   async recordMetric(organizationId: string | null, module: string, metricName: string, value: number, tags?: Record<string, string>): Promise<void> {

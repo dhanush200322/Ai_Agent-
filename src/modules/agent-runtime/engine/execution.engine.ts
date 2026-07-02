@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { AgentExecutionResult } from '../types/runtime.types';
 import { PlanningEngine } from './planning.engine';
 
-const prisma = new PrismaClient();
+
 
 export class ExecutionEngine {
   private planningEngine = new PlanningEngine();

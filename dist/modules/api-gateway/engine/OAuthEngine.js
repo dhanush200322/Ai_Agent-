@@ -41,12 +41,12 @@ var __importStar = (this && this.__importStar) || (function () {
 var OAuthEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OAuthEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const crypto = __importStar(require("crypto"));
 let OAuthEngine = OAuthEngine_1 = class OAuthEngine {
     logger = new common_1.Logger(OAuthEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async registerApplication(organizationId, name, redirectUris) {
         this.logger.debug(`Registering OAuth application ${name} for org ${organizationId}`);
         const clientId = crypto.randomBytes(16).toString('hex');

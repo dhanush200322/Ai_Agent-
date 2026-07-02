@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, AgentTask } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class TaskService {
   async createTask(teamId: string, input: string, priority: number = 0, parentTaskId?: string): Promise<AgentTask> {

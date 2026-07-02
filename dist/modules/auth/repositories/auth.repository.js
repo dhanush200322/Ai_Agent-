@@ -1,15 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthRepository = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const AppError_1 = require("../../../shared/errors/AppError");
-const prisma = new client_1.PrismaClient();
 class AuthRepository {
     async findUserByEmail(email) {
-        return prisma.user.findUnique({ where: { email } });
+        return prisma_1.prisma.user.findUnique({ where: { email } });
     }
     async findUserById(id) {
-        return prisma.user.findUnique({
+        return prisma_1.prisma.user.findUnique({
             where: { id },
             include: {
                 organization: true,
@@ -22,10 +21,10 @@ class AuthRepository {
         });
     }
     async findOrganizationBySlug(slug) {
-        return prisma.organization.findUnique({ where: { slug } });
+        return prisma_1.prisma.organization.findUnique({ where: { slug } });
     }
     async updateLastLogin(userId, ip) {
-        return prisma.user.update({
+        return prisma_1.prisma.user.update({
             where: { id: userId },
             data: {
                 lastLogin: new Date(),
@@ -36,7 +35,7 @@ class AuthRepository {
     // Transaction for Registration
     async registerTransaction(data) {
         try {
-            return await prisma.$transaction(async (tx) => {
+            return await prisma_1.prisma.$transaction(async (tx) => {
                 // 1. Create Organization
                 const org = await tx.organization.create({
                     data: {

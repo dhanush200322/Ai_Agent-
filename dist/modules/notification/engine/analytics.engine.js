@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnalyticsEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class AnalyticsEngine {
     async logEvent(params) {
-        return await prisma.notificationAnalytics.create({
+        return await prisma_1.prisma.notificationAnalytics.create({
             data: {
                 organizationId: params.organizationId,
                 notificationId: params.notificationId,
@@ -18,20 +17,20 @@ class AnalyticsEngine {
         });
     }
     async getMetrics(organizationId) {
-        const total = await prisma.notificationAnalytics.count({
+        const total = await prisma_1.prisma.notificationAnalytics.count({
             where: { organizationId },
         });
-        const statusCounts = await prisma.notificationAnalytics.groupBy({
+        const statusCounts = await prisma_1.prisma.notificationAnalytics.groupBy({
             by: ['status'],
             where: { organizationId },
             _count: true,
         });
-        const channelCounts = await prisma.notificationAnalytics.groupBy({
+        const channelCounts = await prisma_1.prisma.notificationAnalytics.groupBy({
             by: ['channel'],
             where: { organizationId },
             _count: true,
         });
-        const avgLatency = await prisma.notificationAnalytics.aggregate({
+        const avgLatency = await prisma_1.prisma.notificationAnalytics.aggregate({
             where: { organizationId },
             _avg: { latency: true },
         });

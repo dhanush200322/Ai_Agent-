@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response } from 'express';
 import { OrganizationService } from '../services/organization.service';
 import { OrganizationStatsService } from '../services/organizationStats.service';
@@ -24,7 +25,7 @@ export class OrganizationController {
   
   getActivity = async (req: Request, res: Response) => {
     const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    
     const activity = await prisma.auditLog.findMany({
       where: { organizationId: req.user!.organizationId },
       orderBy: { createdAt: 'desc' },

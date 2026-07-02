@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JobDispatcher = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class JobDispatcher {
     workers = new Map();
     registerWorkerClass(jobType, workerClass) {
@@ -16,11 +15,11 @@ class JobDispatcher {
             throw new Error(`Invalid Job Payload Contract for job ${queueJob.id}`);
         }
         // 2. Observability & DB Sync (Job Started)
-        await prisma.jobQueue.update({
+        await prisma_1.prisma.jobQueue.update({
             where: { id: payload.id },
             data: { status: 'ACTIVE', startedAt: new Date(), attempts: queueJob.attemptsMade }
         });
-        const execution = await prisma.jobExecution.create({
+        const execution = await prisma_1.prisma.jobExecution.create({
             data: {
                 jobId: payload.id,
                 organizationId: payload.organizationId,
@@ -33,7 +32,7 @@ class JobDispatcher {
         await queueJob.updateProgress(0);
         try {
             // 3. Load Organization Context (Placeholder for RBAC/Org Check)
-            const org = await prisma.organization.findUnique({ where: { id: payload.organizationId } });
+            const org = await prisma_1.prisma.organization.findUnique({ where: { id: payload.organizationId } });
             if (!org)
                 throw new Error("Organization not found");
             // 4. Route to specific worker
@@ -47,22 +46,22 @@ class JobDispatcher {
             await handler(queueJob, { org });
             await queueJob.updateProgress(100);
             // 5. Success Sync
-            await prisma.jobQueue.update({
+            await prisma_1.prisma.jobQueue.update({
                 where: { id: payload.id },
                 data: { status: 'COMPLETED', completedAt: new Date() }
             });
-            await prisma.jobExecution.update({
+            await prisma_1.prisma.jobExecution.update({
                 where: { id: execution.id },
                 data: { finishedAt: new Date(), duration: Date.now() - startTime }
             });
         }
         catch (err) {
             // 6. Failure Sync
-            await prisma.jobQueue.update({
+            await prisma_1.prisma.jobQueue.update({
                 where: { id: payload.id },
                 data: { status: 'FAILED', failedAt: new Date() }
             });
-            await prisma.jobExecution.update({
+            await prisma_1.prisma.jobExecution.update({
                 where: { id: execution.id },
                 data: { finishedAt: new Date(), duration: Date.now() - startTime, logs: err.message }
             });

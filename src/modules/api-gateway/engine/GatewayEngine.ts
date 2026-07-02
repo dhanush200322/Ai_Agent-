@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { Request } from 'express';
@@ -5,7 +6,7 @@ import { Request } from 'express';
 @Injectable()
 export class GatewayEngine {
   private readonly logger = new Logger(GatewayEngine.name);
-  private prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async resolveRoute(path: string, method: string) {
     this.logger.debug(`Resolving route for [${method}] ${path}`);

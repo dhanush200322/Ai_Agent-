@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, NotificationChannel, NotificationPreference } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export interface PreferenceResolutionContext {
   organizationId: string;

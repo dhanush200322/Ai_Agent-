@@ -1,16 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardAggregator = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 // MetricsService not used here directly
-const prisma = new client_1.PrismaClient();
 class DashboardAggregator {
     /**
      * Generates a snapshot on demand by pulling raw metrics and aggregating them.
      */
     async generateSnapshot(organizationId) {
         // 1. Get raw metrics for the last hour
-        const rawMetrics = await prisma.systemMetric.findMany({
+        const rawMetrics = await prisma_1.prisma.systemMetric.findMany({
             where: {
                 organizationId,
                 timestamp: { gte: new Date(Date.now() - 60 * 60 * 1000) }
@@ -29,7 +28,7 @@ class DashboardAggregator {
      */
     async cacheSnapshot(organizationId) {
         const snapshot = await this.generateSnapshot(organizationId);
-        await prisma.dashboardSnapshot.create({
+        await prisma_1.prisma.dashboardSnapshot.create({
             data: {
                 organizationId,
                 snapshot: JSON.stringify(snapshot)

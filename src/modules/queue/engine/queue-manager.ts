@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { QueueProvider, EnqueueOptions } from '../providers/queue-provider.interface';
 import { PrismaClient, JobStatus } from '@prisma/client';
 import { StandardQueueName } from '../types';
 
-const prisma = new PrismaClient();
+
 
 export class QueueManager {
   constructor(private provider: QueueProvider) {}

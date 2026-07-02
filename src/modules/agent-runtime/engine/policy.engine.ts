@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class PolicyEngine {
   public async validateExecution(organizationId: string, agentId: string): Promise<boolean> {

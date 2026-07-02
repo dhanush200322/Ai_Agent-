@@ -1,10 +1,11 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { WorkflowService } from '../services/workflow.service';
 import { ExecutionService } from '../services/execution.service';
 import { TemplateEngine } from '../engine/template.engine';
 
-const prisma = new PrismaClient();
+
 const workflowService = new WorkflowService();
 const executionService = new ExecutionService();
 const templateEngine = new TemplateEngine();

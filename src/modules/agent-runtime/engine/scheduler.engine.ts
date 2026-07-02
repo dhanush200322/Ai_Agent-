@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, JobType } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class SchedulerEngine {
   public async scheduleExecution(organizationId: string, executionId: string, delayMs: number): Promise<void> {

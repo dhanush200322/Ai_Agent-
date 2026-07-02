@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationController = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const notification_engine_1 = require("../engine/notification.engine");
-const prisma = new client_1.PrismaClient();
 const notificationEngine = new notification_engine_1.NotificationEngine();
 class NotificationController {
     async send(req, res) {
@@ -55,7 +54,7 @@ class NotificationController {
         if (userId) {
             where.userId = userId;
         }
-        const notifications = await prisma.notification.findMany({
+        const notifications = await prisma_1.prisma.notification.findMany({
             where,
             orderBy: { createdAt: 'desc' },
         });
@@ -64,7 +63,7 @@ class NotificationController {
     async getNotificationById(req, res) {
         const { id } = req.params;
         const organizationId = req.user?.organizationId;
-        const notif = await prisma.notification.findFirst({
+        const notif = await prisma_1.prisma.notification.findFirst({
             where: { id, organizationId },
         });
         if (!notif) {
@@ -75,7 +74,7 @@ class NotificationController {
     async markAsRead(req, res) {
         const { id } = req.params;
         const organizationId = req.user?.organizationId;
-        await prisma.notification.updateMany({
+        await prisma_1.prisma.notification.updateMany({
             where: { id, organizationId },
             data: { isRead: true, readAt: new Date() },
         });
@@ -84,7 +83,7 @@ class NotificationController {
     async markAsUnread(req, res) {
         const { id } = req.params;
         const organizationId = req.user?.organizationId;
-        await prisma.notification.updateMany({
+        await prisma_1.prisma.notification.updateMany({
             where: { id, organizationId },
             data: { isRead: false, readAt: null },
         });
@@ -93,7 +92,7 @@ class NotificationController {
     async archive(req, res) {
         const { id } = req.params;
         const organizationId = req.user?.organizationId;
-        await prisma.notification.updateMany({
+        await prisma_1.prisma.notification.updateMany({
             where: { id, organizationId },
             data: { isArchived: true, archivedAt: new Date() },
         });
@@ -102,7 +101,7 @@ class NotificationController {
     async deleteNotification(req, res) {
         const { id } = req.params;
         const organizationId = req.user?.organizationId;
-        await prisma.notification.updateMany({
+        await prisma_1.prisma.notification.updateMany({
             where: { id, organizationId },
             data: { isDeleted: true, deletedAt: new Date() },
         });
@@ -110,7 +109,7 @@ class NotificationController {
     }
     async getTemplates(req, res) {
         const organizationId = req.user?.organizationId;
-        const templates = await prisma.notificationTemplate.findMany({
+        const templates = await prisma_1.prisma.notificationTemplate.findMany({
             where: { organizationId },
         });
         return res.json(templates);
@@ -121,7 +120,7 @@ class NotificationController {
         if (!organizationId) {
             return res.status(400).json({ error: 'Organization ID is required' });
         }
-        const template = await prisma.notificationTemplate.create({
+        const template = await prisma_1.prisma.notificationTemplate.create({
             data: {
                 organizationId,
                 name,
@@ -139,7 +138,7 @@ class NotificationController {
         const { id } = req.params;
         const { name, subject, content, language, version } = req.body;
         const organizationId = req.user?.organizationId;
-        await prisma.notificationTemplate.updateMany({
+        await prisma_1.prisma.notificationTemplate.updateMany({
             where: { id, organizationId },
             data: { name, subject, content, language, version },
         });
@@ -148,7 +147,7 @@ class NotificationController {
     async deleteTemplate(req, res) {
         const { id } = req.params;
         const organizationId = req.user?.organizationId;
-        await prisma.notificationTemplate.deleteMany({
+        await prisma_1.prisma.notificationTemplate.deleteMany({
             where: { id, organizationId },
         });
         return res.json({ success: true });
@@ -159,11 +158,11 @@ class NotificationController {
         if (!organizationId) {
             return res.status(400).json({ error: 'Organization ID is required' });
         }
-        let pref = await prisma.notificationPreference.findFirst({
+        let pref = await prisma_1.prisma.notificationPreference.findFirst({
             where: { organizationId, userId: userId || null },
         });
         if (!pref) {
-            pref = await prisma.notificationPreference.create({
+            pref = await prisma_1.prisma.notificationPreference.create({
                 data: {
                     organizationId,
                     userId: userId || null,
@@ -189,15 +188,15 @@ class NotificationController {
             quietHoursEnd,
             digestMode,
         };
-        const existing = await prisma.notificationPreference.findFirst({ where });
+        const existing = await prisma_1.prisma.notificationPreference.findFirst({ where });
         if (existing) {
-            await prisma.notificationPreference.update({
+            await prisma_1.prisma.notificationPreference.update({
                 where: { id: existing.id },
                 data,
             });
         }
         else {
-            await prisma.notificationPreference.create({
+            await prisma_1.prisma.notificationPreference.create({
                 data: {
                     ...where,
                     ...data,

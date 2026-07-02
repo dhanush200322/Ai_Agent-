@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { VaultProvider, StoreSecretParams, RetrieveSecretResult } from './vault-provider.interface';
 import { EncryptionEngine } from '../engine/encryption.engine';
 
-const prisma = new PrismaClient() as any;
+
 
 export class DatabaseVaultProvider implements VaultProvider {
   private encryptionEngine: EncryptionEngine;
@@ -19,9 +20,9 @@ export class DatabaseVaultProvider implements VaultProvider {
         organizationId,
         name: params.name,
         description: params.description,
-        category: params.category,
-        provider: 'DATABASE',
-        status: 'ACTIVE',
+        category: params.category as any,
+        provider: 'DATABASE' as any,
+        status: 'ACTIVE' as any,
         versions: {
           create: {
             version: 1,

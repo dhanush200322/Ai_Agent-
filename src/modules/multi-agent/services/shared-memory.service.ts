@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, SharedMemory } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 // Note: For full RAG we would inject the real EmbeddingService and VectorService here.
 // For this enterprise scaffold, we mimic the storage to validate the DB/engine flow.

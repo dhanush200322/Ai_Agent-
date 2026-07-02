@@ -34,8 +34,26 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Standard Security & Core Middlewares
 app.use(helmet());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://ai-agent-pohw.vercel.app'
+];
+
+if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(compression());

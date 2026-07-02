@@ -1,10 +1,11 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { DatabaseVaultProvider } from '../providers/database-vault.provider';
 import { VaultProvider } from '../providers/vault-provider.interface';
 import { CacheService } from '../../cache/cache.service';
 import { REDIS_CONSTANTS } from '../../../config/redis.constants';
 
-const prisma = new PrismaClient() as any;
+
 
 export class VaultService {
   private provider: VaultProvider;

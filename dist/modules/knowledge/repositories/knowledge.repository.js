@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.KnowledgeRepository = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class KnowledgeRepository {
     async findKnowledgeBases(organizationId, skip, limit, search) {
         const where = {
@@ -16,7 +15,7 @@ class KnowledgeRepository {
             ];
         }
         const [items, total] = await Promise.all([
-            prisma.knowledgeBase.findMany({
+            prisma_1.prisma.knowledgeBase.findMany({
                 where,
                 skip,
                 take: limit,
@@ -27,12 +26,12 @@ class KnowledgeRepository {
                     }
                 }
             }),
-            prisma.knowledgeBase.count({ where })
+            prisma_1.prisma.knowledgeBase.count({ where })
         ]);
         return { items, total };
     }
     async findKnowledgeBaseById(organizationId, id) {
-        return prisma.knowledgeBase.findFirst({
+        return prisma_1.prisma.knowledgeBase.findFirst({
             where: { id, organizationId, deletedAt: null },
             include: {
                 createdBy: {
@@ -42,18 +41,18 @@ class KnowledgeRepository {
         });
     }
     async createKnowledgeBase(data) {
-        return prisma.knowledgeBase.create({
+        return prisma_1.prisma.knowledgeBase.create({
             data
         });
     }
     async updateKnowledgeBase(_organizationId, id, data) {
-        return prisma.knowledgeBase.update({
+        return prisma_1.prisma.knowledgeBase.update({
             where: { id },
             data
         });
     }
     async softDeleteKnowledgeBase(_organizationId, id) {
-        return prisma.knowledgeBase.update({
+        return prisma_1.prisma.knowledgeBase.update({
             where: { id },
             data: {
                 deletedAt: new Date()
@@ -62,12 +61,12 @@ class KnowledgeRepository {
     }
     // Document methods
     async createKnowledgeDocument(data) {
-        return prisma.knowledgeDocument.create({
+        return prisma_1.prisma.knowledgeDocument.create({
             data
         });
     }
     async findKnowledgeDocuments(organizationId, knowledgeBaseId) {
-        return prisma.knowledgeDocument.findMany({
+        return prisma_1.prisma.knowledgeDocument.findMany({
             where: {
                 organizationId,
                 knowledgeBaseId,
@@ -77,7 +76,7 @@ class KnowledgeRepository {
         });
     }
     async findKnowledgeDocumentById(organizationId, id) {
-        return prisma.knowledgeDocument.findFirst({
+        return prisma_1.prisma.knowledgeDocument.findFirst({
             where: {
                 id,
                 organizationId,
@@ -86,7 +85,7 @@ class KnowledgeRepository {
         });
     }
     async softDeleteKnowledgeDocument(_organizationId, id) {
-        return prisma.knowledgeDocument.update({
+        return prisma_1.prisma.knowledgeDocument.update({
             where: { id },
             data: {
                 deletedAt: new Date(),
@@ -96,7 +95,7 @@ class KnowledgeRepository {
     }
     // Agent Connection methods
     async getConnectedAgents(organizationId, knowledgeBaseId) {
-        return prisma.agentKnowledgeBase.findMany({
+        return prisma_1.prisma.agentKnowledgeBase.findMany({
             where: {
                 knowledgeBaseId,
                 agent: { organizationId, deletedAt: null }
@@ -112,13 +111,13 @@ class KnowledgeRepository {
             agentId,
             knowledgeBaseId
         }));
-        return prisma.agentKnowledgeBase.createMany({
+        return prisma_1.prisma.agentKnowledgeBase.createMany({
             data,
             skipDuplicates: true
         });
     }
     async removeConnectedAgent(knowledgeBaseId, agentId) {
-        return prisma.agentKnowledgeBase.delete({
+        return prisma_1.prisma.agentKnowledgeBase.delete({
             where: {
                 agentId_knowledgeBaseId: {
                     agentId,

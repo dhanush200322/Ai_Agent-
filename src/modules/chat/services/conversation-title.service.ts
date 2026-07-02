@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { GroqService } from './groq.service';
 
-const prisma = new PrismaClient();
+
 const groqService = new GroqService();
 
 export class ConversationTitleService {

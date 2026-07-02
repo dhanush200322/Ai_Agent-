@@ -1,24 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrganizationRepository = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class OrganizationRepository {
     async findOrganizationById(id) {
-        return prisma.organization.findUnique({
+        return prisma_1.prisma.organization.findUnique({
             where: { id }
         });
     }
     async updateOrganization(id, data) {
-        return prisma.organization.update({
+        return prisma_1.prisma.organization.update({
             where: { id },
             data
         });
     }
     async transferOwnership(_organizationId, currentOwnerId, newOwnerId) {
-        return prisma.$transaction([
-            prisma.user.update({ where: { id: currentOwnerId }, data: { isOwner: false } }),
-            prisma.user.update({ where: { id: newOwnerId }, data: { isOwner: true } })
+        return prisma_1.prisma.$transaction([
+            prisma_1.prisma.user.update({ where: { id: currentOwnerId }, data: { isOwner: false } }),
+            prisma_1.prisma.user.update({ where: { id: newOwnerId }, data: { isOwner: true } })
         ]);
     }
 }

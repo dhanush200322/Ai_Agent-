@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoutingEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class RoutingEngine {
     async getProvidersForChannel(organizationId, channel) {
-        let providers = await prisma.notificationProvider.findMany({
+        let providers = await prisma_1.prisma.notificationProvider.findMany({
             where: {
                 organizationId,
                 isActive: true,
@@ -15,7 +14,7 @@ class RoutingEngine {
             },
         });
         if (providers.length === 0) {
-            providers = await prisma.notificationProvider.findMany({
+            providers = await prisma_1.prisma.notificationProvider.findMany({
                 where: {
                     organizationId: null,
                     isActive: true,

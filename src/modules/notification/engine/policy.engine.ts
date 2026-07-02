@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, NotificationChannel, NotificationPriority } from '@prisma/client';
 import { CacheService } from '../../cache/cache.service';
 
-const prisma = new PrismaClient();
+
 
 export class NotificationPolicyEngine {
   private cache: CacheService;

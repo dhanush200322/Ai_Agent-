@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import * as v8 from 'v8';
 import * as perfHooks from 'perf_hooks';
@@ -7,7 +8,7 @@ import { MetricsEngine } from './MetricsEngine';
 @Injectable()
 export class ProfilingEngine {
   private readonly logger = new Logger(ProfilingEngine.name);
-  private readonly prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   constructor(private readonly metrics: MetricsEngine) {
     this.monitorEventLoop();

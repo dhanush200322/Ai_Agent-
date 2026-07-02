@@ -1,15 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConversationService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const AppError_1 = require("../../../shared/errors/AppError");
-const prisma = new client_1.PrismaClient();
 class ConversationService {
     /**
      * Create a new conversation
      */
     async createConversation(data) {
-        return prisma.conversation.create({
+        return prisma_1.prisma.conversation.create({
             data: {
                 sessionId: data.sessionId,
                 organizationId: data.organizationId,
@@ -24,7 +23,7 @@ class ConversationService {
      */
     async getConversationById(id, organizationId) {
         try {
-            const conversation = await prisma.conversation.findFirst({
+            const conversation = await prisma_1.prisma.conversation.findFirst({
                 where: {
                     id,
                     organizationId,
@@ -60,7 +59,7 @@ class ConversationService {
         if (params.status)
             where.status = params.status;
         const [items, total] = await Promise.all([
-            prisma.conversation.findMany({
+            prisma_1.prisma.conversation.findMany({
                 where,
                 skip: params.skip,
                 take: params.limit,
@@ -69,7 +68,7 @@ class ConversationService {
                     agent: { select: { id: true, name: true } }
                 }
             }),
-            prisma.conversation.count({ where })
+            prisma_1.prisma.conversation.count({ where })
         ]);
         return { items, total };
     }
@@ -78,7 +77,7 @@ class ConversationService {
      */
     async archiveConversation(id, organizationId) {
         const conversation = await this.getConversationById(id, organizationId);
-        return prisma.conversation.update({
+        return prisma_1.prisma.conversation.update({
             where: { id: conversation.id },
             data: { status: 'ARCHIVED' }
         });
@@ -88,7 +87,7 @@ class ConversationService {
      */
     async restoreConversation(id, organizationId) {
         const conversation = await this.getConversationById(id, organizationId);
-        return prisma.conversation.update({
+        return prisma_1.prisma.conversation.update({
             where: { id: conversation.id },
             data: { status: 'ACTIVE' }
         });
@@ -98,7 +97,7 @@ class ConversationService {
      */
     async deleteConversation(id, organizationId) {
         const conversation = await this.getConversationById(id, organizationId);
-        return prisma.conversation.update({
+        return prisma_1.prisma.conversation.update({
             where: { id: conversation.id },
             data: {
                 status: 'DELETED',
@@ -110,7 +109,7 @@ class ConversationService {
      * Update Conversation Title
      */
     async updateTitle(id, title) {
-        return prisma.conversation.update({
+        return prisma_1.prisma.conversation.update({
             where: { id },
             data: { title }
         });
@@ -119,7 +118,7 @@ class ConversationService {
      * Update Conversation Summary
      */
     async updateSummary(id, summary) {
-        return prisma.conversation.update({
+        return prisma_1.prisma.conversation.update({
             where: { id },
             data: { summary }
         });
@@ -128,7 +127,7 @@ class ConversationService {
      * Update lastMessageAt
      */
     async updateLastMessageAt(id) {
-        return prisma.conversation.update({
+        return prisma_1.prisma.conversation.update({
             where: { id },
             data: { lastMessageAt: new Date() }
         });

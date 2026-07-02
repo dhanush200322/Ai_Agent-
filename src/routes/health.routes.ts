@@ -1,3 +1,4 @@
+import { prisma } from '../shared/prisma';
 import { Router, Request, Response } from 'express';
 import { ApiResponse } from '../shared/response/ApiResponse';
 import { PrismaClient } from '@prisma/client';
@@ -7,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL || 'http://localhost:6333',
   apiKey: process.env.QDRANT_API_KEY,

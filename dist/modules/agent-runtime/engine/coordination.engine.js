@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoordinationEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class CoordinationEngine {
     async delegateTask(sourceAgentId, targetAgentId, taskDefinition) {
-        const delegation = await prisma.agentDelegation.create({
+        const delegation = await prisma_1.prisma.agentDelegation.create({
             data: {
                 sourceAgentId,
                 targetAgentId,
@@ -13,7 +12,7 @@ class CoordinationEngine {
                 status: 'PENDING'
             }
         });
-        await prisma.agentEvent.create({
+        await prisma_1.prisma.agentEvent.create({
             data: {
                 agentId: sourceAgentId,
                 type: 'DELEGATION',
@@ -23,13 +22,13 @@ class CoordinationEngine {
         return delegation.id;
     }
     async resolveDelegation(delegationId, status, result) {
-        await prisma.agentDelegation.update({
+        await prisma_1.prisma.agentDelegation.update({
             where: { id: delegationId },
             data: { status, result }
         });
     }
     async sendMessage(senderId, receiverId, content) {
-        await prisma.agentMessage.create({
+        await prisma_1.prisma.agentMessage.create({
             data: {
                 senderAgentId: senderId,
                 receiverAgentId: receiverId,

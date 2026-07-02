@@ -1,18 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegistryEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class RegistryEngine {
     async registerAgent(organizationId, agentId) {
-        await prisma.agentHeartbeat.upsert({
+        await prisma_1.prisma.agentHeartbeat.upsert({
             where: { agentId },
             update: { lastActive: new Date(), status: 'ONLINE' },
             create: { agentId, status: 'ONLINE' }
         });
     }
     async discoverAgentsByCapability(organizationId, capabilityName) {
-        const agents = await prisma.agent.findMany({
+        const agents = await prisma_1.prisma.agent.findMany({
             where: {
                 organizationId,
                 status: 'ACTIVE',
@@ -47,7 +46,7 @@ class RegistryEngine {
         });
     }
     async getAgentMetadata(organizationId, agentId) {
-        const agent = await prisma.agent.findFirst({
+        const agent = await prisma_1.prisma.agent.findFirst({
             where: { id: agentId, organizationId },
             include: { capabilities: true, heartbeat: true }
         });

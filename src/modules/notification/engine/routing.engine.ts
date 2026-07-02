@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, NotificationChannel, NotificationProviderType } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class RoutingEngine {
   async getProvidersForChannel(organizationId: string, channel: NotificationChannel): Promise<any[]> {

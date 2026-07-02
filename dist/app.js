@@ -20,6 +20,7 @@ const knowledge_routes_1 = __importDefault(require("./modules/knowledge/routes/k
 const chat_routes_1 = __importDefault(require("./modules/chat/routes/chat.routes"));
 const notification_routes_1 = __importDefault(require("./modules/notification/routes/notification.routes"));
 const workflow_routes_1 = __importDefault(require("./modules/workflow/routes/workflow.routes"));
+const vault_routes_1 = __importDefault(require("./modules/vault/routes/vault.routes"));
 const health_routes_1 = __importDefault(require("./routes/health.routes"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const logger_1 = __importDefault(require("./shared/logger/logger"));
@@ -33,8 +34,25 @@ app.use((req, res, next) => {
 });
 // Standard Security & Core Middlewares
 app.use((0, helmet_1.default)());
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://ai-agent-pohw.vercel.app'
+];
+if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) {
+    allowedOrigins.push(process.env.CLIENT_URL);
+}
 app.use((0, cors_1.default)({
-    origin: process.env.CLIENT_URL || '*',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, server-to-server)
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use((0, compression_1.default)());
@@ -47,6 +65,10 @@ app.use((0, morgan_1.default)('combined', {
         write: (message) => logger_1.default.info(message.trim())
     }
 }));
+// Root endpoint for Render Health Check
+app.get('/', (req, res) => {
+    res.status(200).send('OK');
+});
 // Health check endpoint
 app.use('/health', health_routes_1.default);
 // API Routes
@@ -60,6 +82,7 @@ app.use('/api/v1/knowledge', knowledge_routes_1.default);
 app.use('/api/v1/chat', chat_routes_1.default);
 app.use('/api/v1/notifications', notification_routes_1.default);
 app.use('/api/v1/workflows', workflow_routes_1.default);
+app.use('/api/v1/vault', vault_routes_1.default);
 // Catch 404 and forward to error handler
 app.use((req, _res, next) => {
     next(new AppError_1.NotFoundError(`Route ${req.originalUrl} not found`));

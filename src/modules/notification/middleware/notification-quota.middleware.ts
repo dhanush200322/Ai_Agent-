@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export async function checkNotificationQuota(req: Request, res: Response, next: NextFunction) {
   const organizationId = req.user?.organizationId;

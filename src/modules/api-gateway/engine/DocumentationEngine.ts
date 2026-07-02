@@ -1,10 +1,11 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class DocumentationEngine {
   private readonly logger = new Logger(DocumentationEngine.name);
-  private prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async getOpenApiSpec(version: string = '1.0.0') {
     this.logger.debug(`Generating OpenAPI spec for version ${version}`);

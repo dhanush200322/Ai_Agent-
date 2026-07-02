@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthorizationError, NotFoundError } from '../../../shared/errors/AppError';
 
-const prisma = new PrismaClient();
+
 
 export const authorizeWorkflow = (action: 'read' | 'write' | 'execute' | 'delete') => {
   return async (req: Request, _res: Response, next: NextFunction) => {

@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentRepository = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class AgentRepository {
     async findAgents(organizationId, skip, limit, search) {
         const where = {
@@ -16,7 +15,7 @@ class AgentRepository {
             ];
         }
         const [items, total] = await Promise.all([
-            prisma.agent.findMany({
+            prisma_1.prisma.agent.findMany({
                 where,
                 skip,
                 take: limit,
@@ -27,12 +26,12 @@ class AgentRepository {
                     }
                 }
             }),
-            prisma.agent.count({ where })
+            prisma_1.prisma.agent.count({ where })
         ]);
         return { items, total };
     }
     async findAgentById(organizationId, id) {
-        return prisma.agent.findFirst({
+        return prisma_1.prisma.agent.findFirst({
             where: { id, organizationId, deletedAt: null },
             include: {
                 createdBy: {
@@ -42,32 +41,35 @@ class AgentRepository {
         });
     }
     async findAgentBySlug(organizationId, slug) {
-        return prisma.agent.findFirst({
+        return prisma_1.prisma.agent.findFirst({
             where: { slug, organizationId, deletedAt: null }
         });
     }
     async createAgent(data) {
-        return prisma.agent.create({
+        return prisma_1.prisma.agent.create({
             data
         });
     }
     async updateAgent(_organizationId, id, data) {
-        return prisma.agent.update({
+        return prisma_1.prisma.agent.update({
             where: { id },
             data
         });
     }
     async softDeleteAgent(_organizationId, id) {
-        return prisma.agent.update({
+        const agent = await prisma_1.prisma.agent.findUnique({ where: { id } });
+        const deletedSlug = agent ? `${agent.slug}-deleted-${Date.now()}` : `deleted-${Date.now()}`;
+        return prisma_1.prisma.agent.update({
             where: { id },
             data: {
                 deletedAt: new Date(),
-                status: 'ARCHIVED'
+                status: 'ARCHIVED',
+                slug: deletedSlug
             }
         });
     }
     async getKnowledgeBases(organizationId, agentId) {
-        return prisma.agentKnowledgeBase.findMany({
+        return prisma_1.prisma.agentKnowledgeBase.findMany({
             where: {
                 agentId,
                 knowledgeBase: { organizationId, deletedAt: null }
@@ -84,13 +86,13 @@ class AgentRepository {
             agentId,
             knowledgeBaseId: kbId
         }));
-        return prisma.agentKnowledgeBase.createMany({
+        return prisma_1.prisma.agentKnowledgeBase.createMany({
             data,
             skipDuplicates: true
         });
     }
     async removeKnowledgeBase(agentId, knowledgeBaseId) {
-        return prisma.agentKnowledgeBase.delete({
+        return prisma_1.prisma.agentKnowledgeBase.delete({
             where: {
                 agentId_knowledgeBaseId: {
                     agentId,

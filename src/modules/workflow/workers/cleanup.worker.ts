@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { QueueJob } from '../../queue/providers/queue-provider.interface';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export const CleanupWorker = async (job: QueueJob, _context: any) => {
   await job.log('Starting execution logs cleanup...');

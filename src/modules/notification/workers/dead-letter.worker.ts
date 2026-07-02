@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { QueueJob } from '../../queue/providers/queue-provider.interface';
 
-const prisma = new PrismaClient();
+
 
 export class DeadLetterWorker {
   async process(job: QueueJob): Promise<void> {

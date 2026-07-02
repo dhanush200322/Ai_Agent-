@@ -1,18 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ToolEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class ToolEngine {
     async executeTool(executionId, toolId, input, overrideConversationId) {
-        const execution = await prisma.agentExecution.findUnique({
+        const execution = await prisma_1.prisma.agentExecution.findUnique({
             where: { id: executionId },
             include: { agent: true, session: true }
         });
         if (!execution)
             throw new Error('Execution not found');
         const conversationId = overrideConversationId || execution.session?.id || executionId; // Mock conversationId for ToolExecution
-        const toolExecution = await prisma.toolExecution.create({
+        const toolExecution = await prisma_1.prisma.toolExecution.create({
             data: {
                 conversationId,
                 agentId: execution.agentId,
@@ -24,7 +23,7 @@ class ToolEngine {
         try {
             // Mock actual tool execution call
             const output = JSON.stringify({ success: true, executedAt: new Date() });
-            await prisma.toolExecution.update({
+            await prisma_1.prisma.toolExecution.update({
                 where: { id: toolExecution.id },
                 data: {
                     status: 'COMPLETED',
@@ -36,7 +35,7 @@ class ToolEngine {
             return JSON.parse(output);
         }
         catch (error) {
-            await prisma.toolExecution.update({
+            await prisma_1.prisma.toolExecution.update({
                 where: { id: toolExecution.id },
                 data: {
                     status: 'FAILED',
@@ -48,7 +47,7 @@ class ToolEngine {
         }
     }
     async discoverTools(agentId) {
-        const agentTools = await prisma.agentTool.findMany({
+        const agentTools = await prisma_1.prisma.agentTool.findMany({
             where: { agentId, enabled: true },
             include: { tool: true }
         });

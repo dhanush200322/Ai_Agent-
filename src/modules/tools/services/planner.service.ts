@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { ChatMessage } from '../../chat/types/chat.types';
 import { GroqService } from '../../chat/services/groq.service';
 import { ToolResolverService } from './tool-resolver.service';
@@ -6,7 +7,7 @@ import { ToolExecutorService } from './tool-executor.service';
 import { ToolDefinition } from '../types/tool.types';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class PlannerService {
   private groqService = new GroqService();

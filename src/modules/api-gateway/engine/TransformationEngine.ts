@@ -1,10 +1,11 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class TransformationEngine {
   private readonly logger = new Logger(TransformationEngine.name);
-  private prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async transformRequest(routeId: string, payload: any) {
     this.logger.debug(`Applying REQUEST transformations for route ${routeId}`);

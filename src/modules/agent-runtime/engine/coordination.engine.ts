@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class CoordinationEngine {
   public async delegateTask(sourceAgentId: string, targetAgentId: string, taskDefinition: string): Promise<string> {

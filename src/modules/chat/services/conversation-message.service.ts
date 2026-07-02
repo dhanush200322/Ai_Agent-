@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, MessageRole } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class ConversationMessageService {
   /**

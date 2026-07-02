@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -6,7 +7,7 @@ import axios from 'axios';
 @Injectable()
 export class WebhookEngine {
   private readonly logger = new Logger(WebhookEngine.name);
-  private prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async dispatchWebhook(applicationId: string, event: string, payload: any) {
     this.logger.debug(`Dispatching webhook for app ${applicationId}, event ${event}`);

@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationEngine = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const delivery_engine_1 = require("./delivery.engine");
 const bullmq_provider_1 = require("../../queue/providers/bullmq.provider");
-const prisma = new client_1.PrismaClient();
 class NotificationEngine {
     deliveryEngine = new delivery_engine_1.DeliveryEngine();
     queueProvider = null;
@@ -18,7 +17,7 @@ class NotificationEngine {
     }
     async trigger(params) {
         const priority = params.priority || 'NORMAL';
-        const notification = await prisma.notification.create({
+        const notification = await prisma_1.prisma.notification.create({
             data: {
                 organizationId: params.organizationId,
                 userId: params.userId || null,
@@ -34,7 +33,7 @@ class NotificationEngine {
             },
         });
         if (params.scheduledAt && params.scheduledAt.getTime() > Date.now()) {
-            await prisma.notificationSchedule.create({
+            await prisma_1.prisma.notificationSchedule.create({
                 data: {
                     notificationId: notification.id,
                     runAt: params.scheduledAt,
@@ -68,7 +67,7 @@ class NotificationEngine {
             }
         }
         await this.deliveryEngine.deliver(notification.id);
-        return await prisma.notification.findUnique({ where: { id: notification.id } });
+        return await prisma_1.prisma.notification.findUnique({ where: { id: notification.id } });
     }
 }
 exports.NotificationEngine = NotificationEngine;

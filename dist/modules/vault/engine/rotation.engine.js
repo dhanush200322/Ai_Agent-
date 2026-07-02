@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RotationEngine = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const queue_manager_1 = require("../../queue/engine/queue-manager");
 const bullmq_provider_1 = require("../../queue/providers/bullmq.provider");
 const vault_service_1 = require("../services/vault.service");
-const prisma = new client_1.PrismaClient();
 class RotationEngine {
     queueManager;
     vaultService;
@@ -14,7 +13,7 @@ class RotationEngine {
         this.vaultService = new vault_service_1.VaultService();
     }
     async triggerRotation(secretId) {
-        const policy = await prisma.secretRotationPolicy.findUnique({
+        const policy = await prisma_1.prisma.secretRotationPolicy.findUnique({
             where: { secretId },
             include: { secret: true }
         });
@@ -62,7 +61,7 @@ class RotationEngine {
             }
             await this.vaultService.rotateSecret(secretId, 'SYSTEM_ROTATION_ENGINE', newSecretValue);
             // Update policy dates
-            await prisma.secretRotationPolicy.update({
+            await prisma_1.prisma.secretRotationPolicy.update({
                 where: { secretId },
                 data: {
                     lastRotatedAt: new Date(),
@@ -73,7 +72,7 @@ class RotationEngine {
             });
         }
         catch (err) {
-            await prisma.secretRotationPolicy.update({
+            await prisma_1.prisma.secretRotationPolicy.update({
                 where: { secretId },
                 data: { failureCount: { increment: 1 } }
             });

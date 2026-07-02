@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QueueManager = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const client_1 = require("@prisma/client");
 const types_1 = require("../types");
-const prisma = new client_1.PrismaClient();
 class QueueManager {
     provider;
     constructor(provider) {
@@ -11,7 +11,7 @@ class QueueManager {
     }
     async enqueue(options) {
         // 1. Persist to Postgres
-        const dbJob = await prisma.jobQueue.create({
+        const dbJob = await prisma_1.prisma.jobQueue.create({
             data: {
                 organizationId: options.payload.organizationId,
                 queue: options.queueName,
@@ -39,10 +39,10 @@ class QueueManager {
     async recover() {
         console.log("Recovering Queue Engine State...");
         // Recover metrics, sync state, and recreate stuck queues
-        const metrics = await prisma.queueMetric.findMany({ take: 10, orderBy: { timestamp: 'desc' } });
+        const metrics = await prisma_1.prisma.queueMetric.findMany({ take: 10, orderBy: { timestamp: 'desc' } });
         if (metrics.length === 0) {
             for (const q of Object.values(types_1.StandardQueueName)) {
-                await prisma.queueMetric.create({
+                await prisma_1.prisma.queueMetric.create({
                     data: { queue: q, waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 }
                 });
             }

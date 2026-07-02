@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { RateLimitStore, MemoryRateLimitStore } from './rate-limit-store';
 
-const prisma = new PrismaClient();
+
 
 export class RateLimitEngine {
   private store: RateLimitStore;

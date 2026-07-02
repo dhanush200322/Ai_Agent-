@@ -41,12 +41,12 @@ var __importStar = (this && this.__importStar) || (function () {
 var ApiKeyEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApiKeyEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const crypto = __importStar(require("crypto"));
 let ApiKeyEngine = ApiKeyEngine_1 = class ApiKeyEngine {
     logger = new common_1.Logger(ApiKeyEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async generateDeveloperKey(developerApplicationId, organizationId) {
         this.logger.debug(`Generating API Key for dev app ${developerApplicationId}`);
         const key = `ent_${crypto.randomBytes(32).toString('hex')}`;

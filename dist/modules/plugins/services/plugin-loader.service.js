@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PluginLoaderService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const manifest_validator_1 = require("../validators/manifest.validator");
 const plugin_dependency_service_1 = require("./plugin-dependency.service");
-const prisma = new client_1.PrismaClient();
 const dependencyService = new plugin_dependency_service_1.PluginDependencyService();
 class PluginLoaderService {
     /**
@@ -27,9 +26,9 @@ class PluginLoaderService {
         await dependencyService.resolveDependencies(manifest, organizationId);
         console.log('[Loader] Phase 5: Installing...');
         // Create Plugin if it doesn't exist
-        let plugin = await prisma.plugin.findUnique({ where: { slug: manifest.id } });
+        let plugin = await prisma_1.prisma.plugin.findUnique({ where: { slug: manifest.id } });
         if (!plugin) {
-            plugin = await prisma.plugin.create({
+            plugin = await prisma_1.prisma.plugin.create({
                 data: {
                     name: manifest.name,
                     slug: manifest.id,
@@ -39,11 +38,11 @@ class PluginLoaderService {
                 }
             });
         }
-        let version = await prisma.pluginVersion.findFirst({
+        let version = await prisma_1.prisma.pluginVersion.findFirst({
             where: { pluginId: plugin.id, version: manifest.version }
         });
         if (!version) {
-            version = await prisma.pluginVersion.create({
+            version = await prisma_1.prisma.pluginVersion.create({
                 data: {
                     pluginId: plugin.id,
                     version: manifest.version,
@@ -53,7 +52,7 @@ class PluginLoaderService {
                 }
             });
         }
-        const installation = await prisma.pluginInstallation.create({
+        const installation = await prisma_1.prisma.pluginInstallation.create({
             data: {
                 pluginId: plugin.id,
                 organizationId,
@@ -63,7 +62,7 @@ class PluginLoaderService {
             }
         });
         console.log('[Loader] Phase 6: Enabling...');
-        await prisma.pluginInstallation.update({
+        await prisma_1.prisma.pluginInstallation.update({
             where: { id: installation.id },
             data: { lifecycleState: 'ENABLED' }
         });

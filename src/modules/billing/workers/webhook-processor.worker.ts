@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { QueueJob } from '../../queue/providers/queue-provider.interface';
 import { PrismaClient } from '@prisma/client';
 import { InvoiceEngine } from '../engine/invoice.engine';
 
-const prisma = new PrismaClient() as any;
+
 
 export class WebhookProcessorWorker {
   private invoiceEngine: InvoiceEngine;

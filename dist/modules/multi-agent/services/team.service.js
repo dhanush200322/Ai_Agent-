@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TeamService = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class TeamService {
     async createTeam(organizationId, createdById, name, description, consensusStrategy) {
-        return prisma.agentTeam.create({
+        return prisma_1.prisma.agentTeam.create({
             data: {
                 organizationId,
                 createdById,
@@ -16,7 +15,7 @@ class TeamService {
         });
     }
     async getTeam(teamId) {
-        return prisma.agentTeam.findUnique({
+        return prisma_1.prisma.agentTeam.findUnique({
             where: { id: teamId },
             include: {
                 members: { include: { agent: { include: { capabilities: true } } } }
@@ -24,17 +23,17 @@ class TeamService {
         });
     }
     async addMember(teamId, agentId, role) {
-        return prisma.agentTeamMember.create({
+        return prisma_1.prisma.agentTeamMember.create({
             data: { teamId, agentId, role }
         });
     }
     async addCapability(agentId, name, priority = 0) {
-        return prisma.agentCapability.create({
+        return prisma_1.prisma.agentCapability.create({
             data: { agentId, name, priority }
         });
     }
     async getCapableAgents(teamId, requiredCapability) {
-        const team = await prisma.agentTeam.findUnique({
+        const team = await prisma_1.prisma.agentTeam.findUnique({
             where: { id: teamId },
             include: {
                 members: {

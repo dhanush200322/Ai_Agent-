@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseVaultProvider = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const encryption_engine_1 = require("../engine/encryption.engine");
-const prisma = new client_1.PrismaClient();
 class DatabaseVaultProvider {
     encryptionEngine;
     constructor() {
@@ -11,7 +10,7 @@ class DatabaseVaultProvider {
     }
     async store(organizationId, params) {
         const encryptedData = this.encryptionEngine.encrypt(params.value);
-        const secret = await prisma.vaultSecret.create({
+        const secret = await prisma_1.prisma.vaultSecret.create({
             data: {
                 organizationId,
                 name: params.name,
@@ -33,7 +32,7 @@ class DatabaseVaultProvider {
         return secret.id;
     }
     async retrieve(secretId, version) {
-        const secret = await prisma.vaultSecret.findUnique({
+        const secret = await prisma_1.prisma.vaultSecret.findUnique({
             where: { id: secretId },
             include: {
                 versions: {
@@ -67,7 +66,7 @@ class DatabaseVaultProvider {
         }
     }
     async rotate(secretId, newValue) {
-        const secret = await prisma.vaultSecret.findUnique({
+        const secret = await prisma_1.prisma.vaultSecret.findUnique({
             where: { id: secretId },
             include: {
                 versions: {
@@ -82,7 +81,7 @@ class DatabaseVaultProvider {
         const currentVersion = secret.versions.length > 0 ? secret.versions[0].version : 0;
         const newVersionNum = currentVersion + 1;
         const encryptedData = this.encryptionEngine.encrypt(newValue);
-        await prisma.vaultSecretVersion.create({
+        await prisma_1.prisma.vaultSecretVersion.create({
             data: {
                 secretId,
                 version: newVersionNum,
@@ -95,7 +94,7 @@ class DatabaseVaultProvider {
         return newVersionNum;
     }
     async disable(secretId) {
-        await prisma.vaultSecret.update({
+        await prisma_1.prisma.vaultSecret.update({
             where: { id: secretId },
             data: { status: 'DISABLED' }
         });
@@ -105,7 +104,7 @@ class DatabaseVaultProvider {
         if (category) {
             whereClause.category = category;
         }
-        return prisma.vaultSecret.findMany({
+        return prisma_1.prisma.vaultSecret.findMany({
             where: whereClause,
             select: {
                 id: true,

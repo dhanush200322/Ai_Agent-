@@ -39,7 +39,7 @@ const qrcode = __importStar(require("qrcode"));
 const crypto = __importStar(require("crypto"));
 class MFAEngine {
     async generateSecret(email) {
-        const secret = speakeasy.generateSecret({ name: `EnterpriseAI (${email})` });
+        const secret = speakeasy.generateSecret({ name: `Nexora AI (${email})` });
         const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
         return {
             secret: secret.base32,

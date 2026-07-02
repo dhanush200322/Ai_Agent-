@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InternalExecutor = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const base_executor_1 = require("./base.executor");
 const retrieval_service_1 = require("../../chat/services/retrieval.service");
 const memory_retrieval_service_1 = require("../../chat/services/memory-retrieval.service");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 class InternalExecutor extends base_executor_1.ToolExecutor {
     retrievalService = new retrieval_service_1.RetrievalService();
     memoryRetrievalService = new memory_retrieval_service_1.MemoryRetrievalService();
@@ -64,13 +63,13 @@ class InternalExecutor extends base_executor_1.ToolExecutor {
         return "Read-only database queries are not fully implemented in the current internal platform environment. Requires safe execution container.";
     }
     async handleAgentInfo(agentId) {
-        const agent = await prisma.agent.findUnique({ where: { id: agentId } });
+        const agent = await prisma_1.prisma.agent.findUnique({ where: { id: agentId } });
         if (!agent)
             return "Agent not found.";
         return `Agent Name: ${agent.name}\nDescription: ${agent.description}\nModel: ${agent.model}\nSystem Prompt: ${agent.systemPrompt}`;
     }
     async handleOrganizationInfo(organizationId) {
-        const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+        const org = await prisma_1.prisma.organization.findUnique({ where: { id: organizationId } });
         if (!org)
             return "Organization not found.";
         return `Organization Name: ${org.name}\nIndustry: ${org.industry}\nWebsite: ${org.website}`;

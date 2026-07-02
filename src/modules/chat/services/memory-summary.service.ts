@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { GroqService } from './groq.service';
 import { MemoryService } from './memory.service';
 
-const prisma = new PrismaClient();
+
 const groqService = new GroqService();
 const memoryService = new MemoryService();
 

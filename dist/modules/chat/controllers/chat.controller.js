@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatController = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const retrieval_service_1 = require("../services/retrieval.service");
 const context_builder_service_1 = require("../services/context-builder.service");
 const prompt_builder_service_1 = require("../services/prompt-builder.service");
@@ -17,7 +17,6 @@ const memory_summary_service_1 = require("../services/memory-summary.service");
 const conversation_title_service_1 = require("../services/conversation-title.service");
 const planner_service_1 = require("../../tools/services/planner.service");
 const tool_registry_service_1 = require("../../tools/services/tool-registry.service");
-const prisma = new client_1.PrismaClient();
 class ChatController {
     retrievalService = new retrieval_service_1.RetrievalService();
     contextBuilder = new context_builder_service_1.ContextBuilderService();
@@ -39,7 +38,7 @@ class ChatController {
         metrics.startTimer('Total Time');
         try {
             // 1. Validation & Isolation
-            const agent = await prisma.agent.findUnique({
+            const agent = await prisma_1.prisma.agent.findUnique({
                 where: { id: body.agentId },
                 include: { knowledgeBases: true }
             });
@@ -50,7 +49,7 @@ class ChatController {
             if (conversation.agentId !== agent.id) {
                 throw new AppError_1.AppError('Conversation does not belong to this agent', 403);
             }
-            const organization = await prisma.organization.findUnique({ where: { id: user.organizationId } });
+            const organization = await prisma_1.prisma.organization.findUnique({ where: { id: user.organizationId } });
             // 2. Save User Message synchronously
             const userMessage = await this.messageService.saveMessage({
                 conversationId: conversation.id,
@@ -207,14 +206,14 @@ class ChatController {
         metrics.startTimer('Total Time');
         try {
             // 1. Validation & Isolation
-            const agent = await prisma.agent.findUnique({
+            const agent = await prisma_1.prisma.agent.findUnique({
                 where: { id: body.agentId },
                 include: { knowledgeBases: true }
             });
             if (!agent) {
                 throw new AppError_1.AppError('Invalid Agent', 404);
             }
-            const user = await prisma.user.findFirst({ where: { organizationId: agent.organizationId } });
+            const user = await prisma_1.prisma.user.findFirst({ where: { organizationId: agent.organizationId } });
             if (!user) {
                 throw new AppError_1.AppError('Organization owner not found', 404);
             }
@@ -222,7 +221,7 @@ class ChatController {
             if (conversation.agentId !== agent.id) {
                 throw new AppError_1.AppError('Conversation does not belong to this agent', 403);
             }
-            const organization = await prisma.organization.findUnique({ where: { id: agent.organizationId } });
+            const organization = await prisma_1.prisma.organization.findUnique({ where: { id: agent.organizationId } });
             // 2. Save User Message synchronously
             const userMessage = await this.messageService.saveMessage({
                 conversationId: conversation.id,

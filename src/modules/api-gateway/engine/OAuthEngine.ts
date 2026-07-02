@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -5,7 +6,7 @@ import * as crypto from 'crypto';
 @Injectable()
 export class OAuthEngine {
   private readonly logger = new Logger(OAuthEngine.name);
-  private prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async registerApplication(organizationId: string, name: string, redirectUris: string[]) {
     this.logger.debug(`Registering OAuth application ${name} for org ${organizationId}`);

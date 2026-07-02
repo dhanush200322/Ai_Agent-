@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, NotificationChannel, NotificationProviderType, DeliveryStatus } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class AnalyticsEngine {
   async logEvent(params: {

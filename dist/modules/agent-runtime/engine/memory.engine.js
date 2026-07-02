@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class MemoryEngine {
     async addEpisodicMemory(organizationId, agentId, conversationId, content) {
-        await prisma.conversationMemory.create({
+        await prisma_1.prisma.conversationMemory.create({
             data: {
                 organizationId,
                 agentId,
@@ -21,7 +20,7 @@ class MemoryEngine {
         // Phase 6.4 Vector Search Integration placeholder
         // Here we would call the Vector DB to find relevant memories based on the query.
         // For now, we return recent memories.
-        const memories = await prisma.conversationMemory.findMany({
+        const memories = await prisma_1.prisma.conversationMemory.findMany({
             where: { organizationId, agentId },
             orderBy: { createdAt: 'desc' },
             take: limit
@@ -31,7 +30,7 @@ class MemoryEngine {
     async summarizeSession(organizationId, agentId, conversationId) {
         // Placeholder for memory summarization
         const summary = 'Summary of recent agent execution and conversation.';
-        await prisma.conversationMemory.create({
+        await prisma_1.prisma.conversationMemory.create({
             data: {
                 organizationId,
                 agentId,

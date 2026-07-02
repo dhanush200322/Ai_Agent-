@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class AnalyticsEngine {
-  private readonly prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async recordTokenUsage(organizationId: string, model: string, promptTokens: number, completionTokens: number) {
     await this.prisma.tokenAnalytics.create({

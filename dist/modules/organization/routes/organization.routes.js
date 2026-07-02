@@ -13,5 +13,6 @@ router.use(auth_1.authenticate);
 router.get('/', (0, authorize_1.authorize)('organization:view'), (0, asyncHandler_1.asyncHandler)(orgController.getOrganization));
 router.patch('/', (0, authorize_1.authorize)('organization:update'), (0, validate_1.validate)(organization_validator_1.updateOrganizationSchema), (0, asyncHandler_1.asyncHandler)(orgController.updateOrganization));
 router.get('/stats', (0, authorize_1.authorize)('organization:view'), (0, asyncHandler_1.asyncHandler)(orgController.getStats));
+router.get('/activity', (0, authorize_1.authorize)('organization:view'), (0, asyncHandler_1.asyncHandler)(orgController.getActivity));
 router.post('/transfer-ownership', (0, authorize_1.authorize)('organization:update'), (0, validate_1.validate)(organization_validator_1.transferOwnershipSchema), (0, asyncHandler_1.asyncHandler)(orgController.transferOwnership));
 exports.default = router;

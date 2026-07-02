@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const embedding_service_1 = require("../../knowledge/services/embedding.service");
 const vector_service_1 = require("../../knowledge/services/vector.service");
 const crypto_1 = require("crypto");
-const prisma = new client_1.PrismaClient();
 const embeddingService = new embedding_service_1.EmbeddingService();
 const vectorService = new vector_service_1.VectorService();
 class MemoryService {
@@ -50,7 +49,7 @@ class MemoryService {
         const vector = embeddings[0];
         // 3. Save to Prisma
         const vectorId = (0, crypto_1.randomUUID)();
-        const memory = await prisma.conversationMemory.create({
+        const memory = await prisma_1.prisma.conversationMemory.create({
             data: {
                 conversationId: data.conversationId,
                 organizationId: data.organizationId,

@@ -8,18 +8,18 @@ const AppError_1 = require("../../../shared/errors/AppError");
 transformers_1.env.allowLocalModels = true;
 class EmbeddingService {
     model = 'Xenova/all-MiniLM-L6-v2';
-    extractorPromise;
-    constructor() {
-        // Initialize the pipeline once as a singleton promise
-        this.extractorPromise = (0, transformers_1.pipeline)('feature-extraction', this.model, {
-            quantized: true, // Use quantized model for speed and lower memory
-        });
-    }
+    static extractorPromise = null;
+    constructor() { }
     async generateEmbeddings(texts) {
         if (!texts || texts.length === 0)
             return [];
         try {
-            const extractor = await this.extractorPromise;
+            if (!EmbeddingService.extractorPromise) {
+                EmbeddingService.extractorPromise = (0, transformers_1.pipeline)('feature-extraction', this.model, {
+                    quantized: true,
+                });
+            }
+            const extractor = await EmbeddingService.extractorPromise;
             const embeddings = [];
             // We can process sequentially or batch. 
             // all-MiniLM-L6-v2 handles batches, but for simplicity and memory limits, process sequentially

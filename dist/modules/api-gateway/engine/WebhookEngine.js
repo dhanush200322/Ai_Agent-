@@ -44,13 +44,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 var WebhookEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebhookEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const crypto = __importStar(require("crypto"));
 const axios_1 = __importDefault(require("axios"));
 let WebhookEngine = WebhookEngine_1 = class WebhookEngine {
     logger = new common_1.Logger(WebhookEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async dispatchWebhook(applicationId, event, payload) {
         this.logger.debug(`Dispatching webhook for app ${applicationId}, event ${event}`);
         const webhooks = await this.prisma.apiWebhook.findMany({

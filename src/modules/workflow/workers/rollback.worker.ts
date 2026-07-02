@@ -1,10 +1,11 @@
+import { prisma } from '../../../shared/prisma';
 import { QueueJob } from '../../queue/providers/queue-provider.interface';
 import { RollbackEngine } from '../engine/rollback.engine';
 import { PrismaClient } from '@prisma/client';
 import { WorkflowExecutionContext, VariableManager } from '../engine/context.engine';
 import { WorkflowDefinition } from '../types';
 
-const prisma = new PrismaClient();
+
 const rollbackEngine = new RollbackEngine();
 
 export const RollbackWorker = async (job: QueueJob, _context: any) => {

@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TracingService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const uuid_1 = require("uuid");
-const prisma = new client_1.PrismaClient();
 class TracingService {
     /**
      * Starts a new span. If context is provided, it acts as a child span.
@@ -22,7 +21,7 @@ class TracingService {
      * Ends a span and writes it asynchronously.
      */
     endSpan(context, module, operation, durationMs, status, attributes, events, organizationId) {
-        prisma.trace.create({
+        prisma_1.prisma.trace.create({
             data: {
                 traceId: context.traceId,
                 spanId: context.spanId,

@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemorySummaryService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const groq_service_1 = require("./groq.service");
 const memory_service_1 = require("./memory.service");
-const prisma = new client_1.PrismaClient();
 const groqService = new groq_service_1.GroqService();
 const memoryService = new memory_service_1.MemoryService();
 class MemorySummaryService {
@@ -12,10 +11,10 @@ class MemorySummaryService {
      * Check if a conversation needs to be summarized
      */
     async checkAndSummarize(conversationId, organizationId, agentId) {
-        const messageCount = await prisma.conversationMessage.count({
+        const messageCount = await prisma_1.prisma.conversationMessage.count({
             where: { conversationId }
         });
-        const agg = await prisma.conversationMessage.aggregate({
+        const agg = await prisma_1.prisma.conversationMessage.aggregate({
             where: { conversationId },
             _sum: { tokens: true }
         });
@@ -31,7 +30,7 @@ class MemorySummaryService {
      * Actually perform the summarization
      */
     async generateSummary(conversationId, organizationId, agentId) {
-        const conversation = await prisma.conversation.findUnique({
+        const conversation = await prisma_1.prisma.conversation.findUnique({
             where: { id: conversationId },
             include: {
                 agent: true
@@ -42,7 +41,7 @@ class MemorySummaryService {
         // Fetch the recent history that hasn't been archived yet
         // Since we aren't archiving natively in the DB structure strictly right now, 
         // we just fetch all or top N. Let's just grab the last 50.
-        const messages = await prisma.conversationMessage.findMany({
+        const messages = await prisma_1.prisma.conversationMessage.findMany({
             where: { conversationId },
             orderBy: { createdAt: 'desc' },
             take: 50
@@ -65,7 +64,7 @@ class MemorySummaryService {
             finalSummary += chunk;
         }
         // 1. Update the Conversation DB Model
-        await prisma.conversation.update({
+        await prisma_1.prisma.conversation.update({
             where: { id: conversationId },
             data: { summary: finalSummary }
         });

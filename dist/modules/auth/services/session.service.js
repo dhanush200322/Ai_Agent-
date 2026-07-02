@@ -34,11 +34,10 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SessionService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const redis_1 = require("../../../config/redis");
 const redis_constants_1 = require("../../../config/redis.constants");
 const crypto = __importStar(require("crypto"));
-const prisma = new client_1.PrismaClient();
 class SessionService {
     get redis() {
         return redis_1.RedisConnectionManager.getClient();
@@ -49,7 +48,7 @@ class SessionService {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7); // 7 days timeout
         // Create in DB
-        const session = await prisma.userSession.create({
+        const session = await prisma_1.prisma.userSession.create({
             data: {
                 id: sessionId,
                 userId,
@@ -71,7 +70,7 @@ class SessionService {
         const cached = await this.redis.get(cacheKey);
         if (cached)
             return JSON.parse(cached);
-        const session = await prisma.userSession.findUnique({ where: { id: sessionId } });
+        const session = await prisma_1.prisma.userSession.findUnique({ where: { id: sessionId } });
         if (session) {
             await this.redis.setex(cacheKey, redis_constants_1.REDIS_CONSTANTS.TTL.SESSION * 7, JSON.stringify(session));
         }
@@ -79,7 +78,7 @@ class SessionService {
     }
     async revokeSession(sessionId) {
         // Revoke in DB
-        await prisma.userSession.update({
+        await prisma_1.prisma.userSession.update({
             where: { id: sessionId },
             data: { status: 'REVOKED' }
         });
@@ -88,13 +87,13 @@ class SessionService {
         await this.redis.del(cacheKey);
     }
     async revokeAllUserSessions(userId) {
-        const sessions = await prisma.userSession.findMany({ where: { userId, status: 'ACTIVE' } });
+        const sessions = await prisma_1.prisma.userSession.findMany({ where: { userId, status: 'ACTIVE' } });
         for (const s of sessions) {
             await this.revokeSession(s.id);
         }
     }
     async listActiveSessions(userId) {
-        return prisma.userSession.findMany({ where: { userId, status: 'ACTIVE' } });
+        return prisma_1.prisma.userSession.findMany({ where: { userId, status: 'ACTIVE' } });
     }
     async validateSession(sessionId) {
         const session = await this.getSession(sessionId);
@@ -108,7 +107,7 @@ class SessionService {
     async updateActivity(sessionId) {
         const cacheKey = `${redis_constants_1.REDIS_CONSTANTS.NAMESPACES.SESSION}${sessionId}`;
         await this.redis.expire(cacheKey, redis_constants_1.REDIS_CONSTANTS.TTL.SESSION * 7);
-        await prisma.userSession.update({
+        await prisma_1.prisma.userSession.update({
             where: { id: sessionId },
             data: { lastActivityAt: new Date() }
         });

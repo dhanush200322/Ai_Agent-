@@ -1,12 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorize = exports.authenticate = void 0;
+const prisma_1 = require("../shared/prisma");
 const AppError_1 = require("../shared/errors/AppError");
 const jwt_engine_1 = require("../modules/auth/engine/jwt.engine");
 const session_service_1 = require("../modules/auth/services/session.service");
 const policy_engine_1 = require("../modules/auth/engine/policy.engine");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 const jwtEngine = new jwt_engine_1.JWTEngine();
 const sessionService = new session_service_1.SessionService();
 const policyEngine = new policy_engine_1.PolicyEngine();
@@ -26,7 +25,7 @@ const authenticate = async (req, _res, next) => {
             throw new AppError_1.AuthenticationError('Session is invalid or expired');
         }
         // 3. Load User & Organization Validation
-        const user = await prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { id: userId },
             include: {
                 organization: true,

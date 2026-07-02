@@ -8,11 +8,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var VersionEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VersionEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 let VersionEngine = VersionEngine_1 = class VersionEngine {
     logger = new common_1.Logger(VersionEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async negotiateVersion(requestedVersion) {
         this.logger.debug(`Negotiating API version: ${requestedVersion}`);
         const version = await this.prisma.apiVersion.findFirst({

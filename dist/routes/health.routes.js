@@ -3,15 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const prisma_1 = require("../shared/prisma");
 const express_1 = require("express");
 const ApiResponse_1 = require("../shared/response/ApiResponse");
-const client_1 = require("@prisma/client");
 const redis_1 = require("../config/redis");
 const js_client_rest_1 = require("@qdrant/js-client-rest");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 const qdrant = new js_client_rest_1.QdrantClient({
     url: process.env.QDRANT_URL || 'http://localhost:6333',
     apiKey: process.env.QDRANT_API_KEY,
@@ -25,7 +24,7 @@ router.get('/live', (req, res) => {
 router.get('/ready', async (req, res) => {
     try {
         // Check DB
-        await prisma.$queryRawUnsafe('SELECT 1');
+        await prisma_1.prisma.$queryRawUnsafe('SELECT 1');
         // Check Redis
         await redis_1.RedisConnectionManager.ping();
         // Check Storage
@@ -42,7 +41,7 @@ router.get('/ready', async (req, res) => {
 });
 router.get('/database', async (req, res) => {
     try {
-        await prisma.$queryRawUnsafe('SELECT 1');
+        await prisma_1.prisma.$queryRawUnsafe('SELECT 1');
         res.status(200).json(ApiResponse_1.ApiResponse.success({ status: 'healthy', database: 'connected' }, 'Database check passed', req.reqId));
     }
     catch (err) {

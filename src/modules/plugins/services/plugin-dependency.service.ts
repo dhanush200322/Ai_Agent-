@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { PluginManifest } from '../sdk/plugin-manifest';
 
-const prisma = new PrismaClient();
+
 
 export class PluginDependencyService {
   

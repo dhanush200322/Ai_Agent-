@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PolicyEngine } from './policy.engine';
@@ -6,7 +7,7 @@ import { MFAEngine } from './mfa.engine';
 import { SessionService } from '../services/session.service';
 import { JWTEngine } from './jwt.engine';
 
-const prisma = new PrismaClient();
+
 
 export class AuthenticationEngine {
   private policyEngine = new PolicyEngine();

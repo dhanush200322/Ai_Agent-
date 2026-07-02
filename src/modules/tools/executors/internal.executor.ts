@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { ToolExecutor, ExecutorContext } from './base.executor';
 import { RetrievalService } from '../../chat/services/retrieval.service';
 import { MemoryRetrievalService } from '../../chat/services/memory-retrieval.service';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class InternalExecutor extends ToolExecutor {
   private retrievalService = new RetrievalService();

@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { CacheService } from '../../cache/cache.service';
 import { REDIS_CONSTANTS } from '../../../config/redis.constants';
 
-const prisma = new PrismaClient() as any;
+
 const cache = new CacheService();
 
 export class QuotaEngine {

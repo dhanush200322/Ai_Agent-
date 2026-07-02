@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class ApprovalEngine {
   public async requestHumanApproval(executionId: string, nodeId: string): Promise<string> {

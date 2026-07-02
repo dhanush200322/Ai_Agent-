@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AlertEngine = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const notification_dispatcher_1 = require("./notification-dispatcher");
-const prisma = new client_1.PrismaClient();
 class AlertEngine {
     dispatcher;
     constructor(dispatcher) {
@@ -13,7 +12,7 @@ class AlertEngine {
      * Evaluates incoming metrics against configured rules.
      */
     async evaluateMetric(metricName, value, organizationId = null) {
-        const rules = await prisma.alertRule.findMany({
+        const rules = await prisma_1.prisma.alertRule.findMany({
             where: { metricName, enabled: true, organizationId }
         });
         for (const rule of rules) {
@@ -31,7 +30,7 @@ class AlertEngine {
     }
     async triggerAlert(rule, actualValue) {
         // 1. Deduplication: Check if there's an unresolved alert for this rule already
-        const existing = await prisma.alert.findFirst({
+        const existing = await prisma_1.prisma.alert.findFirst({
             where: { ruleId: rule.id, resolved: false }
         });
         if (existing) {
@@ -39,7 +38,7 @@ class AlertEngine {
             return;
         }
         const message = `Rule [${rule.name}] triggered. Value ${actualValue} evaluated against ${rule.condition} ${rule.threshold}`;
-        await prisma.alert.create({
+        await prisma_1.prisma.alert.create({
             data: {
                 organizationId: rule.organizationId,
                 ruleId: rule.id,

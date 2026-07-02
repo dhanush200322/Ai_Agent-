@@ -1,8 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.KnowledgeEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 class KnowledgeEngine {
     async queryRAG(organizationId, knowledgeBaseId, query, topK = 5) {
         // Phase 6.4 Knowledge Base & RAG integration placeholder

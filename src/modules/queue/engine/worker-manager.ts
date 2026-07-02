@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, WorkerStatus } from '@prisma/client';
 import { QueueProvider, QueueJob } from '../providers/queue-provider.interface';
 import * as os from 'os';
 
-const prisma = new PrismaClient();
+
 
 export class WorkerManager {
   private hostname: string;

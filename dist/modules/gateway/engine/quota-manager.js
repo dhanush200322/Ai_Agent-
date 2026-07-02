@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuotaManager = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class QuotaManager {
     /**
      * Records usage asynchronously to prepare for Phase 6.13 Billing
@@ -10,7 +9,7 @@ class QuotaManager {
     recordUsage(organizationId, metric, amount = 1) {
         const updateData = {};
         updateData[metric] = { increment: amount };
-        prisma.usageQuota.upsert({
+        prisma_1.prisma.usageQuota.upsert({
             where: { organizationId },
             update: updateData,
             create: {

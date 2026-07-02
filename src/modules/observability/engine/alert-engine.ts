@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { NotificationDispatcher, DefaultNotificationDispatcher } from './notification-dispatcher';
 
-const prisma = new PrismaClient();
+
 
 export class AlertEngine {
   private dispatcher: NotificationDispatcher;

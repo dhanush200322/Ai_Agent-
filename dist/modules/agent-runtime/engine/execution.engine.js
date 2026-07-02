@@ -1,17 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExecutionEngine = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const planning_engine_1 = require("./planning.engine");
-const prisma = new client_1.PrismaClient();
 class ExecutionEngine {
     planningEngine = new planning_engine_1.PlanningEngine();
     async executeStep(executionId, stepId, action) {
-        const execution = await prisma.agentExecution.findUnique({ where: { id: executionId } });
+        const execution = await prisma_1.prisma.agentExecution.findUnique({ where: { id: executionId } });
         if (!execution || execution.status !== 'RUNNING') {
             throw new Error('Execution is not in RUNNING state');
         }
-        const step = await prisma.agentExecutionStep.create({
+        const step = await prisma_1.prisma.agentExecutionStep.create({
             data: {
                 executionId,
                 stepNumber: Math.floor(Math.random() * 1000000), // Mock sequence within 32-bit bounds
@@ -21,7 +20,7 @@ class ExecutionEngine {
         });
         // Mock execution logic
         const observation = `Result of ${action}`;
-        await prisma.agentExecutionStep.update({
+        await prisma_1.prisma.agentExecutionStep.update({
             where: { id: step.id },
             data: { observation, duration: 150 }
         });

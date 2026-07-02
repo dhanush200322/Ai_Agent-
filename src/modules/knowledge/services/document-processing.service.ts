@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { DocumentParserService } from './document-parser.service';
 import path from 'path';
@@ -6,7 +7,7 @@ import { ChunkService } from './chunk.service';
 import { EmbeddingService } from './embedding.service';
 import { VectorService, VectorPayload } from './vector.service';
 
-const prisma = new PrismaClient();
+
 
 export class DocumentProcessingService {
   private chunkService = new ChunkService(1000, 200);

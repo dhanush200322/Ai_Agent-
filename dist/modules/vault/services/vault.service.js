@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VaultService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const database_vault_provider_1 = require("../providers/database-vault.provider");
 const cache_service_1 = require("../../cache/cache.service");
 const redis_constants_1 = require("../../../config/redis.constants");
-const prisma = new client_1.PrismaClient();
 class VaultService {
     provider;
     cache;
@@ -14,7 +13,7 @@ class VaultService {
         this.cache = new cache_service_1.CacheService();
     }
     async audit(secretId, actorId, actorType, action, metadata) {
-        await prisma.vaultAccessLog.create({
+        await prisma_1.prisma.vaultAccessLog.create({
             data: {
                 secretId,
                 actorId,
@@ -58,7 +57,7 @@ class VaultService {
         const cacheKey = `${redis_constants_1.REDIS_CONSTANTS.NAMESPACES.VAULT}${secretId}`;
         await this.cache.del(cacheKey);
         // 3. Revoke all active leases
-        await prisma.secretLease.updateMany({
+        await prisma_1.prisma.secretLease.updateMany({
             where: { secretId, isRevoked: false },
             data: { isRevoked: true }
         });
@@ -69,7 +68,7 @@ class VaultService {
     }
     async createLease(secretId, organizationId, actorId, actorType, ttlSeconds = 60) {
         const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
-        const lease = await prisma.secretLease.create({
+        const lease = await prisma_1.prisma.secretLease.create({
             data: {
                 organizationId,
                 secretId,
@@ -82,7 +81,7 @@ class VaultService {
         return lease.id;
     }
     async retrieveViaLease(leaseId) {
-        const lease = await prisma.secretLease.findUnique({ where: { id: leaseId } });
+        const lease = await prisma_1.prisma.secretLease.findUnique({ where: { id: leaseId } });
         if (!lease || lease.isRevoked || new Date() > lease.expiresAt) {
             throw new Error('Lease is invalid, expired, or revoked');
         }

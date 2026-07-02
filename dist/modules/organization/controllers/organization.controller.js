@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrganizationController = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const organization_service_1 = require("../services/organization.service");
 const organizationStats_service_1 = require("../services/organizationStats.service");
 const ApiResponse_1 = require("../../../shared/response/ApiResponse");
@@ -18,6 +19,15 @@ class OrganizationController {
     getStats = async (req, res) => {
         const stats = await this.statsService.getOrganizationStats(req.user.organizationId);
         res.status(200).json(ApiResponse_1.ApiResponse.success(stats, 'Organization stats fetched successfully', req.reqId));
+    };
+    getActivity = async (req, res) => {
+        const { PrismaClient } = require('@prisma/client');
+        const activity = await prisma_1.prisma.auditLog.findMany({
+            where: { organizationId: req.user.organizationId },
+            orderBy: { createdAt: 'desc' },
+            take: 5
+        });
+        res.status(200).json(ApiResponse_1.ApiResponse.success(activity, 'Organization activity fetched successfully', req.reqId));
     };
     transferOwnership = async (req, res) => {
         const { newOwnerId } = req.body;

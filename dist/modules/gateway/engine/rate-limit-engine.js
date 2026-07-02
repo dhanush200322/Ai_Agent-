@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RateLimitEngine = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const rate_limit_store_1 = require("./rate-limit-store");
-const prisma = new client_1.PrismaClient();
 class RateLimitEngine {
     store;
     constructor(store) {
@@ -15,7 +14,7 @@ class RateLimitEngine {
      */
     async checkRateLimit(organizationId, userId, apiKeyId) {
         // Note: In a real system, you'd cache policies in memory.
-        const policies = await prisma.rateLimitPolicy.findMany({
+        const policies = await prisma_1.prisma.rateLimitPolicy.findMany({
             where: {
                 OR: [
                     { organizationId },

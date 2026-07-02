@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorizeWorkflow = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const AppError_1 = require("../../../shared/errors/AppError");
-const prisma = new client_1.PrismaClient();
 const authorizeWorkflow = (action) => {
     return async (req, _res, next) => {
         try {
@@ -24,7 +23,7 @@ const authorizeWorkflow = (action) => {
             }
             // 2. If a workflowId is present in params, enforce tenant isolation
             if (workflowId) {
-                const workflow = await prisma.workflow.findUnique({
+                const workflow = await prisma_1.prisma.workflow.findUnique({
                     where: { id: workflowId }
                 });
                 if (!workflow) {

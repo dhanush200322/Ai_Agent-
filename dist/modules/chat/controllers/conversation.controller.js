@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConversationController = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const conversation_service_1 = require("../services/conversation.service");
 const conversation_message_service_1 = require("../services/conversation-message.service");
 const conversationService = new conversation_service_1.ConversationService();
@@ -25,13 +26,12 @@ class ConversationController {
         try {
             const { sessionId, agentId } = req.body;
             const { PrismaClient } = require('@prisma/client');
-            const prisma = new PrismaClient();
-            const agent = await prisma.agent.findUnique({ where: { id: agentId } });
+            const agent = await prisma_1.prisma.agent.findUnique({ where: { id: agentId } });
             if (!agent) {
                 res.status(404).json({ success: false, message: 'Agent not found' });
                 return;
             }
-            const user = await prisma.user.findFirst({ where: { organizationId: agent.organizationId } });
+            const user = await prisma_1.prisma.user.findFirst({ where: { organizationId: agent.organizationId } });
             if (!user) {
                 res.status(404).json({ success: false, message: 'Organization owner not found' });
                 return;
@@ -52,8 +52,7 @@ class ConversationController {
         try {
             const { agentId } = req.params;
             const { PrismaClient } = require('@prisma/client');
-            const prisma = new PrismaClient();
-            const agent = await prisma.agent.findUnique({
+            const agent = await prisma_1.prisma.agent.findUnique({
                 where: { id: agentId },
                 select: { id: true, name: true, description: true, avatar: true, themeConfig: true }
             });

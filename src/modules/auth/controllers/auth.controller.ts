@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response } from 'express';
 import { AuthenticationEngine } from '../engine/authentication.engine';
 import { SessionService } from '../services/session.service';
@@ -8,7 +9,7 @@ import { Queue } from 'bullmq';
 import { RedisConnectionManager } from '../../../config/redis';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class AuthController {
   private authEngine = new AuthenticationEngine();

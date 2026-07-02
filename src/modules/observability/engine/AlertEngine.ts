@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { LoggingEngine } from './LoggingEngine';
@@ -5,7 +6,7 @@ import { MetricsEngine } from './MetricsEngine';
 
 @Injectable()
 export class AlertEngine {
-  private readonly prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   constructor(
     private readonly logger: LoggingEngine,

@@ -1,14 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditService = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class AuditService {
     /**
      * Logs a critical business mutation asynchronously.
      */
     logEvent(organizationId, action, resource, resourceId, userId, ipAddress, userAgent, metadata) {
-        prisma.auditLog.create({
+        prisma_1.prisma.auditLog.create({
             data: {
                 organizationId,
                 userId,

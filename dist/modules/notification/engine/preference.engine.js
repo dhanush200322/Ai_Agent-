@@ -1,12 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PreferenceEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class PreferenceEngine {
     async resolvePreferences(context) {
         const { organizationId, userId, department, team } = context;
-        const preferences = await prisma.notificationPreference.findMany({
+        const preferences = await prisma_1.prisma.notificationPreference.findMany({
             where: {
                 organizationId,
             },

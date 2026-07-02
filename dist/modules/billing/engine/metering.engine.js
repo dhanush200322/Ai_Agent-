@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeteringEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class MeteringEngine {
     async recordUsageEvent(organizationId, type, quantity, metadata) {
-        await prisma.usageEvent.create({
+        await prisma_1.prisma.usageEvent.create({
             data: {
                 organizationId,
                 type,
@@ -20,7 +19,7 @@ class MeteringEngine {
         const now = new Date();
         const startOfHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0);
         const endOfHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 59, 59, 999);
-        const result = await prisma.usageEvent.aggregate({
+        const result = await prisma_1.prisma.usageEvent.aggregate({
             where: {
                 organizationId,
                 type,
@@ -30,7 +29,7 @@ class MeteringEngine {
         });
         const total = result._sum.quantity || BigInt(0);
         if (total > BigInt(0)) {
-            await prisma.usageSummary.upsert({
+            await prisma_1.prisma.usageSummary.upsert({
                 where: {
                     organizationId_type_period_startDate: {
                         organizationId,

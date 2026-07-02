@@ -2,46 +2,70 @@ const fs = require('fs');
 const path = require('path');
 
 function walk(dir) {
-    let results = [];
-    const list = fs.readdirSync(dir);
-    list.forEach(file => {
-        file = path.join(dir, file);
-        const stat = fs.statSync(file);
-        if (stat && stat.isDirectory()) { 
-            results = results.concat(walk(file));
-        } else { 
-            if (file.endsWith('.ts')) results.push(file);
-        }
-    });
-    return results;
+  let results = [];
+  const list = fs.readdirSync(dir);
+  list.forEach((file) => {
+    file = path.join(dir, file);
+    const stat = fs.statSync(file);
+    if (stat && stat.isDirectory()) {
+      results = results.concat(walk(file));
+    } else {
+      if (file.endsWith('.ts')) {
+        results.push(file);
+      }
+    }
+  });
+  return results;
 }
 
 const files = walk(path.join(__dirname, 'src'));
 
 files.forEach(file => {
-    let content = fs.readFileSync(file, 'utf8');
-    let original = content;
+  // Skip the shared prisma file itself
+  if (file.includes('shared\\prisma\\index.ts') || file.includes('shared/prisma/index.ts')) return;
 
-    // Replace (req as any).reqId with req.reqId
-    content = content.replace(/\(req as any\)\.reqId/g, 'req.reqId');
-    
-    // Replace (req as any).sessionId with req.sessionId
-    content = content.replace(/\(req as any\)\.sessionId/g, 'req.sessionId');
+  let content = fs.readFileSync(file, 'utf8');
+  let changed = false;
 
-    // Replace (req as any).user with req.user!
-    // because auth middleware guarantees it if they are using it
-    // Wait, for optional chaining like (req as any).user?.id, we can just replace with req.user?.id
-    content = content.replace(/\(req as any\)\.user\?\./g, 'req.user?.');
-    
-    // For (req as any).user.property, replace with req.user!.property
-    content = content.replace(/\(req as any\)\.user\./g, 'req.user!.');
-    
-    // For standalone (req as any).user, replace with req.user!
-    // But be careful not to break (req as any).user?. which we already replaced above
-    content = content.replace(/\(req as any\)\.user/g, 'req.user!');
-    
-    if (content !== original) {
-        fs.writeFileSync(file, content, 'utf8');
-        console.log(`Updated ${file}`);
+  // Pattern 1: Module-level const prisma = new PrismaClient();
+  const pattern1 = /const\s+prisma\s*=\s*new\s+PrismaClient\(\)\s*(as\s+any)?\s*;/g;
+  if (pattern1.test(content)) {
+    content = content.replace(pattern1, '');
+    if (!content.includes("import { prisma } from '@shared/prisma'")) {
+        content = "import { prisma } from '@shared/prisma';\n" + content;
     }
+    changed = true;
+  }
+
+  // Pattern 2: Class-level private readonly prisma = new PrismaClient();
+  const pattern2 = /private\s+(readonly\s+)?prisma\s*=\s*new\s+PrismaClient\(\)\s*;/g;
+  if (pattern2.test(content)) {
+     content = content.replace(pattern2, 'private readonly prisma = prisma;');
+     if (!content.includes("import { prisma } from '@shared/prisma'")) {
+        content = "import { prisma } from '@shared/prisma';\n" + content;
+     }
+     changed = true;
+  }
+  
+  // Pattern 3: export const prisma = new PrismaClient();
+  const pattern3 = /export\s+const\s+prisma\s*=\s*new\s+PrismaClient\(\)\s*;/g;
+  if (pattern3.test(content)) {
+      content = content.replace(pattern3, "export { prisma } from '@shared/prisma';");
+      changed = true;
+  }
+
+  // Pattern 4: let prisma = new PrismaClient();
+  const pattern4 = /let\s+prisma\s*=\s*new\s+PrismaClient\(\)\s*;/g;
+  if (pattern4.test(content)) {
+      content = content.replace(pattern4, '');
+      if (!content.includes("import { prisma } from '@shared/prisma'")) {
+          content = "import { prisma } from '@shared/prisma';\n" + content;
+      }
+      changed = true;
+  }
+
+  if (changed) {
+    fs.writeFileSync(file, content);
+    console.log(`Updated ${file}`);
+  }
 });

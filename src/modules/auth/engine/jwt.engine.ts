@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class JWTEngine {
   async generateAccessToken(payload: any): Promise<string> {

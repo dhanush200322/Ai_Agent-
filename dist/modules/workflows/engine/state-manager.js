@@ -1,25 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StateManager = void 0;
-// @ts-nocheck
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class StateManager {
     async saveState(context) {
         const stateStr = JSON.stringify(context.variables.getScope());
-        await prisma.workflowExecution.update({
+        await prisma_1.prisma.workflowExecution.update({
             where: { id: context.execution.id },
             data: { state: stateStr }
         });
     }
     async loadState(executionId) {
-        const ex = await prisma.workflowExecution.findUnique({ where: { id: executionId } });
+        const ex = await prisma_1.prisma.workflowExecution.findUnique({ where: { id: executionId } });
         if (!ex || !ex.state)
             return null;
         return JSON.parse(ex.state);
     }
     async logNodeStart(executionId, nodeId, nodeType, input) {
-        return prisma.workflowExecutionLog.create({
+        return prisma_1.prisma.workflowExecutionLog.create({
             data: {
                 executionId,
                 nodeId,
@@ -30,7 +28,7 @@ class StateManager {
         });
     }
     async logNodeFinish(logId, status, output, error) {
-        return prisma.workflowExecutionLog.update({
+        return prisma_1.prisma.workflowExecutionLog.update({
             where: { id: logId },
             data: {
                 status,
@@ -41,7 +39,7 @@ class StateManager {
         });
     }
     async setExecutionStatus(executionId, status) {
-        await prisma.workflowExecution.update({
+        await prisma_1.prisma.workflowExecution.update({
             where: { id: executionId },
             data: {
                 status,

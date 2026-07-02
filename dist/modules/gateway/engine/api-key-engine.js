@@ -4,10 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApiKeyEngine = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const crypto_1 = __importDefault(require("crypto"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const prisma = new client_1.PrismaClient();
 class ApiKeyEngine {
     /**
      * Generates a new API Key for an organization.
@@ -21,7 +20,7 @@ class ApiKeyEngine {
         const salt = await bcryptjs_1.default.genSalt(10);
         const keyHash = await bcryptjs_1.default.hash(secret, salt);
         // Save metadata and hash
-        const apiKey = await prisma.apiKey.create({
+        const apiKey = await prisma_1.prisma.apiKey.create({
             data: {
                 organizationId,
                 name,
@@ -46,7 +45,7 @@ class ApiKeyEngine {
             return false;
         const [prefix, secret] = prefixSecret.split('.');
         // Find candidate keys by prefix
-        const candidate = await prisma.apiKey.findFirst({
+        const candidate = await prisma_1.prisma.apiKey.findFirst({
             where: { prefix, status: 'ACTIVE' },
             include: { permissions: true }
         });
@@ -56,7 +55,7 @@ class ApiKeyEngine {
         const isValid = await bcryptjs_1.default.compare(secret, candidate.keyHash);
         if (isValid) {
             // Async update last used
-            prisma.apiKey.update({
+            prisma_1.prisma.apiKey.update({
                 where: { id: candidate.id },
                 data: { lastUsedAt: new Date() }
             }).catch((e) => console.error(e));

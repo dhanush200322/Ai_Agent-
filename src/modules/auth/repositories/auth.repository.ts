@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { InternalServerError } from '../../../shared/errors/AppError';
 
-const prisma = new PrismaClient();
+
 
 export class AuthRepository {
   async findUserByEmail(email: string) {

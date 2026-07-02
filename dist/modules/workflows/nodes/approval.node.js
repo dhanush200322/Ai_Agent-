@@ -1,15 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApprovalNode = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class ApprovalNode {
     type = 'approval';
     async execute(node, context) {
         // If we're executing this for the first time, we need to pause the workflow
         // and wait for a human to approve it.
         // We create a WorkflowApproval record
-        await prisma.workflowApproval.create({
+        await prisma_1.prisma.workflowApproval.create({
             data: {
                 executionId: context.execution.id,
                 nodeId: node.id,
@@ -23,7 +22,7 @@ class ApprovalNode {
     }
     async resume(node, context, approvalData) {
         // This is called when the API endpoint /approve is hit
-        const approvalRecord = await prisma.workflowApproval.findFirst({
+        const approvalRecord = await prisma_1.prisma.workflowApproval.findFirst({
             where: { executionId: context.execution.id, nodeId: node.id },
             orderBy: { requestedAt: 'desc' }
         });
@@ -31,14 +30,14 @@ class ApprovalNode {
             return { status: 'FAILED', error: 'Approval record not found' };
         }
         if (approvalData?.approved === true) {
-            await prisma.workflowApproval.update({
+            await prisma_1.prisma.workflowApproval.update({
                 where: { id: approvalRecord.id },
                 data: { status: 'APPROVED', approvedAt: new Date() }
             });
             return { status: 'COMPLETED', output: { approved: true, notes: approvalData.notes } };
         }
         else {
-            await prisma.workflowApproval.update({
+            await prisma_1.prisma.workflowApproval.update({
                 where: { id: approvalRecord.id },
                 data: { status: 'REJECTED', approvedAt: new Date() }
             });

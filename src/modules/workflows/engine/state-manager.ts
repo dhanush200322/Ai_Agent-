@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 // @ts-nocheck
 import { PrismaClient, WorkflowExecutionLog, NodeExecutionStatus } from '@prisma/client';
 import { WorkflowExecutionContext } from './context';
 
-const prisma = new PrismaClient();
+
 
 export class StateManager {
   

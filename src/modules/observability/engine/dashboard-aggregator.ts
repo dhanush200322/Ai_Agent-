@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 // MetricsService not used here directly
 
-const prisma = new PrismaClient();
+
 
 export class DashboardAggregator {
   /**

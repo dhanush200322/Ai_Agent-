@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeliveryEngine = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const template_engine_1 = require("./template.engine");
 const preference_engine_1 = require("./preference.engine");
 const routing_engine_1 = require("./routing.engine");
@@ -18,7 +18,6 @@ const discord_provider_1 = require("../providers/discord.provider");
 const webhook_provider_1 = require("../providers/webhook.provider");
 const fcm_provider_1 = require("../providers/fcm.provider");
 const inapp_provider_1 = require("../providers/inapp.provider");
-const prisma = new client_1.PrismaClient();
 class DeliveryEngine {
     templateEngine = new template_engine_1.TemplateEngine();
     preferenceEngine = new preference_engine_1.PreferenceEngine();
@@ -27,7 +26,7 @@ class DeliveryEngine {
     analyticsEngine = new analytics_engine_1.AnalyticsEngine();
     vaultService = new vault_service_1.VaultService();
     async deliver(notificationId) {
-        const notif = await prisma.notification.findUnique({
+        const notif = await prisma_1.prisma.notification.findUnique({
             where: { id: notificationId },
             include: { template: true },
         });
@@ -41,7 +40,7 @@ class DeliveryEngine {
         });
         // Check if channel enabled
         if (!this.preferenceEngine.isChannelEnabled(resolvedPref, notif.channel)) {
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: { status: 'CANCELLED', errorMessage: 'Channel disabled by preference' },
             });
@@ -49,7 +48,7 @@ class DeliveryEngine {
         }
         // Check quiet hours (unless critical priority)
         if (notif.priority !== 'CRITICAL' && this.preferenceEngine.isInQuietHours(resolvedPref)) {
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: { status: 'QUEUED', errorMessage: 'Postponed due to quiet hours' },
             });
@@ -58,7 +57,7 @@ class DeliveryEngine {
         // 2. Policy suppression
         const isDuplicate = await this.policyEngine.shouldSuppress(notif.organizationId, notif.recipient, notif.body);
         if (isDuplicate) {
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: { status: 'CANCELLED', errorMessage: 'Suppressed as duplicate' },
             });
@@ -66,7 +65,7 @@ class DeliveryEngine {
         }
         const withinLimits = await this.policyEngine.checkFrequencyLimits(notif.organizationId, notif.userId || undefined);
         if (!withinLimits) {
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: { status: 'CANCELLED', errorMessage: 'Frequency limits exceeded' },
             });
@@ -82,14 +81,14 @@ class DeliveryEngine {
             finalBody = this.templateEngine.applyBranding(finalBody, notif.template.type);
         }
         // Update rendered subject & body
-        await prisma.notification.update({
+        await prisma_1.prisma.notification.update({
             where: { id: notificationId },
             data: { body: finalBody, subject: finalSubject, status: 'PROCESSING' }
         });
         // 4. Routing
         const providerList = await this.routingEngine.getProvidersForChannel(notif.organizationId, notif.channel);
         if (providerList.length === 0) {
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: { status: 'FAILED', errorMessage: 'No active provider found for channel' },
             });
@@ -125,7 +124,7 @@ class DeliveryEngine {
         }
         const latency = Date.now() - startTime;
         if (success) {
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: {
                     status: 'SENT',
@@ -134,7 +133,7 @@ class DeliveryEngine {
                     errorMessage: null
                 },
             });
-            await prisma.notificationDelivery.create({
+            await prisma_1.prisma.notificationDelivery.create({
                 data: {
                     notificationId,
                     providerId: activeProvider.id,
@@ -152,7 +151,7 @@ class DeliveryEngine {
                 latency,
             });
             // Emit Billing Usage Event
-            await prisma.usageEvent.create({
+            await prisma_1.prisma.usageEvent.create({
                 data: {
                     organizationId: notif.organizationId,
                     type: `${notif.channel}_SENT`,
@@ -164,7 +163,7 @@ class DeliveryEngine {
         }
         else {
             const errorMsg = result?.errorMessage || 'Delivery failed on all providers';
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: {
                     status: 'FAILED',
@@ -172,7 +171,7 @@ class DeliveryEngine {
                     retryCount: notif.retryCount + 1,
                 },
             });
-            await prisma.notificationDelivery.create({
+            await prisma_1.prisma.notificationDelivery.create({
                 data: {
                     notificationId,
                     status: 'FAILED',
@@ -215,11 +214,11 @@ class DeliveryEngine {
         for (const [key, value] of Object.entries(resolved)) {
             if (typeof value === 'string' && value.startsWith('vault:')) {
                 const secretName = value.replace('vault:', '');
-                let secretObj = await prisma.vaultSecret.findFirst({
+                let secretObj = await prisma_1.prisma.vaultSecret.findFirst({
                     where: { name: secretName, organizationId }
                 });
                 if (!secretObj) {
-                    secretObj = await prisma.vaultSecret.findFirst({
+                    secretObj = await prisma_1.prisma.vaultSecret.findFirst({
                         where: { name: secretName }
                     });
                 }

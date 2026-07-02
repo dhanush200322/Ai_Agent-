@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { RetrievalService } from '../services/retrieval.service';
@@ -18,7 +19,7 @@ import { ConversationTitleService } from '../services/conversation-title.service
 import { PlannerService } from '../../tools/services/planner.service';
 import { ToolRegistryService } from '../../tools/services/tool-registry.service';
 
-const prisma = new PrismaClient();
+
 
 export class ChatController {
   private retrievalService = new RetrievalService();

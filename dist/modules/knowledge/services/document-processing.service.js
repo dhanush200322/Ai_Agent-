@@ -4,14 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocumentProcessingService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const document_parser_service_1 = require("./document-parser.service");
 const path_1 = __importDefault(require("path"));
 const text_cleaner_1 = require("../utils/text-cleaner");
 const chunk_service_1 = require("./chunk.service");
 const embedding_service_1 = require("./embedding.service");
 const vector_service_1 = require("./vector.service");
-const prisma = new client_1.PrismaClient();
 class DocumentProcessingService {
     chunkService = new chunk_service_1.ChunkService(1000, 200);
     embeddingService = new embedding_service_1.EmbeddingService();
@@ -29,7 +28,7 @@ class DocumentProcessingService {
         try {
             // 1. Fetch Document from DB
             // @ts-ignore
-            const document = await prisma.knowledgeDocument.findUnique({
+            const document = await prisma_1.prisma.knowledgeDocument.findUnique({
                 where: { id: documentId },
             });
             if (!document) {
@@ -37,7 +36,7 @@ class DocumentProcessingService {
             }
             // Update status to PROCESSING
             // @ts-ignore
-            await prisma.knowledgeDocument.update({
+            await prisma_1.prisma.knowledgeDocument.update({
                 where: { id: documentId },
                 data: { status: 'PROCESSING' },
             });
@@ -97,7 +96,7 @@ class DocumentProcessingService {
             }
             // Update DB to EMBEDDING
             // @ts-ignore
-            await prisma.knowledgeDocument.update({
+            await prisma_1.prisma.knowledgeDocument.update({
                 where: { id: documentId },
                 data: { status: 'EMBEDDING' },
             });
@@ -109,7 +108,7 @@ class DocumentProcessingService {
             const embeddingTime = Date.now() - embeddingStartTime;
             // Update DB to INDEXING
             // @ts-ignore
-            await prisma.knowledgeDocument.update({
+            await prisma_1.prisma.knowledgeDocument.update({
                 where: { id: documentId },
                 data: { status: 'INDEXING' },
             });
@@ -148,7 +147,7 @@ class DocumentProcessingService {
             console.log(`- Qdrant Insert Time: ${indexingTime}ms`);
             console.log(`- Chunk Count: ${chunks.length}`);
             // @ts-ignore
-            await prisma.knowledgeDocument.update({
+            await prisma_1.prisma.knowledgeDocument.update({
                 where: { id: documentId },
                 data: {
                     status: 'COMPLETED',
@@ -165,7 +164,7 @@ class DocumentProcessingService {
             const processingTime = Date.now() - startTime;
             // Update DB to FAILED
             // @ts-ignore
-            await prisma.knowledgeDocument.update({
+            await prisma_1.prisma.knowledgeDocument.update({
                 where: { id: documentId },
                 data: {
                     status: 'FAILED',

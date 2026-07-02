@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { HealthEngine } from '../engine/HealthEngine';
 import { MetricsEngine } from '../engine/MetricsEngine';
@@ -8,7 +9,7 @@ import { PrismaClient } from '@prisma/client';
 
 @Controller('api/v1/observability')
 export class ObservabilityController {
-  private readonly prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   constructor(
     private readonly healthEngine: HealthEngine,

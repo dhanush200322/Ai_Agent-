@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, AgentExecutionStatus } from '@prisma/client';
 import { AgentExecutionInput, AgentExecutionResult } from '../types/runtime.types';
 
-const prisma = new PrismaClient();
+
 
 export class RuntimeEngine {
   public async spawn(input: AgentExecutionInput): Promise<AgentExecutionResult> {

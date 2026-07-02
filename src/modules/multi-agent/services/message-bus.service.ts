@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, AgentMessage } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class MessageBusService {
   async send(senderAgentId: string, receiverAgentId: string, content: string, type: any = 'REQUEST', taskId?: string, metadata?: any): Promise<AgentMessage> {

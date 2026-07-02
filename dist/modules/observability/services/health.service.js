@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HealthService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const redis_health_service_1 = require("./redis-health.service");
-const prisma = new client_1.PrismaClient();
 const redisHealth = new redis_health_service_1.RedisHealthService();
 class HealthService {
     /**
@@ -23,7 +22,7 @@ class HealthService {
         // 1. Database
         const startDb = Date.now();
         try {
-            await prisma.$queryRaw `SELECT 1`;
+            await prisma_1.prisma.$queryRaw `SELECT 1`;
             dependencies.push({ name: 'Database', status: 'HEALTHY', latency: Date.now() - startDb });
             this.recordHealth('Database', 'READINESS', 'HEALTHY', Date.now() - startDb);
         }
@@ -52,7 +51,7 @@ class HealthService {
         return { status: overallStatus, dependencies };
     }
     recordHealth(component, type, status, latency, message) {
-        prisma.healthCheck.create({
+        prisma_1.prisma.healthCheck.create({
             data: { component, type, status, latency, message }
         }).catch(err => console.error(`[HealthService] Failed to record health:`, err));
     }

@@ -10,12 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const MetricsEngine_1 = require("./MetricsEngine");
 let DashboardEngine = class DashboardEngine {
     metrics;
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     constructor(metrics) {
         this.metrics = metrics;
     }

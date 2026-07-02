@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class RecoveryEngine {
   public async createCheckpoint(executionId: string, state: any): Promise<string> {

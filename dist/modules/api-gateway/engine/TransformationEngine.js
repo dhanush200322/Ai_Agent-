@@ -8,11 +8,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var TransformationEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TransformationEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 let TransformationEngine = TransformationEngine_1 = class TransformationEngine {
     logger = new common_1.Logger(TransformationEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async transformRequest(routeId, payload) {
         this.logger.debug(`Applying REQUEST transformations for route ${routeId}`);
         const transforms = await this.prisma.apiTransformation.findMany({

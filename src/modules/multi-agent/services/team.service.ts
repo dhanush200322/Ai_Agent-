@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, AgentTeam, ConsensusStrategy } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class TeamService {
   async createTeam(organizationId: string, createdById: string, name: string, description?: string, consensusStrategy?: ConsensusStrategy): Promise<AgentTeam> {

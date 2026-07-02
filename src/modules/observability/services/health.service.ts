@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, HealthStatus } from '@prisma/client';
 import { RedisHealthService } from './redis-health.service';
 
-const prisma = new PrismaClient();
+
 const redisHealth = new RedisHealthService();
 
 export class HealthService {

@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PolicyEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class PolicyEngine {
     async evaluateAuthenticationPolicy(organizationId, ipAddress) {
-        const policy = await prisma.authenticationPolicy.findUnique({
+        const policy = await prisma_1.prisma.authenticationPolicy.findUnique({
             where: { organizationId },
             include: { ipRanges: true, geoRestrictions: true, workingHours: true }
         });
@@ -19,7 +18,7 @@ class PolicyEngine {
         return true;
     }
     async validatePasswordComplexity(organizationId, password) {
-        const policy = await prisma.authenticationPolicy.findUnique({ where: { organizationId } });
+        const policy = await prisma_1.prisma.authenticationPolicy.findUnique({ where: { organizationId } });
         if (!policy)
             return password.length >= 8;
         if (password.length < policy.passwordMinLength)
@@ -33,7 +32,7 @@ class PolicyEngine {
         return true;
     }
     async isMfaRequired(organizationId, userId, isAdmin = false) {
-        const policy = await prisma.authenticationPolicy.findUnique({ where: { organizationId } });
+        const policy = await prisma_1.prisma.authenticationPolicy.findUnique({ where: { organizationId } });
         if (!policy)
             return false;
         if (policy.mfaEnforcementLevel === 'REQUIRED_FOR_ALL')

@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebhookProcessorWorker = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const invoice_engine_1 = require("../engine/invoice.engine");
-const prisma = new client_1.PrismaClient();
 class WebhookProcessorWorker {
     invoiceEngine;
     constructor() {
@@ -11,7 +10,7 @@ class WebhookProcessorWorker {
     }
     async process(job) {
         const { webhookEventId } = job.payload.payload;
-        const webhookEvent = await prisma.billingWebhookEvent.findUnique({
+        const webhookEvent = await prisma_1.prisma.billingWebhookEvent.findUnique({
             where: { id: webhookEventId }
         });
         if (!webhookEvent || webhookEvent.processed)
@@ -22,19 +21,19 @@ class WebhookProcessorWorker {
                 const invoiceNumber = payload.data.object.metadata?.invoiceNumber;
                 const providerPaymentId = payload.data.object.payment_intent;
                 if (invoiceNumber) {
-                    const invoice = await prisma.invoice.findUnique({ where: { invoiceNumber } });
+                    const invoice = await prisma_1.prisma.invoice.findUnique({ where: { invoiceNumber } });
                     if (invoice) {
                         await this.invoiceEngine.markPaid(invoice.id, providerPaymentId);
                     }
                 }
             }
-            await prisma.billingWebhookEvent.update({
+            await prisma_1.prisma.billingWebhookEvent.update({
                 where: { id: webhookEventId },
                 data: { processed: true, processedAt: new Date() }
             });
         }
         catch (error) {
-            await prisma.billingWebhookEvent.update({
+            await prisma_1.prisma.billingWebhookEvent.update({
                 where: { id: webhookEventId },
                 data: { error: error.message }
             });

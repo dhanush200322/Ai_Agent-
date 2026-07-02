@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, UserStatus } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class UserRepository {
   async findUsers(organizationId: string, skip: number, take: number, search?: string) {

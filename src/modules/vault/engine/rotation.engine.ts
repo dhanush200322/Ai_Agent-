@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { QueueManager } from '../../queue/engine/queue-manager';
 import { BullMQProvider } from '../../queue/providers/bullmq.provider';
 import { VaultService } from '../services/vault.service';
 
-const prisma = new PrismaClient() as any;
+
 
 export class RotationEngine {
   private queueManager: QueueManager;

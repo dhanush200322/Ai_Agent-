@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { PluginManifest } from '../sdk/plugin-manifest';
 import { ManifestValidator } from '../validators/manifest.validator';
 import { PluginDependencyService } from './plugin-dependency.service';
 
-const prisma = new PrismaClient();
+
 const dependencyService = new PluginDependencyService();
 
 export class PluginLoaderService {

@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response } from 'express';
 import { ConversationService } from '../services/conversation.service';
 import { ConversationMessageService } from '../services/conversation-message.service';
@@ -26,7 +27,7 @@ export class ConversationController {
       const { sessionId, agentId } = req.body;
       
       const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
+      
       
       const agent = await prisma.agent.findUnique({ where: { id: agentId } });
       if (!agent) {
@@ -56,7 +57,7 @@ export class ConversationController {
     try {
       const { agentId } = req.params;
       const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
+      
       
       const agent = await prisma.agent.findUnique({ 
         where: { id: agentId },

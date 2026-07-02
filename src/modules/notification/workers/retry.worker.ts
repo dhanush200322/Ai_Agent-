@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { DeliveryEngine } from '../engine/delivery.engine';
 import { RetryEngine } from '../engine/retry.engine';
 import { QueueJob } from '../../queue/providers/queue-provider.interface';
 
-const prisma = new PrismaClient();
+
 const deliveryEngine = new DeliveryEngine();
 const retryEngine = new RetryEngine();
 

@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { BaseWorkflowNode } from './base.node';
 import { WorkflowNodeData, NodeExecutionResult } from '../types/workflow.types';
 import { WorkflowExecutionContext } from '../engine/context';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class ApprovalNode implements BaseWorkflowNode {
   type = 'approval';

@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { EmbeddingService } from '../../knowledge/services/embedding.service';
 import { VectorService } from '../../knowledge/services/vector.service';
 
-const prisma = new PrismaClient();
+
 const embeddingService = new EmbeddingService();
 const vectorService = new VectorService();
 

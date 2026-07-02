@@ -1,16 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ToolRegistryService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const AppError_1 = require("../../../shared/errors/AppError");
 const auditLogger_1 = require("../../../shared/audit/auditLogger");
-const prisma = new client_1.PrismaClient();
 class ToolRegistryService {
     /**
      * Registers a new global or organizational tool
      */
     async registerTool(data) {
-        const tool = await prisma.tool.create({
+        const tool = await prisma_1.prisma.tool.create({
             data: {
                 ...data,
             }
@@ -22,7 +21,7 @@ class ToolRegistryService {
      * Fetches a specific tool
      */
     async getTool(organizationId, toolId) {
-        const tool = await prisma.tool.findFirst({
+        const tool = await prisma_1.prisma.tool.findFirst({
             where: { id: toolId, organizationId, deletedAt: null }
         });
         if (!tool)
@@ -33,7 +32,7 @@ class ToolRegistryService {
      * Lists all tools available to an organization
      */
     async listOrganizationTools(organizationId) {
-        return prisma.tool.findMany({
+        return prisma_1.prisma.tool.findMany({
             where: { organizationId, deletedAt: null }
         });
     }
@@ -41,7 +40,7 @@ class ToolRegistryService {
      * Assigns a tool to an agent
      */
     async assignToolToAgent(agentId, toolId, configuration) {
-        return prisma.agentTool.upsert({
+        return prisma_1.prisma.agentTool.upsert({
             where: {
                 agentId_toolId: { agentId, toolId }
             },
@@ -63,7 +62,7 @@ class ToolRegistryService {
      * Retrieves all enabled tools for a specific agent
      */
     async getAgentTools(agentId) {
-        const agentTools = await prisma.agentTool.findMany({
+        const agentTools = await prisma_1.prisma.agentTool.findMany({
             where: {
                 agentId,
                 enabled: true,
@@ -86,7 +85,7 @@ class ToolRegistryService {
      */
     async setToolStatus(organizationId, toolId, enabled) {
         const tool = await this.getTool(organizationId, toolId);
-        return prisma.tool.update({
+        return prisma_1.prisma.tool.update({
             where: { id: tool.id },
             data: { enabled }
         });
@@ -96,7 +95,7 @@ class ToolRegistryService {
      */
     async deleteTool(organizationId, toolId) {
         const tool = await this.getTool(organizationId, toolId);
-        await prisma.tool.update({
+        await prisma_1.prisma.tool.update({
             where: { id: tool.id },
             data: { deletedAt: new Date(), enabled: false }
         });

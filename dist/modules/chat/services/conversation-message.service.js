@@ -1,14 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConversationMessageService = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class ConversationMessageService {
     /**
      * Save a single message to a conversation
      */
     async saveMessage(data) {
-        return prisma.conversationMessage.create({
+        return prisma_1.prisma.conversationMessage.create({
             data: {
                 conversationId: data.conversationId,
                 role: data.role,
@@ -28,7 +27,7 @@ class ConversationMessageService {
      * Get the history of a conversation
      */
     async getHistory(conversationId, limit = 50, skip = 0) {
-        return prisma.conversationMessage.findMany({
+        return prisma_1.prisma.conversationMessage.findMany({
             where: {
                 conversationId
             },
@@ -43,7 +42,7 @@ class ConversationMessageService {
      * Count total messages in a conversation
      */
     async countMessages(conversationId) {
-        return prisma.conversationMessage.count({
+        return prisma_1.prisma.conversationMessage.count({
             where: {
                 conversationId
             }
@@ -53,7 +52,7 @@ class ConversationMessageService {
      * Get total token usage for a conversation
      */
     async getTokenUsage(conversationId) {
-        const agg = await prisma.conversationMessage.aggregate({
+        const agg = await prisma_1.prisma.conversationMessage.aggregate({
             where: { conversationId },
             _sum: {
                 tokens: true,

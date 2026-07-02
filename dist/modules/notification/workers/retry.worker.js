@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RetryWorker = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const delivery_engine_1 = require("../engine/delivery.engine");
 const retry_engine_1 = require("../engine/retry.engine");
-const prisma = new client_1.PrismaClient();
 const deliveryEngine = new delivery_engine_1.DeliveryEngine();
 const retryEngine = new retry_engine_1.RetryEngine();
 class RetryWorker {
@@ -12,11 +11,11 @@ class RetryWorker {
         const notificationId = job.payload?.payload?.notificationId;
         if (!notificationId)
             return;
-        const notif = await prisma.notification.findUnique({ where: { id: notificationId } });
+        const notif = await prisma_1.prisma.notification.findUnique({ where: { id: notificationId } });
         if (!notif)
             return;
         if (notif.retryCount >= notif.maxRetries) {
-            await prisma.notification.update({
+            await prisma_1.prisma.notification.update({
                 where: { id: notificationId },
                 data: { status: 'FAILED', errorMessage: 'Max retries exceeded' },
             });

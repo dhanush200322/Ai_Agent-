@@ -44,15 +44,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var ProfilingEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProfilingEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
 const v8 = __importStar(require("v8"));
 const perfHooks = __importStar(require("perf_hooks"));
-const client_1 = require("@prisma/client");
 const MetricsEngine_1 = require("./MetricsEngine");
 let ProfilingEngine = ProfilingEngine_1 = class ProfilingEngine {
     metrics;
     logger = new common_1.Logger(ProfilingEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     constructor(metrics) {
         this.metrics = metrics;
         this.monitorEventLoop();

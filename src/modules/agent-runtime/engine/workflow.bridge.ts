@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class WorkflowBridge {
   public async triggerWorkflow(organizationId: string, workflowId: string, payload: any): Promise<string> {

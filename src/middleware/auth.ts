@@ -1,3 +1,4 @@
+import { prisma } from '../shared/prisma';
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticationError, AuthorizationError } from '../shared/errors/AppError';
 import { JWTEngine } from '../modules/auth/engine/jwt.engine';
@@ -5,7 +6,7 @@ import { SessionService } from '../modules/auth/services/session.service';
 import { PolicyEngine } from '../modules/auth/engine/policy.engine';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 const jwtEngine = new JWTEngine();
 const sessionService = new SessionService();
 const policyEngine = new PolicyEngine();

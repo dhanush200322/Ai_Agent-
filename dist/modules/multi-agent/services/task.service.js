@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TaskService = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class TaskService {
     async createTask(teamId, input, priority = 0, parentTaskId) {
-        return prisma.agentTask.create({
+        return prisma_1.prisma.agentTask.create({
             data: {
                 teamId,
                 input,
@@ -16,31 +15,31 @@ class TaskService {
         });
     }
     async assignTask(taskId, agentId) {
-        return prisma.agentTask.update({
+        return prisma_1.prisma.agentTask.update({
             where: { id: taskId },
             data: { assignedAgentId: agentId, status: 'WAITING' }
         });
     }
     async startTask(taskId) {
-        return prisma.agentTask.update({
+        return prisma_1.prisma.agentTask.update({
             where: { id: taskId },
             data: { status: 'RUNNING', startedAt: new Date() }
         });
     }
     async completeTask(taskId, output) {
-        return prisma.agentTask.update({
+        return prisma_1.prisma.agentTask.update({
             where: { id: taskId },
             data: { status: 'COMPLETED', output, completedAt: new Date() }
         });
     }
     async failTask(taskId, error) {
-        return prisma.agentTask.update({
+        return prisma_1.prisma.agentTask.update({
             where: { id: taskId },
             data: { status: 'FAILED', output: error, completedAt: new Date() }
         });
     }
     async getSubTasks(parentTaskId) {
-        return prisma.agentTask.findMany({
+        return prisma_1.prisma.agentTask.findMany({
             where: { parentTaskId },
             orderBy: { createdAt: 'asc' }
         });

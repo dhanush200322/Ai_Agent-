@@ -7,10 +7,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnalyticsEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 let AnalyticsEngine = class AnalyticsEngine {
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async recordTokenUsage(organizationId, model, promptTokens, completionTokens) {
         await this.prisma.tokenAnalytics.create({
             data: {

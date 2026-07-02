@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryRetrievalService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const embedding_service_1 = require("../../knowledge/services/embedding.service");
 const vector_service_1 = require("../../knowledge/services/vector.service");
-const prisma = new client_1.PrismaClient();
 const embeddingService = new embedding_service_1.EmbeddingService();
 const vectorService = new vector_service_1.VectorService();
 class MemoryRetrievalService {
@@ -65,7 +64,7 @@ class MemoryRetrievalService {
                 seenContent.add(norm);
                 uniqueMemories.push(mem);
                 // Track retrieval in DB asynchronously
-                prisma.conversationMemory.update({
+                prisma_1.prisma.conversationMemory.update({
                     where: { vectorId: mem.id },
                     data: {
                         retrievalCount: { increment: 1 },

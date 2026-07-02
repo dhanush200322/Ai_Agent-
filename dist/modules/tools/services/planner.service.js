@@ -1,12 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlannerService = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const groq_service_1 = require("../../chat/services/groq.service");
 const tool_resolver_service_1 = require("./tool-resolver.service");
 const tool_policy_service_1 = require("./tool-policy.service");
 const tool_executor_service_1 = require("./tool-executor.service");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 class PlannerService {
     groqService = new groq_service_1.GroqService();
     resolver = new tool_resolver_service_1.ToolResolverService();
@@ -15,7 +14,7 @@ class PlannerService {
     async planAndExecuteTools(initialMessages, availableTools, context) {
         let messages = [...initialMessages];
         // Fetch Agent Configuration
-        const agent = await prisma.agent.findUnique({
+        const agent = await prisma_1.prisma.agent.findUnique({
             where: { id: context.agentId },
             select: {
                 maxPlannerDepth: true,

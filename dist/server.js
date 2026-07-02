@@ -8,14 +8,35 @@ const path_1 = __importDefault(require("path"));
 // Load environment variables
 dotenv_1.default.config({ path: path_1.default.join(__dirname, '../.env') });
 const app_1 = __importDefault(require("./app"));
+const prisma_1 = require("./shared/prisma");
 const PORT = process.env.PORT || 3000;
-const server = app_1.default.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-});
-// Graceful shutdown handling
-process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received: closing HTTP server');
-    server.close(() => {
-        console.log('HTTP server closed');
-    });
-});
+async function bootstrap() {
+    try {
+        await prisma_1.prisma.$connect();
+        console.log("✅ PostgreSQL Connected");
+        const server = app_1.default.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+        });
+        // Graceful shutdown handling
+        process.on('SIGTERM', async () => {
+            console.log('SIGTERM signal received: closing HTTP server');
+            server.close(() => {
+                console.log('HTTP server closed');
+            });
+            await prisma_1.prisma.$disconnect();
+        });
+        process.on('SIGINT', async () => {
+            console.log('SIGINT signal received: closing HTTP server');
+            server.close(() => {
+                console.log('HTTP server closed');
+            });
+            await prisma_1.prisma.$disconnect();
+        });
+    }
+    catch (error) {
+        console.error("❌ Database connection failed");
+        console.error(error);
+        process.exit(1);
+    }
+}
+bootstrap();

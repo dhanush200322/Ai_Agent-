@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InAppProvider = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class InAppProvider {
     config = null;
     constructor(config) {
@@ -16,7 +15,7 @@ class InAppProvider {
             }
             const notificationId = options.metadata?.notificationId;
             if (notificationId) {
-                await prisma.notification.update({
+                await prisma_1.prisma.notification.update({
                     where: { id: notificationId },
                     data: { status: 'SENT', sentAt: new Date() }
                 });

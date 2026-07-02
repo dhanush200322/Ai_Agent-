@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { SubscriptionEngine } from '../engine/subscription.engine';
@@ -5,7 +6,7 @@ import { StripeProvider } from '../providers/stripe.provider';
 import { QueueManager } from '../../queue/engine/queue-manager';
 import { BullMQProvider } from '../../queue/providers/bullmq.provider';
 
-const prisma = new PrismaClient() as any;
+
 
 export class BillingController {
   private subscriptionEngine = new SubscriptionEngine();

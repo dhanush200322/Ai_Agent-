@@ -10,8 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HealthEngine = exports.HealthStatus = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const LoggingEngine_1 = require("./LoggingEngine");
 var HealthStatus;
 (function (HealthStatus) {
@@ -21,7 +21,7 @@ var HealthStatus;
 })(HealthStatus || (exports.HealthStatus = HealthStatus = {}));
 let HealthEngine = class HealthEngine {
     logger;
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     constructor(logger) {
         this.logger = logger;
     }

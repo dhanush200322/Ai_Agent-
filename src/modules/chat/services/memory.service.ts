@@ -1,9 +1,10 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, MemoryType } from '@prisma/client';
 import { EmbeddingService } from '../../knowledge/services/embedding.service';
 import { VectorService } from '../../knowledge/services/vector.service';
 import { randomUUID } from 'crypto';
 
-const prisma = new PrismaClient();
+
 const embeddingService = new EmbeddingService();
 const vectorService = new VectorService();
 

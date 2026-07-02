@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { NotFoundError } from '../../../shared/errors/AppError';
 import { AuditLogger } from '../../../shared/audit/auditLogger';
 
-const prisma = new PrismaClient();
+
 
 export class ToolRegistryService {
   /**

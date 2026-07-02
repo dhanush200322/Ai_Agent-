@@ -6,16 +6,41 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 import app from './app';
 
+import { prisma } from './shared/prisma';
+
 const PORT = process.env.PORT || 3000;
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-});
+async function bootstrap() {
+  try {
+    await prisma.$connect();
+    console.log("✅ PostgreSQL Connected");
 
-// Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-  });
-});
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    });
+
+    // Graceful shutdown handling
+    process.on('SIGTERM', async () => {
+      console.log('SIGTERM signal received: closing HTTP server');
+      server.close(() => {
+        console.log('HTTP server closed');
+      });
+      await prisma.$disconnect();
+    });
+
+    process.on('SIGINT', async () => {
+      console.log('SIGINT signal received: closing HTTP server');
+      server.close(() => {
+        console.log('HTTP server closed');
+      });
+      await prisma.$disconnect();
+    });
+
+  } catch (error) {
+    console.error("❌ Database connection failed");
+    console.error(error);
+    process.exit(1);
+  }
+}
+
+bootstrap();

@@ -8,11 +8,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var DeveloperPortalEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeveloperPortalEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 let DeveloperPortalEngine = DeveloperPortalEngine_1 = class DeveloperPortalEngine {
     logger = new common_1.Logger(DeveloperPortalEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async registerDeveloper(userId) {
         this.logger.debug(`Registering developer for user ${userId}`);
         return this.prisma.developer.create({

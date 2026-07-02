@@ -1,10 +1,11 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class VersionEngine {
   private readonly logger = new Logger(VersionEngine.name);
-  private prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async negotiateVersion(requestedVersion: string) {
     this.logger.debug(`Negotiating API version: ${requestedVersion}`);

@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { LoggingEngine } from './LoggingEngine';
@@ -10,7 +11,7 @@ export enum HealthStatus {
 
 @Injectable()
 export class HealthEngine {
-  private readonly prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   constructor(private readonly logger: LoggingEngine) {}
 

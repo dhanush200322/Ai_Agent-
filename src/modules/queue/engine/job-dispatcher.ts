@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { QueueJob } from '../providers/queue-provider.interface';
 import { PrismaClient } from '@prisma/client';
 import { JobPayloadContract } from '../types';
 
-const prisma = new PrismaClient();
+
 
 export type WorkerFunction = (job: QueueJob, context: any) => Promise<void>;
 

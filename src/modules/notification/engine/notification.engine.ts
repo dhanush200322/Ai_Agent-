@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, NotificationChannel, NotificationPriority, NotificationStatus } from '@prisma/client';
 import { DeliveryEngine } from './delivery.engine';
 import { BullMQProvider } from '../../queue/providers/bullmq.provider';
 
-const prisma = new PrismaClient();
+
 
 export interface TriggerNotificationParams {
   organizationId: string;

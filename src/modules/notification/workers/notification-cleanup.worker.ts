@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { DeliveryEngine } from '../engine/delivery.engine';
 
-const prisma = new PrismaClient();
+
 const deliveryEngine = new DeliveryEngine();
 
 export class NotificationCleanupWorker {

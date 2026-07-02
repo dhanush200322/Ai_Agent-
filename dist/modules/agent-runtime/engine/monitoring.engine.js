@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MonitoringEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class MonitoringEngine {
     async logMetrics(organizationId, executionId, metrics) {
-        await prisma.agentPerformanceMetrics.upsert({
+        await prisma_1.prisma.agentPerformanceMetrics.upsert({
             where: { executionId },
             update: {
                 totalLatency: { increment: metrics.latency },
@@ -22,7 +21,7 @@ class MonitoringEngine {
             }
         });
         // Also push to generic SystemMetrics for Phase 6.10 observability
-        await prisma.systemMetric.createMany({
+        await prisma_1.prisma.systemMetric.createMany({
             data: [
                 { organizationId, module: 'AGENT_RUNTIME', metricName: 'LATENCY', metricValue: metrics.latency },
                 { organizationId, module: 'AGENT_RUNTIME', metricName: 'COST', metricValue: metrics.cost }
@@ -30,7 +29,7 @@ class MonitoringEngine {
         });
     }
     async logEvent(executionId, level, message, metadata) {
-        await prisma.agentExecutionLog.create({
+        await prisma_1.prisma.agentExecutionLog.create({
             data: {
                 executionId,
                 level,

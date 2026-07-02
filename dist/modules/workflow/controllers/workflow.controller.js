@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkflowController = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const workflow_service_1 = require("../services/workflow.service");
 const execution_service_1 = require("../services/execution.service");
 const template_engine_1 = require("../engine/template.engine");
-const prisma = new client_1.PrismaClient();
 const workflowService = new workflow_service_1.WorkflowService();
 const executionService = new execution_service_1.ExecutionService();
 const templateEngine = new template_engine_1.TemplateEngine();
@@ -44,7 +43,7 @@ class WorkflowController {
     async getWorkflows(req, res, next) {
         try {
             const user = req.user;
-            const workflows = await prisma.workflow.findMany({
+            const workflows = await prisma_1.prisma.workflow.findMany({
                 where: { organizationId: user.organizationId, deletedAt: null },
                 include: { versions: true }
             });
@@ -82,7 +81,7 @@ class WorkflowController {
     async cancelExecution(req, res, next) {
         try {
             const { id } = req.params; // executionId
-            const execution = await prisma.workflowExecution.update({
+            const execution = await prisma_1.prisma.workflowExecution.update({
                 where: { id },
                 data: { status: 'CANCELED', finishedAt: new Date() }
             });
@@ -107,7 +106,7 @@ class WorkflowController {
     async getWorkflowHistory(req, res, next) {
         try {
             const { id } = req.params; // workflowId
-            const executions = await prisma.workflowExecution.findMany({
+            const executions = await prisma_1.prisma.workflowExecution.findMany({
                 where: { workflowId: id },
                 include: { logs: true, steps: true },
                 orderBy: { startedAt: 'desc' }
@@ -132,7 +131,7 @@ class WorkflowController {
     async getExecutions(req, res, next) {
         try {
             const user = req.user;
-            const executions = await prisma.workflowExecution.findMany({
+            const executions = await prisma_1.prisma.workflowExecution.findMany({
                 where: { organizationId: user.organizationId },
                 orderBy: { startedAt: 'desc' }
             });

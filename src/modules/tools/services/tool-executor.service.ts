@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { ExecutorContext, ToolExecutor } from '../executors/base.executor';
 import { InternalExecutor } from '../executors/internal.executor';
@@ -5,7 +6,7 @@ import { HttpExecutor, WebhookExecutor, FunctionExecutor } from '../executors/ex
 import { ResolvedTool } from './tool-resolver.service';
 import { AuditLogger } from '../../../shared/audit/auditLogger';
 
-const prisma = new PrismaClient();
+
 
 export class ToolExecutorService {
   private executors: Record<string, ToolExecutor> = {

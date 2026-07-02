@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { NotificationEngine } from '../engine/notification.engine';
 
-const prisma = new PrismaClient();
+
 const notificationEngine = new NotificationEngine();
 
 export class NotificationController {

@@ -9,11 +9,14 @@ const asyncHandler_1 = require("../../../shared/utils/asyncHandler");
 const router = (0, express_1.Router)();
 const authController = new auth_controller_1.AuthController();
 // Public auth routes
+router.post('/register', (0, validate_1.validate)(auth_validator_1.registerSchema), (0, asyncHandler_1.asyncHandler)(authController.register));
 router.post('/login', (0, validate_1.validate)(auth_validator_1.loginSchema), (0, asyncHandler_1.asyncHandler)(authController.login));
 router.post('/refresh', (0, validate_1.validate)(auth_validator_1.refreshTokenSchema), (0, asyncHandler_1.asyncHandler)(authController.refresh));
 router.post('/password/reset', (0, asyncHandler_1.asyncHandler)(authController.passwordReset));
-router.post('/oauth/google', (0, asyncHandler_1.asyncHandler)(authController.oauthGoogle));
-router.post('/oauth/microsoft', (0, asyncHandler_1.asyncHandler)(authController.oauthMicrosoft));
+router.get('/oauth/google', (0, asyncHandler_1.asyncHandler)(authController.oauthGoogle));
+router.get('/oauth/google/callback', (0, asyncHandler_1.asyncHandler)(authController.oauthGoogleCallback));
+router.get('/oauth/github', (0, asyncHandler_1.asyncHandler)(authController.oauthGithub));
+router.get('/oauth/github/callback', (0, asyncHandler_1.asyncHandler)(authController.oauthGithubCallback));
 router.post('/mfa/verify', (0, asyncHandler_1.asyncHandler)(authController.mfaVerify));
 // Protected auth routes
 router.get('/me', auth_1.authenticate, (0, asyncHandler_1.asyncHandler)(authController.me));

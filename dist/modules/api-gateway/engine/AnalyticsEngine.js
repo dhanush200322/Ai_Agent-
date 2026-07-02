@@ -8,11 +8,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var AnalyticsEngine_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnalyticsEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 let AnalyticsEngine = AnalyticsEngine_1 = class AnalyticsEngine {
     logger = new common_1.Logger(AnalyticsEngine_1.name);
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     async recordApiUsage(apiKeyId, endpoint, method, statusCode, latencyMs) {
         this.logger.debug(`Recording API Usage for key ${apiKeyId}`);
         return this.prisma.apiUsage.create({

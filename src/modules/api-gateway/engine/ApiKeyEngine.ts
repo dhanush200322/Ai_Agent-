@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -5,7 +6,7 @@ import * as crypto from 'crypto';
 @Injectable()
 export class ApiKeyEngine {
   private readonly logger = new Logger(ApiKeyEngine.name);
-  private prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   async generateDeveloperKey(developerApplicationId: string, organizationId: string) {
     this.logger.debug(`Generating API Key for dev app ${developerApplicationId}`);

@@ -34,9 +34,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkerManager = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const client_1 = require("@prisma/client");
 const os = __importStar(require("os"));
-const prisma = new client_1.PrismaClient();
 class WorkerManager {
     provider;
     capabilities;
@@ -51,7 +51,7 @@ class WorkerManager {
     }
     async start(concurrency = 10) {
         console.log(`Starting WorkerManager on node ${this.hostname}`);
-        await prisma.workerNode.upsert({
+        await prisma_1.prisma.workerNode.upsert({
             where: { hostname: this.hostname },
             update: { status: client_1.WorkerStatus.ONLINE, lastHeartbeat: new Date(), concurrency, capabilities: JSON.stringify(this.capabilities) },
             create: { hostname: this.hostname, status: client_1.WorkerStatus.ONLINE, concurrency, capabilities: JSON.stringify(this.capabilities) }
@@ -67,7 +67,7 @@ class WorkerManager {
             if (this.isShuttingDown)
                 return;
             try {
-                await prisma.workerNode.update({
+                await prisma_1.prisma.workerNode.update({
                     where: { hostname: this.hostname },
                     data: { lastHeartbeat: new Date() }
                 });
@@ -89,7 +89,7 @@ class WorkerManager {
             await this.provider.disconnect();
             // Update Node status
             try {
-                await prisma.workerNode.update({
+                await prisma_1.prisma.workerNode.update({
                     where: { hostname: this.hostname },
                     data: { status: client_1.WorkerStatus.OFFLINE, lastHeartbeat: new Date() }
                 });

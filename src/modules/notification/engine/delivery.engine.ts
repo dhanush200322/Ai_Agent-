@@ -1,3 +1,4 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient, NotificationChannel, NotificationPriority, NotificationStatus, DeliveryStatus, NotificationProviderType } from '@prisma/client';
 import { TemplateEngine } from './template.engine';
 import { PreferenceEngine } from './preference.engine';
@@ -17,7 +18,7 @@ import { WebhookProvider } from '../providers/webhook.provider';
 import { FCMProvider } from '../providers/fcm.provider';
 import { InAppProvider } from '../providers/inapp.provider';
 
-const prisma = new PrismaClient();
+
 
 export class DeliveryEngine {
   private templateEngine = new TemplateEngine();

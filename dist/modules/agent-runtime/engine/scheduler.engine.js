@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchedulerEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 class SchedulerEngine {
     async scheduleExecution(organizationId, executionId, delayMs) {
-        await prisma.scheduledJob.create({
+        await prisma_1.prisma.scheduledJob.create({
             data: {
                 organizationId,
                 queue: 'agent-runtime',
@@ -18,7 +18,7 @@ class SchedulerEngine {
         });
     }
     async scheduleCron(organizationId, agentId, cronExpression, goal) {
-        await prisma.scheduledJob.create({
+        await prisma_1.prisma.scheduledJob.create({
             data: {
                 organizationId,
                 queue: 'agent-runtime',

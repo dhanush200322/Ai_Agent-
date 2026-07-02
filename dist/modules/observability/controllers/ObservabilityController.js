@@ -13,20 +13,20 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ObservabilityController = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const common_1 = require("@nestjs/common");
 const HealthEngine_1 = require("../engine/HealthEngine");
 const MetricsEngine_1 = require("../engine/MetricsEngine");
 const DashboardEngine_1 = require("../engine/DashboardEngine");
 const ProfilingEngine_1 = require("../engine/ProfilingEngine");
 const AlertEngine_1 = require("../engine/AlertEngine");
-const client_1 = require("@prisma/client");
 let ObservabilityController = class ObservabilityController {
     healthEngine;
     metricsEngine;
     dashboardEngine;
     profilingEngine;
     alertEngine;
-    prisma = new client_1.PrismaClient();
+    prisma = prisma_1.prisma;
     constructor(healthEngine, metricsEngine, dashboardEngine, profilingEngine, alertEngine) {
         this.healthEngine = healthEngine;
         this.metricsEngine = metricsEngine;

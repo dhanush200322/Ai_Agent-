@@ -1,14 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketplaceService = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class MarketplaceService {
     /**
      * Retrieve catalog combining Public global plugins + Private Org plugins
      */
     async getCatalog(organizationId) {
-        return prisma.plugin.findMany({
+        return prisma_1.prisma.plugin.findMany({
             where: {
                 OR: [
                     { visibility: 'PUBLIC', status: 'PUBLISHED' },
@@ -24,7 +23,7 @@ class MarketplaceService {
         });
     }
     async publishPrivatePlugin(organizationId, slug) {
-        return prisma.plugin.update({
+        return prisma_1.prisma.plugin.update({
             where: { slug },
             data: { status: 'PUBLISHED', visibility: 'PRIVATE', organizationId }
         });

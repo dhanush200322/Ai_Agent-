@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { NotificationProvider, ProviderSendOptions, ProviderSendResult } from '../interfaces/notification-provider.interface';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class InAppProvider implements NotificationProvider {
   private config: any = null;

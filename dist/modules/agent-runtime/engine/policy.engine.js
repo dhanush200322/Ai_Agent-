@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PolicyEngine = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class PolicyEngine {
     async validateExecution(organizationId, agentId) {
-        const policy = await prisma.agentPolicy.findFirst({
+        const policy = await prisma_1.prisma.agentPolicy.findFirst({
             where: { organizationId }
         });
         if (!policy)

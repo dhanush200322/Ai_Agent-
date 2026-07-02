@@ -1,7 +1,8 @@
+import { prisma } from '../../../shared/prisma';
 import { Job } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class CleanupWorker {
   public async processJob(job: Job): Promise<any> {

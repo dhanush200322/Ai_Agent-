@@ -1,10 +1,11 @@
+import { prisma } from '../../../shared/prisma';
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { MetricsEngine } from './MetricsEngine';
 
 @Injectable()
 export class DashboardEngine {
-  private readonly prisma = new PrismaClient();
+  private readonly prisma = prisma;
 
   constructor(private readonly metrics: MetricsEngine) {}
 

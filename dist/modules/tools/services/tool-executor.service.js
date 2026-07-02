@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ToolExecutorService = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../shared/prisma");
 const internal_executor_1 = require("../executors/internal.executor");
 const external_executor_1 = require("../executors/external.executor");
 const auditLogger_1 = require("../../../shared/audit/auditLogger");
-const prisma = new client_1.PrismaClient();
 class ToolExecutorService {
     executors = {
         'InternalExecutor': new internal_executor_1.InternalExecutor(),
@@ -22,13 +21,13 @@ class ToolExecutorService {
         let executionRecordId = null;
         let actualToolId = null;
         if (tool.category !== 'INTERNAL') {
-            const dbTool = await prisma.tool.findFirst({
+            const dbTool = await prisma_1.prisma.tool.findFirst({
                 where: { name: tool.name, organizationId }
             });
             actualToolId = dbTool?.id || null;
         }
         if (actualToolId) {
-            const exec = await prisma.toolExecution.create({
+            const exec = await prisma_1.prisma.toolExecution.create({
                 data: {
                     toolId: actualToolId,
                     conversationId,
@@ -62,7 +61,7 @@ class ToolExecutorService {
         const duration = Date.now() - startTime;
         // 2. Update ToolExecution record
         if (executionRecordId) {
-            await prisma.toolExecution.update({
+            await prisma_1.prisma.toolExecution.update({
                 where: { id: executionRecordId },
                 data: {
                     status: errorStr ? 'FAILED' : 'COMPLETED',

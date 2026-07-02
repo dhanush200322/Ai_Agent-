@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 type ConversationStatus = 'ACTIVE' | 'ARCHIVED' | 'DELETED';
 import { AppError } from '../../../shared/errors/AppError';
 
-const prisma = new PrismaClient();
+
 
 export class ConversationService {
   /**

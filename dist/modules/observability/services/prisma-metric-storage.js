@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaMetricStorage = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../../shared/prisma");
 class PrismaMetricStorage {
     async recordMetric(organizationId, module, metricName, value, tags) {
-        await prisma.systemMetric.create({
+        await prisma_1.prisma.systemMetric.create({
             data: {
                 organizationId,
                 module,
@@ -16,7 +15,7 @@ class PrismaMetricStorage {
         });
     }
     async getMetrics(module, metricName, startTime, endTime) {
-        return prisma.systemMetric.findMany({
+        return prisma_1.prisma.systemMetric.findMany({
             where: {
                 module,
                 metricName,
@@ -28,7 +27,7 @@ class PrismaMetricStorage {
     async purgeOldMetrics(retentionDays) {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - retentionDays);
-        const result = await prisma.systemMetric.deleteMany({
+        const result = await prisma_1.prisma.systemMetric.deleteMany({
             where: { timestamp: { lt: cutoff } }
         });
         return result.count;

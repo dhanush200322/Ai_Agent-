@@ -1,8 +1,9 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 
 import { JobPayloadContract } from '../types';
 
-const prisma = new PrismaClient();
+
 
 export class DeadLetterService {
   async processFailedJob(_queueName: string, jobType: any, payload: any, reason: string, failedWorker: string, retryCount: number) {

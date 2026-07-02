@@ -1,6 +1,7 @@
+import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export class MonitoringEngine {
   public async logMetrics(organizationId: string, executionId: string, metrics: { latency: number, promptTokens: number, completionTokens: number, cost: number }): Promise<void> {

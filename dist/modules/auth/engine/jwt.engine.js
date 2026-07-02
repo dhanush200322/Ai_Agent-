@@ -34,10 +34,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JWTEngine = void 0;
+const prisma_1 = require("../../../shared/prisma");
 const jwt = __importStar(require("jsonwebtoken"));
 const crypto = __importStar(require("crypto"));
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 class JWTEngine {
     async generateAccessToken(payload) {
         // Standard access token (e.g. 15m)
@@ -48,7 +47,7 @@ class JWTEngine {
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-        await prisma.refreshToken.create({
+        await prisma_1.prisma.refreshToken.create({
             data: {
                 sessionId,
                 tokenHash,
@@ -63,7 +62,7 @@ class JWTEngine {
     }
     async rotateRefreshToken(oldToken, sessionId) {
         const oldTokenHash = crypto.createHash('sha256').update(oldToken).digest('hex');
-        const existing = await prisma.refreshToken.findUnique({ where: { tokenHash: oldTokenHash } });
+        const existing = await prisma_1.prisma.refreshToken.findUnique({ where: { tokenHash: oldTokenHash } });
         if (!existing || existing.isRevoked || existing.sessionId !== sessionId) {
             // Refresh token replay detected or invalid token
             return null;
@@ -72,7 +71,7 @@ class JWTEngine {
             return null;
         }
         // Revoke the old token
-        await prisma.refreshToken.update({
+        await prisma_1.prisma.refreshToken.update({
             where: { id: existing.id },
             data: { isRevoked: true }
         });
@@ -80,7 +79,7 @@ class JWTEngine {
         const newToken = await this.generateRefreshToken(sessionId);
         // Link replacement to trace rotation
         const newTokenHash = crypto.createHash('sha256').update(newToken).digest('hex');
-        await prisma.refreshToken.update({
+        await prisma_1.prisma.refreshToken.update({
             where: { id: existing.id },
             data: { replacedByToken: newTokenHash }
         });
