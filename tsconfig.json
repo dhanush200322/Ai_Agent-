@@ -5,7 +5,6 @@
     "lib": [
       "ES2022"
     ],
-    "types": ["jest"],
     "allowJs": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -53,7 +52,9 @@
   "exclude": [
     "node_modules",
     "dist",
-    "tests"
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/tests/**/*"
   ],
   "ts-node": {
     "files": true
