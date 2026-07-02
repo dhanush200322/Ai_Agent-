@@ -40,5 +40,4 @@ jspm_packages/
 .env.production.local
 
 # Database / Prisma
-/prisma/migrations/
 /uploads/
