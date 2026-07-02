@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: "postgresql://postgres:postgres@localhost:5434/postgres?schema=public"
+      url: "postgresql://postgres:2122@localhost:5432/enterprise_ai_agent?schema=public"
     }
   }
 });

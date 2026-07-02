@@ -41,3 +41,6 @@ jspm_packages/
 
 # Database / Prisma
 /uploads/
+
+# Local testing
+redis*
