@@ -84,23 +84,15 @@ export function UserMenu() {
                 <User className="w-4 h-4 text-gray-400" />
                 Profile
               </button>
-              <button disabled className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 rounded-lg cursor-not-allowed">
-                <Key className="w-4 h-4 text-gray-600" />
-                API Keys
-              </button>
-              <button disabled className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 rounded-lg cursor-not-allowed">
-                <CreditCard className="w-4 h-4 text-gray-600" />
+              <button onClick={() => { setIsOpen(false); router.push('/dashboard/billing'); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.05)] rounded-lg transition-colors">
+                <CreditCard className="w-4 h-4 text-gray-400" />
                 Billing
-              </button>
-              <button disabled className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 rounded-lg cursor-not-allowed">
-                <Settings className="w-4 h-4 text-gray-600" />
-                Preferences
               </button>
             </div>
 
             <div className="p-2 border-t border-[rgba(255,255,255,0.05)] space-y-1">
-              <button disabled className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 rounded-lg cursor-not-allowed">
-                <HelpCircle className="w-4 h-4 text-gray-600" />
+              <button onClick={() => { setIsOpen(false); router.push('/dashboard/support'); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.05)] rounded-lg transition-colors">
+                <HelpCircle className="w-4 h-4 text-gray-400" />
                 Help & Support
               </button>
               <button 

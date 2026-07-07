@@ -3,19 +3,17 @@
 import React from 'react';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
-import { PricingCards } from '@/features/landing/components/sections/PricingCards';
+import { ContactForm } from '@/features/landing/components/sections/ContactForm';
 
-export default function BillingPage() {
-
-
+export default function SupportPage() {
   return (
     <ContentWrapper>
       <PageHeader 
-        title="Billing"
-        description="Manage your enterprise billing here."
+        title="Help & Support"
+        description="Get help or contact our support team."
       />
       <div className="mt-8">
-        <PricingCards />
+        <ContactForm />
       </div>
     </ContentWrapper>
   );
