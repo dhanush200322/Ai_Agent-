@@ -10,7 +10,6 @@ import { MagneticButton } from '@/components/ui/MagneticButton';
 import { ArrowLeft, ArrowRight, Bot, Loader2, Sparkles, Sliders, AlignLeft, CheckCircle, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { AgentVisibility } from '../../types/agent';
-import { AvatarCropperModal } from '@/components/common/AvatarCropperModal';
 
 const createAgentSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -43,8 +42,6 @@ const STEPS = [
 export function CreateAgentForm() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [cropperOpen, setCropperOpen] = useState(false);
-  const [tempImageSrc, setTempImageSrc] = useState<string>('');
   
   const { mutateAsync: createAgent, isPending } = useCreateAgent();
 
@@ -177,12 +174,7 @@ export function CreateAgentForm() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        setTempImageSrc(reader.result as string);
-                        setCropperOpen(true);
-                      };
-                      reader.readAsDataURL(file);
+                      setValue('avatar', file, { shouldValidate: true, shouldDirty: true });
                     }
                     e.target.value = ''; // Reset input so same file can be selected again
                   }}
@@ -190,17 +182,6 @@ export function CreateAgentForm() {
                 />
               </div>
             </div>
-            
-            <AvatarCropperModal
-              isOpen={cropperOpen}
-              onClose={() => setCropperOpen(false)}
-              imageSrc={tempImageSrc}
-              onCropComplete={(blob) => {
-                const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
-                setValue('avatar', file, { shouldValidate: true, shouldDirty: true });
-                setCurrentStep(c => Math.min(STEPS.length - 1, c + 1));
-              }}
-            />
           </div>
         )}
 

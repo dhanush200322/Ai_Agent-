@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import { useAuthStore } from '@/features/auth/store';
 import { useUpdateProfile, useChangePassword, useSessions, useRevokeSession, useRevokeAllSessions } from '@/services/profile/profile.service';
 import { User, Lock, Clock, Shield, Upload, Monitor, Smartphone, Globe, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { AvatarCropperModal } from '@/components/common/AvatarCropperModal';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'sessions'>('profile');
@@ -75,8 +74,6 @@ function ProfileSettings({ user }: { user: any }) {
     lastName: user?.lastName || '',
     phone: user?.phone || '',
   });
-  const [cropperOpen, setCropperOpen] = useState(false);
-  const [tempImageSrc, setTempImageSrc] = useState<string>('');
   
   const updateMutation = useUpdateProfile();
 
@@ -103,12 +100,9 @@ function ProfileSettings({ user }: { user: any }) {
               <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
-                  const reader = new FileReader();
-                  reader.onload = () => {
-                    setTempImageSrc(reader.result as string);
-                    setCropperOpen(true);
-                  };
-                  reader.readAsDataURL(file);
+                  const fd = new FormData();
+                  fd.append('avatar', file);
+                  updateMutation.mutate(fd);
                 }
                 e.target.value = '';
               }} />
@@ -179,18 +173,6 @@ function ProfileSettings({ user }: { user: any }) {
           </form>
         </div>
       </div>
-      
-      <AvatarCropperModal
-        isOpen={cropperOpen}
-        onClose={() => setCropperOpen(false)}
-        imageSrc={tempImageSrc}
-        onCropComplete={(blob) => {
-          const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
-          const fd = new FormData();
-          fd.append('avatar', file);
-          updateMutation.mutate(fd);
-        }}
-      />
     </div>
   );
 }

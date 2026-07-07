@@ -17,9 +17,7 @@ import { PlaceholderTab } from '@/components/ui/PlaceholderTab';
 import { useAgentKnowledgeBases, useDetachKnowledgeBase } from '@/features/agents/hooks/useAgentKnowledge';
 import { AttachKnowledgeDialog } from '@/features/agents/components/AttachKnowledgeDialog';
 import { AgentAvatar } from '@/components/common/AgentAvatar';
-import { AvatarCropperModal } from '@/components/common/AvatarCropperModal';
 import { Camera } from 'lucide-react';
-
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: Bot },
@@ -36,8 +34,6 @@ export default function AgentDetailsPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAttachKbOpen, setIsAttachKbOpen] = useState(false);
-  const [cropperOpen, setCropperOpen] = useState(false);
-  const [tempImageSrc, setTempImageSrc] = useState<string>('');
 
   const { data: agent, isLoading, error } = useAgent(id);
   const { mutateAsync: updateAgent, isPending: isUpdating } = useUpdateAgent(id);
@@ -113,16 +109,6 @@ export default function AgentDetailsPage() {
     }
   };
 
-  const handleAvatarCropComplete = async (blob: Blob) => {
-    try {
-      const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
-      await updateAgent({ avatar: file });
-      toast.success('Avatar updated successfully');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update avatar');
-    }
-  };
-
 
   return (
     <ContentWrapper>
@@ -148,15 +134,15 @@ export default function AgentDetailsPage() {
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      setTempImageSrc(reader.result as string);
-                      setCropperOpen(true);
-                    };
-                    reader.readAsDataURL(file);
+                    try {
+                      await updateAgent({ avatar: file });
+                      toast.success('Avatar updated successfully');
+                    } catch (err: any) {
+                      toast.error(err.response?.data?.message || 'Failed to update avatar');
+                    }
                   }
                   e.target.value = '';
                 }}
@@ -393,13 +379,6 @@ export default function AgentDetailsPage() {
         isOpen={isAttachKbOpen}
         onClose={() => setIsAttachKbOpen(false)}
         agentId={id}
-      />
-
-      <AvatarCropperModal
-        isOpen={cropperOpen}
-        onClose={() => setCropperOpen(false)}
-        imageSrc={tempImageSrc}
-        onCropComplete={handleAvatarCropComplete}
       />
     </ContentWrapper>
   );
