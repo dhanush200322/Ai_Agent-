@@ -30,10 +30,13 @@ export class UserService {
     return safeUser;
   }
 
-  async inviteUser(organizationId: string, inviterId: string, email: string, roleId: string) {
-    const role = await this.roleRepo.findRoleById(organizationId, roleId);
-    if (!role) throw new NotFoundError('Role not found');
+  async inviteUser(organizationId: string, inviterId: string, email: string, roleName: string) {
+    const role = await this.roleRepo.findRoleByName(organizationId, roleName);
+    if (!role) throw new NotFoundError(`Role '${roleName}' not found`);
     if (role.name === 'Owner') throw new AuthorizationError('Cannot invite users as Owner');
+
+    const inviter = await this.userRepo.findUserById(organizationId, inviterId);
+    if (!inviter) throw new NotFoundError('Inviter not found');
 
     const token = TokenHelper.generateRandomToken();
     const expiresAt = new Date();
@@ -44,11 +47,26 @@ export class UserService {
       token,
       expiresAt,
       organizationId,
-      roleId,
+      roleId: role.id,
       inviterId
     });
 
-    AuditLogger.log('USER_INVITED', 'user', { email, organizationId, roleId });
+    try {
+      const { Resend } = require('resend');
+      if (process.env.RESEND_API_KEY) {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: inviter.email,
+          to: email,
+          subject: `You have been invited to join ${inviter.firstName}'s Organization`,
+          html: `<p>Click <a href="http://localhost:3001/accept-invite?token=${token}">here</a> to accept your invitation.</p>`
+        });
+      }
+    } catch (e) {
+      console.error('Failed to send invitation email via Resend', e);
+    }
+
+    AuditLogger.log('USER_INVITED', 'user', { email, organizationId, roleId: role.id });
     return invite;
   }
 

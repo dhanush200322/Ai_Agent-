@@ -100,8 +100,8 @@ export const useDeleteUser = () => {
 // Hook: Invite User
 export const useInviteUser = () => {
   return useMutation({
-    mutationFn: async (data: { email: string; roleId: string }) => {
-      const response = await api.post('/users/invite', data);
+    mutationFn: async ({ email, roleName }: { email: string; roleName?: string }) => {
+      const response = await api.post('/users/invite', { email, roleName });
       return response.data.data;
     },
   });

@@ -19,8 +19,8 @@ class UserController {
         res.status(200).json(ApiResponse_1.ApiResponse.success(user, 'User fetched successfully', req.reqId));
     };
     inviteUser = async (req, res) => {
-        const { email, roleId } = req.body;
-        const invite = await this.userService.inviteUser(req.user.organizationId, req.user.id, email, roleId);
+        const { email, roleName } = req.body;
+        const invite = await this.userService.inviteUser(req.user.organizationId, req.user.id, email, roleName);
         res.status(201).json(ApiResponse_1.ApiResponse.success(invite, 'Invitation sent', req.reqId));
     };
     acceptInvite = async (req, res) => {

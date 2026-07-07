@@ -11,20 +11,19 @@ interface InviteUserModalProps {
 
 export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
   const [email, setEmail] = useState('');
-  const [roleId, setRoleId] = useState('');
+  const [roleName, setRoleName] = useState('');
 
-  const { data: rolesData, isLoading: isLoadingRoles } = useRoles();
   const inviteMutation = useInviteUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !roleId) return;
+    if (!email || !roleName) return;
     
     try {
-      await inviteMutation.mutateAsync({ email, roleId });
+      await inviteMutation.mutateAsync({ email, roleName: roleName.trim() });
       alert('Invitation sent successfully');
       setEmail('');
-      setRoleId('');
+      setRoleName('');
       onClose();
     } catch (error: any) {
       alert(error?.response?.data?.message || 'Failed to send invitation');
@@ -80,22 +79,16 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
 
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">
-                  Role
+                  Role Name
                 </label>
-                <select
-                  value={roleId}
-                  onChange={(e) => setRoleId(e.target.value)}
+                <input
+                  type="text"
+                  value={roleName}
+                  onChange={(e) => setRoleName(e.target.value)}
                   required
-                  disabled={isLoadingRoles}
-                  className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 appearance-none transition-colors"
-                >
-                  <option value="" disabled>Select a role...</option>
-                  {rolesData?.map((role: any) => (
-                    <option key={role.id} value={role.id} disabled={role.name === 'Owner'}>
-                      {role.name} {role.name === 'Owner' && '(Cannot invite Owner)'}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="e.g. Admin, Editor"
+                  className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                />
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
@@ -108,7 +101,7 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
                 </button>
                 <button
                   type="submit"
-                  disabled={inviteMutation.isPending || !email || !roleId}
+                  disabled={inviteMutation.isPending || !email || !roleName}
                   className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   {inviteMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
