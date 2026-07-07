@@ -81,6 +81,8 @@ app.use('/health', healthRoutes);
 // Serve Static Uploads (Avatars, etc.)
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+import billingRoutes from './modules/billing/routes/billing.routes';
+
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/roles', rbacRoutes);
@@ -94,6 +96,7 @@ app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/workflows', workflowRoutes);
 app.use('/api/v1/vault', vaultRoutes);
 app.use('/api/v1/contact', contactRoutes);
+app.use('/api/v1/billing', billingRoutes);
 
 // Catch 404 and forward to error handler
 app.use((req: Request, _res: Response, next: NextFunction) => {

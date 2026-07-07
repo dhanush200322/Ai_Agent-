@@ -6,7 +6,7 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$
 exports.inviteUserSchema = zod_1.z.object({
     body: zod_1.z.object({
         email: zod_1.z.string().email('Invalid email address'),
-        roleId: zod_1.z.string().uuid('Invalid role ID format')
+        roleName: zod_1.z.string().min(1, 'Role name is required')
     })
 });
 exports.acceptInviteSchema = zod_1.z.object({

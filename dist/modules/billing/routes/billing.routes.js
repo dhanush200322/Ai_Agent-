@@ -13,6 +13,9 @@ router.get('/plans', controller.getPlans.bind(controller));
 router.get('/subscription', authMiddleware, controller.getSubscription.bind(controller));
 router.post('/subscribe', authMiddleware, controller.subscribe.bind(controller));
 router.post('/cancel', authMiddleware, controller.cancel.bind(controller));
+// Razorpay routes
+router.post('/create-razorpay-order', authMiddleware, controller.createRazorpayOrder.bind(controller));
+router.post('/verify-razorpay-payment', authMiddleware, controller.verifyRazorpayPayment.bind(controller));
 // Webhook must use express.raw({ type: 'application/json' }) in the main app configuration
 router.post('/webhook', controller.webhook.bind(controller));
 exports.default = router;

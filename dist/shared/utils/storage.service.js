@@ -36,7 +36,7 @@ class StorageService {
     }
     static async deleteFile(baseName) {
         try {
-            if (!baseName)
+            if (!baseName || baseName.startsWith('data:'))
                 return;
             const fs = require('fs');
             const uploadDir = path_1.default.join(__dirname, '../../../public/uploads');

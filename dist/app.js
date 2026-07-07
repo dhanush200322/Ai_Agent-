@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
+const path_1 = __importDefault(require("path"));
 const compression_1 = __importDefault(require("compression"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -72,6 +73,9 @@ app.get('/', (req, res) => {
 });
 // Health check endpoint
 app.use('/health', health_routes_1.default);
+// Serve Static Uploads (Avatars, etc.)
+app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../public/uploads')));
+const billing_routes_1 = __importDefault(require("./modules/billing/routes/billing.routes"));
 // API Routes
 app.use('/api/v1/auth', auth_routes_1.default);
 app.use('/api/v1/roles', rbac_routes_1.default);
@@ -85,6 +89,7 @@ app.use('/api/v1/notifications', notification_routes_1.default);
 app.use('/api/v1/workflows', workflow_routes_1.default);
 app.use('/api/v1/vault', vault_routes_1.default);
 app.use('/api/v1/contact', contact_routes_1.default);
+app.use('/api/v1/billing', billing_routes_1.default);
 // Catch 404 and forward to error handler
 app.use((req, _res, next) => {
     next(new AppError_1.NotFoundError(`Route ${req.originalUrl} not found`));

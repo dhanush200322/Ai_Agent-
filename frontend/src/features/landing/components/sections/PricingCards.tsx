@@ -101,11 +101,100 @@ const featuresList = [
 
 interface PricingCardsProps {
   showCTA?: boolean;
-}
+import { api } from "@/services/api/api";
+import { toast } from "sonner";
 
 export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleUpgrade = async (planName: string) => {
+    // If showCTA is true, we're likely on the landing page where user isn't logged in
+    if (showCTA) {
+      return router.push('/login');
+    }
+
+    if (planName.toLowerCase() !== 'professional') {
+      // Free or Enterprise
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      
+      const res = await loadRazorpayScript();
+      if (!res) {
+        toast.error("Razorpay SDK failed to load. Are you online?");
+        setIsProcessing(false);
+        return;
+      }
+
+      const billingCycle = isAnnual ? 'annual' : 'monthly';
+
+      // 1. Create order on backend
+      const orderRes = await api.post('/billing/create-razorpay-order', {
+        plan: 'professional',
+        billingCycle
+      });
+
+      const { order_id, amount, currency } = orderRes.data;
+
+      // 2. Initialize Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+        amount: amount.toString(),
+        currency: currency,
+        name: "Enterprise AI Agent",
+        description: `Upgrade to Professional (${billingCycle})`,
+        order_id: order_id,
+        handler: async function (response: any) {
+          try {
+            // 3. Verify payment on backend
+            await api.post('/billing/verify-razorpay-payment', {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              plan: 'professional',
+              billingCycle
+            });
+
+            toast.success("Successfully upgraded to Professional plan!");
+            router.refresh(); // Refresh the page to reflect new subscription status
+          } catch (error) {
+            console.error("Payment verification failed", error);
+            toast.error("Payment verification failed. Please contact support.");
+          }
+        },
+        theme: {
+          color: "#D4AF37"
+        }
+      };
+
+      const rzp1 = new (window as any).Razorpay(options);
+      
+      rzp1.on("payment.failed", function (response: any) {
+        toast.error(`Payment failed: ${response.error.description}`);
+      });
+      
+      rzp1.open();
+    } catch (error) {
+      console.error("Failed to initiate payment", error);
+      toast.error("Failed to initiate payment. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  }
 
   return (
     <section className="py-32 px-8 md:px-16 lg:px-24 bg-[#0B0B0B] relative overflow-hidden" id="pricing">
@@ -186,8 +275,13 @@ export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
               </ul>
 
               <div className="mt-auto">
-                <MagneticButton variant={plan.buttonVariant} className="w-full" onClick={() => router.push('/login')}>
-                  {plan.buttonText}
+                <MagneticButton 
+                  variant={plan.buttonVariant} 
+                  className="w-full" 
+                  onClick={() => handleUpgrade(plan.name)}
+                  disabled={isProcessing && plan.name === "Professional"}
+                >
+                  {isProcessing && plan.name === "Professional" ? "Processing..." : plan.buttonText}
                 </MagneticButton>
               </div>
             </motion.div>

@@ -16,10 +16,10 @@ router.use(auth_1.authenticate);
 // Profile
 router.patch('/profile', storage_service_1.upload.single('avatar'), (0, validate_1.validate)(user_validator_1.updateProfileSchema), (0, asyncHandler_1.asyncHandler)(userController.updateProfile));
 // Organization Invites
-router.post('/invite', (0, authorize_1.authorize)('user:invite'), (0, validate_1.validate)(user_validator_1.inviteUserSchema), (0, asyncHandler_1.asyncHandler)(userController.inviteUser));
+router.post('/invite', (0, authorize_1.authorize)('user:create'), (0, validate_1.validate)(user_validator_1.inviteUserSchema), (0, asyncHandler_1.asyncHandler)(userController.inviteUser));
 // Users list
-router.get('/', (0, authorize_1.authorize)('user:view'), (0, asyncHandler_1.asyncHandler)(userController.getUsers));
-router.get('/:id', (0, authorize_1.authorize)('user:view'), (0, asyncHandler_1.asyncHandler)(userController.getUser));
+router.get('/', (0, asyncHandler_1.asyncHandler)(userController.getUsers));
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(userController.getUser));
 router.patch('/:id/status', (0, authorize_1.authorize)('user:update'), (0, validate_1.validate)(user_validator_1.updateStatusSchema), (0, asyncHandler_1.asyncHandler)(userController.updateStatus));
 router.delete('/:id', (0, authorize_1.authorize)('user:delete'), (0, asyncHandler_1.asyncHandler)(userController.deleteUser));
 exports.default = router;
