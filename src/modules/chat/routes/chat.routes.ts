@@ -14,21 +14,21 @@ const conversationController = new ConversationController();
 router.post(
   '/completions',
   authenticate,
-  authorize('chat:create'), // Ensure RBAC allows chat
+  authorize('agent:view'), // Ensure RBAC allows chat
   validateChatCompletion,
   chatController.streamChatCompletion
 );
 
 // Conversations
-router.post('/conversations', authenticate, authorize('chat:create'), conversationController.createConversation);
-router.get('/conversations', authenticate, authorize('chat:read'), conversationController.listConversations);
-router.get('/conversations/:id', authenticate, authorize('chat:read'), conversationController.getConversationDetails);
-router.delete('/conversations/:id', authenticate, authorize('chat:delete'), conversationController.deleteConversation);
-router.post('/conversations/:id/archive', authenticate, authorize('chat:update'), conversationController.archiveConversation);
-router.post('/conversations/:id/restore', authenticate, authorize('chat:update'), conversationController.restoreConversation);
+router.post('/conversations', authenticate, authorize('agent:view'), conversationController.createConversation);
+router.get('/conversations', authenticate, authorize('agent:view'), conversationController.listConversations);
+router.get('/conversations/:id', authenticate, authorize('agent:view'), conversationController.getConversationDetails);
+router.delete('/conversations/:id', authenticate, authorize('agent:view'), conversationController.deleteConversation);
+router.post('/conversations/:id/archive', authenticate, authorize('agent:view'), conversationController.archiveConversation);
+router.post('/conversations/:id/restore', authenticate, authorize('agent:view'), conversationController.restoreConversation);
 
 // Messages History
-router.get('/messages/:conversationId', authenticate, authorize('chat:read'), conversationController.getConversationHistory);
+router.get('/messages/:conversationId', authenticate, authorize('agent:view'), conversationController.getConversationHistory);
 
 // Public Widget Routes
 router.get('/widget/agents/:agentId', conversationController.getWidgetAgent);
