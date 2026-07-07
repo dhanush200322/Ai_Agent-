@@ -83,6 +83,8 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   const getFullUrl = (url: string) => {
     if (!url) return '';
     
+    if (url.startsWith('data:')) return url;
+    
     // Legacy URLs (e.g., /uploads/image.png) or external URLs (http://...)
     if (url.startsWith('http')) return url;
     if (url.startsWith('/uploads')) return `${backendUrl}${url}`;
