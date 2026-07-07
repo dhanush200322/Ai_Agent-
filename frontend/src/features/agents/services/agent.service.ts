@@ -27,12 +27,14 @@ export const agentService = {
     let payload: any = data;
     
     // If there's an avatar file, we must use FormData
-    if (data.avatar instanceof File) {
+    const isFile = (val: any) => val && typeof val === 'object' && ('name' in val || val instanceof Blob);
+    
+    if (isFile(data.avatar)) {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          if (value instanceof File) {
-            formData.append(key, value);
+          if (isFile(value)) {
+            formData.append(key, value as Blob);
           } else if (typeof value === 'object') {
             formData.append(key, JSON.stringify(value));
           } else {
@@ -51,12 +53,14 @@ export const agentService = {
     let payload: any = data;
     
     // If there's an avatar file, we must use FormData
-    if (data.avatar instanceof File) {
+    const isFile = (val: any) => val && typeof val === 'object' && ('name' in val || val instanceof Blob);
+    
+    if (isFile(data.avatar)) {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          if (value instanceof File) {
-            formData.append(key, value);
+          if (isFile(value)) {
+            formData.append(key, value as Blob);
           } else if (typeof value === 'object') {
             formData.append(key, JSON.stringify(value));
           } else {
