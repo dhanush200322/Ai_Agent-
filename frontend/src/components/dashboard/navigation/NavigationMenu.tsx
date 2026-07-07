@@ -33,10 +33,8 @@ const NAVIGATION_ITEMS = [
   { label: 'Users', href: '/dashboard/users', icon: Users, section: 'Administration' },
   { label: 'Roles', href: '/dashboard/roles', icon: Shield, section: 'Administration' },
   { label: 'Vault', href: '/dashboard/vault', icon: Lock, section: 'Administration' },
-  { label: 'Observability', href: '/dashboard/observability', icon: Activity, section: 'Administration' },
   
   { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'Platform' },
-  { label: 'Marketplace', href: '/dashboard/marketplace', icon: Store, section: 'Platform' },
 ];
 
 export function NavigationMenu() {

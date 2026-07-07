@@ -99,7 +99,11 @@ const featuresList = [
   { name: "Support", starter: "Community", pro: "Priority", enterprise: "24×7 Dedicated" },
 ];
 
-export function PricingCards() {
+interface PricingCardsProps {
+  showCTA?: boolean;
+}
+
+export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
   const [isAnnual, setIsAnnual] = useState(true);
   const router = useRouter();
 
@@ -237,22 +241,24 @@ export function PricingCards() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-br from-[#111] to-[#050505] border border-[rgba(255,255,255,0.1)] rounded-[32px] p-12 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 blur-[100px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#4F8CFF]/10 blur-[100px] rounded-full pointer-events-none" />
-          
-          <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
-            <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">Start building your AI workspace today.</h3>
-            <p className="text-zinc-400 mb-2 text-lg">No credit card required.</p>
-            <p className="text-[#D4AF37] mb-8 font-medium">Create your first AI Agent in under 5 minutes.</p>
+        {showCTA && (
+          <div className="bg-gradient-to-br from-[#111] to-[#050505] border border-[rgba(255,255,255,0.1)] rounded-[32px] p-12 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#4F8CFF]/10 blur-[100px] rounded-full pointer-events-none" />
             
-            <div className="flex justify-center w-full">
-              <MagneticButton variant="primary" className="!px-8 !py-4 text-lg" onClick={() => router.push('/login')}>
-                Get Started Free
-              </MagneticButton>
+            <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
+              <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">Start building your AI workspace today.</h3>
+              <p className="text-zinc-400 mb-2 text-lg">No credit card required.</p>
+              <p className="text-[#D4AF37] mb-8 font-medium">Create your first AI Agent in under 5 minutes.</p>
+              
+              <div className="flex justify-center w-full">
+                <MagneticButton variant="primary" className="!px-8 !py-4 text-lg" onClick={() => router.push('/login')}>
+                  Get Started Free
+                </MagneticButton>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
       </div>
     </section>

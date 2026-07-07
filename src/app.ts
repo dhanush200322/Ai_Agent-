@@ -18,6 +18,7 @@ import notificationRoutes from './modules/notification/routes/notification.route
 import workflowRoutes from './modules/workflow/routes/workflow.routes';
 import vaultRoutes from './modules/vault/routes/vault.routes';
 import healthRoutes from './routes/health.routes';
+import contactRoutes from './modules/contact/routes/contact.routes';
 import { globalErrorHandler } from './middleware/errorHandler';
 import logger from './shared/logger/logger';
 import { NotFoundError } from './shared/errors/AppError';
@@ -88,6 +89,7 @@ app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/workflows', workflowRoutes);
 app.use('/api/v1/vault', vaultRoutes);
+app.use('/api/v1/contact', contactRoutes);
 
 // Catch 404 and forward to error handler
 app.use((req: Request, _res: Response, next: NextFunction) => {

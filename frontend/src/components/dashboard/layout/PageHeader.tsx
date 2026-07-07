@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Breadcrumb } from './Breadcrumb';
-import { QuickActions } from './QuickActions';
+
 
 interface PageHeaderProps {
   title: string;
@@ -27,7 +27,7 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
       </div>
       
       <div className="flex items-center gap-3">
-        {actions || <QuickActions />}
+        {actions}
       </div>
     </div>
   );

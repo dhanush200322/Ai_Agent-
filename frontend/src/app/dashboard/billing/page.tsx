@@ -15,7 +15,7 @@ export default function BillingPage() {
         description="Manage your enterprise billing here."
       />
       <div className="mt-8">
-        <PricingCards />
+        <PricingCards showCTA={false} />
       </div>
     </ContentWrapper>
   );

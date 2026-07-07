@@ -30,13 +30,27 @@ export function ContactForm() {
 
     const formData = new FormData(e.currentTarget);
     
+    // Combine first and last name for the backend
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    formData.set("name", `${firstName} ${lastName}`);
+    formData.delete("firstName");
+    formData.delete("lastName");
+    
+    // Map company name
+    const companyName = formData.get("companyName");
+    if (companyName) {
+      formData.set("company", companyName as string);
+    }
+
     // Append files to formData
     files.forEach((file) => {
       formData.append("attachments", file);
     });
 
     try {
-      const res = await fetch("/api/contact", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
+      const res = await fetch(`${API_URL}/contact`, {
         method: "POST",
         body: formData,
       });
@@ -92,6 +106,9 @@ export function ContactForm() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               
+              {/* Honeypot Field */}
+              <input type="text" name="honeypot" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
               {/* Name Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
