@@ -8,14 +8,14 @@ export const registerSchema = z.object({
     organizationSlug: z.string().min(2, 'Organization slug must be at least 2 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
-    email: z.string().email('Invalid email address'),
+    email: z.string().email('Invalid email address').trim().toLowerCase(),
     password: z.string().regex(passwordRegex, 'Password must be at least 8 characters, contain an uppercase letter, lowercase letter, a number, and a special character'),
   }),
 });
 
 export const loginSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email address'),
+    email: z.string().email('Invalid email address').trim().toLowerCase(),
     password: z.string().min(1, 'Password is required'),
   }),
 });

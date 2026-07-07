@@ -1,6 +1,6 @@
 import { z } from 'zod';
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').trim().toLowerCase(),
   password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional(),
 });
@@ -8,7 +8,7 @@ export const registerSchema = z.object({
   workspaceName: z.string().min(2, 'Workspace Name must be at least 2 characters'),
   firstName: z.string().min(1, 'First Name is required'),
   lastName: z.string().min(1, 'Last Name is required'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').trim().toLowerCase(),
   password: z.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, 'Password must be at least 8 characters, contain an uppercase letter, lowercase letter, a number, and a special character'),
   confirmPassword: z.string().min(8, 'Confirm Password is required'),
   acceptTerms: z.literal(true, {
@@ -19,7 +19,7 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 export const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').trim().toLowerCase(),
 });
 export const resetPasswordSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
