@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { useRouter } from "next/navigation";
-
+import { api } from "@/services/api/api";
+import { toast } from "sonner";
 const plans = [
   {
     name: "Starter",
@@ -101,8 +102,7 @@ const featuresList = [
 
 interface PricingCardsProps {
   showCTA?: boolean;
-import { api } from "@/services/api/api";
-import { toast } from "sonner";
+}
 
 export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
   const [isAnnual, setIsAnnual] = useState(true);
