@@ -197,7 +197,8 @@ export function CreateAgentForm() {
               imageSrc={tempImageSrc}
               onCropComplete={(blob) => {
                 const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
-                setValue('avatar', file);
+                setValue('avatar', file, { shouldValidate: true, shouldDirty: true });
+                setCurrentStep(c => Math.min(STEPS.length - 1, c + 1));
               }}
             />
           </div>

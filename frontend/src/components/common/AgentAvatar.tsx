@@ -11,6 +11,7 @@ interface AgentAvatarProps {
   name?: string;
   size?: AgentAvatarSize;
   className?: string;
+  updatedAt?: string | Date | null;
 }
 
 const sizeClasses: Record<AgentAvatarSize, string> = {
@@ -43,7 +44,8 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   imageUrl,
   name = 'AI Agent',
   size = 'md',
-  className
+  className = '',
+  updatedAt
 }) => {
   const [imgError, setImgError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -88,7 +90,8 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
     if (url.startsWith('avatar-')) {
       const mappedSize = sizeMap[size] || 'md';
       // Append a basic cache-buster timestamp if needed, but hash already ensures uniqueness
-      return `${backendUrl}/uploads/${url}-${mappedSize}.webp?v=${url.slice(-8)}`;
+      const version = updatedAt ? new Date(updatedAt).getTime() : url.slice(-8);
+      return `${backendUrl}/uploads/${url}-${mappedSize}.webp?v=${version}`;
     }
     
     return url;

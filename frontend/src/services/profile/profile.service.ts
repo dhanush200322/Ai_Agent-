@@ -26,9 +26,7 @@ export const useUpdateProfile = () => {
     mutationFn: async (data: FormData | { firstName?: string; lastName?: string; phone?: string }) => {
       let response;
       if (data instanceof FormData) {
-        response = await api.patch('/users/profile', data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        response = await api.patch('/users/profile', data);
       } else {
         response = await api.patch('/users/profile', data);
       }

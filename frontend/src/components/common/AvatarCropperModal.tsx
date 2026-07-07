@@ -21,6 +21,7 @@ export const AvatarCropperModal: React.FC<AvatarCropperModalProps> = ({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   
   // Real-time preview
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -75,6 +76,8 @@ export const AvatarCropperModal: React.FC<AvatarCropperModalProps> = ({
       pixels.width,
       pixels.height
     );
+    
+    setPreviewUrl(canvas.toDataURL('image/webp'));
   };
 
   const generateCroppedBlob = async (): Promise<Blob | null> => {
@@ -178,7 +181,7 @@ export const AvatarCropperModal: React.FC<AvatarCropperModalProps> = ({
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-12 h-12 rounded-full overflow-hidden border border-[rgba(255,255,255,0.1)] bg-black">
                     <img 
-                      src={canvasRef.current?.toDataURL('image/webp')} 
+                      src={previewUrl} 
                       className="w-full h-full object-cover" 
                       alt="Preview sm" 
                     />
@@ -190,7 +193,7 @@ export const AvatarCropperModal: React.FC<AvatarCropperModalProps> = ({
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden border border-[rgba(255,255,255,0.1)] bg-black">
                     <img 
-                      src={canvasRef.current?.toDataURL('image/webp')} 
+                      src={previewUrl} 
                       className="w-full h-full object-cover" 
                       alt="Preview xs" 
                     />

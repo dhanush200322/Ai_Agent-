@@ -37,9 +37,7 @@ export const agentService = {
       payload = formData;
     }
 
-    const response = await api.post('/agents', payload, {
-      headers: data.avatar instanceof File ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await api.post('/agents', payload);
     return response.data.data;
   },
 
@@ -57,9 +55,7 @@ export const agentService = {
       payload = formData;
     }
 
-    const response = await api.patch(`/agents/${id}`, payload, {
-      headers: data.avatar instanceof File ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await api.patch(`/agents/${id}`, payload);
     return response.data.data;
   },
 
