@@ -17,7 +17,6 @@ import { PlaceholderTab } from '@/components/ui/PlaceholderTab';
 import { useAgentKnowledgeBases, useDetachKnowledgeBase } from '@/features/agents/hooks/useAgentKnowledge';
 import { AttachKnowledgeDialog } from '@/features/agents/components/AttachKnowledgeDialog';
 import { AgentAvatar } from '@/components/common/AgentAvatar';
-import { Camera } from 'lucide-react';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: Bot },
@@ -118,34 +117,13 @@ export default function AgentDetailsPage() {
         </Link>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <div className="relative group rounded-xl overflow-hidden cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
+            <div className="relative rounded-xl overflow-hidden">
               <AgentAvatar
                 imageUrl={agent.avatar}
                 name={agent.name}
                 size="agent-details"
                 className="w-16 h-16 rounded-xl" // override size to match design
                 updatedAt={agent.updatedAt}
-              />
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="w-5 h-5 text-white" />
-              </div>
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    try {
-                      await updateAgent({ avatar: file });
-                      toast.success('Avatar updated successfully');
-                    } catch (err: any) {
-                      toast.error(err.response?.data?.message || 'Failed to update avatar');
-                    }
-                  }
-                  e.target.value = '';
-                }}
               />
             </div>
             <div>
