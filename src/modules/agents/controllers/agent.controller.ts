@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AgentService } from '../services/agent.service';
 import { StorageService } from '../../../shared/utils/storage.service';
+import { ImageService } from '../../../shared/utils/image.service';
 import { ApiResponse } from '../../../shared/response/ApiResponse';
 
 export class AgentController {
@@ -25,7 +26,8 @@ export class AgentController {
     console.log('REQ_BODY', req.body);
     let payload = { ...req.body };
     if (req.file) {
-      payload.avatar = StorageService.getFileUrl(req.file.filename);
+      const baseName = await ImageService.processAvatar(req.file.path);
+      payload.avatar = StorageService.getFileUrl(baseName);
     }
     const agent = await this.agentService.createAgent(req.user!.organizationId, req.user!.id, payload);
     res.status(201).json(ApiResponse.success(agent, 'Agent created successfully', req.reqId));
@@ -34,7 +36,8 @@ export class AgentController {
   updateAgent = async (req: Request, res: Response) => {
     let payload = { ...req.body };
     if (req.file) {
-      payload.avatar = StorageService.getFileUrl(req.file.filename);
+      const baseName = await ImageService.processAvatar(req.file.path);
+      payload.avatar = StorageService.getFileUrl(baseName);
       // Clean up old avatar if exists
       try {
         const existingAgent = await this.agentService.getAgent(req.user!.organizationId, req.params.id);

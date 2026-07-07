@@ -65,11 +65,32 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   const currentSizeClass = sizeClasses[size] || sizeClasses.md;
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   
-  // Clean up URL to prevent double slashes
+  const sizeMap: Record<AgentAvatarSize, string> = {
+    xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl', '2xl': '2xl',
+    'conversation-list': 'sm',
+    'chat-bubble': 'sm',
+    'chat-sidebar': 'md',
+    'chat-header': 'lg',
+    'public-widget': 'lg',
+    'widget-launcher': 'lg',
+    'dashboard-card': 'xl',
+    'agent-details': 'lg',
+  };
+
   const getFullUrl = (url: string) => {
     if (!url) return '';
+    
+    // Legacy URLs (e.g., /uploads/image.png) or external URLs (http://...)
     if (url.startsWith('http')) return url;
     if (url.startsWith('/uploads')) return `${backendUrl}${url}`;
+    
+    // New hashed baseName format (e.g., avatar-abcdef123...)
+    if (url.startsWith('avatar-')) {
+      const mappedSize = sizeMap[size] || 'md';
+      // Append a basic cache-buster timestamp if needed, but hash already ensures uniqueness
+      return `${backendUrl}/uploads/${url}-${mappedSize}.webp?v=${url.slice(-8)}`;
+    }
+    
     return url;
   };
 

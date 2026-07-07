@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { StorageService } from '../../../shared/utils/storage.service';
+import { ImageService } from '../../../shared/utils/image.service';
 import { ApiResponse } from '../../../shared/response/ApiResponse';
 
 export class UserController {
@@ -45,7 +46,18 @@ export class UserController {
   updateProfile = async (req: Request, res: Response) => {
     let updateData = { ...req.body };
     if (req.file) {
-      updateData.avatar = StorageService.getFileUrl(req.file.filename);
+      const baseName = await ImageService.processAvatar(req.file.path);
+      updateData.avatar = StorageService.getFileUrl(baseName);
+      
+      // Clean up old avatar if exists
+      try {
+        const existingUser = await this.userService.getUser(req.user!.organizationId, req.user!.id);
+        if (existingUser && existingUser.avatar) {
+          await StorageService.deleteFile(existingUser.avatar);
+        }
+      } catch (e) {
+        console.error('Failed to cleanup old user avatar', e);
+      }
     }
     const profile = await this.userService.updateProfile(req.user!.organizationId, req.user!.id, updateData);
     res.status(200).json(ApiResponse.success(profile, 'Profile updated', req.reqId));
