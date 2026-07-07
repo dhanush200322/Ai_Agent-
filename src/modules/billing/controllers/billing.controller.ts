@@ -71,7 +71,7 @@ export class BillingController {
       const orderOptions = {
         amount: amountInPaise,
         currency: 'INR',
-        receipt: `receipt_org_${organizationId}_${Date.now()}`
+        receipt: `rcpt_${organizationId.substring(0,8)}_${Date.now()}`
       };
 
       const order = await razorpay.orders.create(orderOptions);
