@@ -155,7 +155,7 @@ export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
         amount: amount.toString(),
         currency: currency,
-        name: "Enterprise AI Agent",
+        name: "Nexora AI",
         description: `Upgrade to Professional (${billingCycle})`,
         order_id: order_id,
         handler: async function (response: any) {
