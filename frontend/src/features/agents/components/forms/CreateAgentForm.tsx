@@ -160,28 +160,7 @@ export function CreateAgentForm() {
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Avatar (Optional)</label>
-              <div className="flex items-center gap-4">
-                {formValues.avatar && (
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[rgba(255,255,255,0.1)] shrink-0">
-                    <img src={URL.createObjectURL(formValues.avatar)} alt="Avatar Preview" className="w-full h-full object-cover" />
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setValue('avatar', file, { shouldValidate: true, shouldDirty: true });
-                    }
-                    e.target.value = ''; // Reset input so same file can be selected again
-                  }}
-                  className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[rgba(255,255,255,0.05)] file:text-white hover:file:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
-                />
-              </div>
-            </div>
+
           </div>
         )}
 
