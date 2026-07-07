@@ -3,6 +3,7 @@ import { X, Loader2, Bot, Search } from 'lucide-react';
 import { MagneticButton } from '@/components/ui/MagneticButton';
 import { useAgents } from '@/features/agents/hooks/useAgents';
 import { useKnowledgeAgents, useAttachAgents, useDetachAgent } from '../hooks/useKnowledgeAgents';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 import { toast } from 'sonner';
 
 interface ConnectAgentDialogProps {
@@ -127,9 +128,13 @@ export const ConnectAgentDialog: React.FC<ConnectAgentDialogProps> = ({ isOpen, 
                     />
                   </div>
                   <div className="ml-3 flex-1 flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-md bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden shrink-0">
-                      {agent.avatar ? <img src={agent.avatar} alt={agent.name || 'Agent avatar'} className="w-full h-full object-cover" /> : <Bot className="w-4 h-4 text-gray-400" />}
-                    </div>
+                    <AgentAvatar
+                      imageUrl={agent.avatar}
+                      name={agent.name}
+                      size="chat-bubble"
+                      className="w-8 h-8 rounded-md shrink-0"
+                      updatedAt={agent.updatedAt}
+                    />
                     <div>
                       <span className="block text-sm font-medium text-white">{agent.name}</span>
                       {agent.description && (

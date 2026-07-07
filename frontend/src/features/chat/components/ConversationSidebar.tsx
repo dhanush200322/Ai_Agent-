@@ -62,6 +62,7 @@ export const ConversationSidebar: React.FC<{
                 imageUrl={selectedAgent?.avatar}
                 name={selectedAgent?.name || 'A'}
                 size="chat-sidebar"
+                updatedAt={selectedAgent?.updatedAt}
               />
               <div className="text-left">
                 <p className="text-sm font-medium text-white truncate max-w-[150px]">{selectedAgent?.name || 'Select Agent'}</p>
@@ -87,6 +88,7 @@ export const ConversationSidebar: React.FC<{
                     name={agent.name}
                     size="xs"
                     className="w-6 h-6 shrink-0"
+                    updatedAt={agent.updatedAt}
                   />
                   <div className="text-left">
                     <p className="text-sm text-white">{agent.name}</p>

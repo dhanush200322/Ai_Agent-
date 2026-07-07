@@ -8,6 +8,7 @@ export interface Agent {
   avatar?: string;
   model: string;
   status: string;
+  updatedAt?: string;
 }
 
 export interface Conversation {
@@ -22,7 +23,7 @@ export interface Conversation {
   lastMessageAt?: string;
   createdAt: string;
   updatedAt: string;
-  agent?: Pick<Agent, 'id' | 'name' | 'avatar'>;
+  agent?: Pick<Agent, 'id' | 'name' | 'avatar' | 'updatedAt'>;
 }
 
 export interface Message {

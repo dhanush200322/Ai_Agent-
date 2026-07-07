@@ -41,6 +41,7 @@ export function AgentCard({ agent, onEdit, onDelete, onDuplicate }: AgentCardPro
             name={agent.name}
             size="dashboard-card"
             className="w-12 h-12 rounded-xl" // keeping the rounded-xl styling from original design for cards
+            updatedAt={agent.updatedAt}
           />
           <div>
             <h3 className="text-lg font-semibold text-white group-hover:text-[#D4AF37] transition-colors truncate max-w-[180px]">

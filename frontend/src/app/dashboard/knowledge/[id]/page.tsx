@@ -17,6 +17,7 @@ import { ManualTextEntry } from '@/features/knowledge/components/ManualTextEntry
 import { BulkImport } from '@/features/knowledge/components/BulkImport';
 import { ConnectAgentDialog } from '@/features/knowledge/components/ConnectAgentDialog';
 import { useKnowledgeAgents, useDetachAgent } from '@/features/knowledge/hooks/useKnowledgeAgents';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 import { toast } from 'sonner';
 
 
@@ -205,9 +206,13 @@ export default function KnowledgeBaseDetails() {
                 {agents?.map((agent: any) => (
                   <div key={agent.id} className="p-4 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-xl flex items-start justify-between group">
                     <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden shrink-0">
-                        {agent.avatar ? <img src={agent.avatar} alt={agent.name || 'Agent avatar'} className="w-full h-full object-cover" /> : <Users className="w-5 h-5 text-gray-400" />}
-                      </div>
+                      <AgentAvatar
+                        imageUrl={agent.avatar}
+                        name={agent.name}
+                        size="md"
+                        className="w-10 h-10 rounded-lg shrink-0"
+                        updatedAt={agent.updatedAt}
+                      />
                       <div>
                         <h4 className="text-white font-medium text-sm">{agent.name}</h4>
                         {agent.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{agent.description}</p>}

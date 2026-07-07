@@ -68,6 +68,7 @@ export function AgentList({ agents, isLoading, viewMode }: AgentListProps) {
                         name={agent.name}
                         size="md"
                         className="w-10 h-10 rounded-xl"
+                        updatedAt={agent.updatedAt}
                       />
                       <div>
                         <h4 className="text-white font-medium truncate max-w-[150px]">{agent.name}</h4>

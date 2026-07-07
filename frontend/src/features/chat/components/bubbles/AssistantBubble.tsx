@@ -11,8 +11,9 @@ export const AssistantBubble: React.FC<{
   message: Message, 
   citations?: Citation[],
   agentName?: string,
-  agentAvatar?: string 
-}> = ({ message, citations, agentName, agentAvatar }) => {
+  agentAvatar?: string,
+  agentUpdatedAt?: string
+}> = ({ message, citations, agentName, agentAvatar, agentUpdatedAt }) => {
   return (
     <div className="flex w-full justify-start mb-6 group">
       <div className="flex gap-4 max-w-[90%]">
@@ -20,6 +21,7 @@ export const AssistantBubble: React.FC<{
           imageUrl={agentAvatar}
           name={agentName}
           size="chat-bubble"
+          updatedAt={agentUpdatedAt}
         />
         
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">

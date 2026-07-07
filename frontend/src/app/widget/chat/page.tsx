@@ -132,6 +132,7 @@ export default function WidgetChatPage() {
             name={agent?.name}
             size="widget-launcher"
             className="w-10 h-10 shadow-lg"
+            updatedAt={agent?.updatedAt}
           />
         </div>
         <div>
@@ -152,6 +153,7 @@ export default function WidgetChatPage() {
               name={agent?.name}
               size="dashboard-card"
               className="w-16 h-16 shadow-xl mb-2"
+              updatedAt={agent?.updatedAt}
             />
             <p className="text-sm" style={{ color: theme === 'light' ? '#71717a' : '#a1a1aa' }}>
               {agent ? `Hi! I'm ${agent.name}. How can I help you today?` : 'Initializing agent...'}
@@ -171,6 +173,7 @@ export default function WidgetChatPage() {
                   name={agent?.name}
                   size="chat-bubble"
                   className="w-8 h-8"
+                  updatedAt={agent?.updatedAt}
                 />
               )}
             </div>
@@ -189,6 +192,7 @@ export default function WidgetChatPage() {
                  name={agent?.name}
                  size="chat-bubble"
                  className="w-8 h-8"
+                 updatedAt={agent?.updatedAt}
                />
              </div>
              <div className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm border rounded-tl-sm"

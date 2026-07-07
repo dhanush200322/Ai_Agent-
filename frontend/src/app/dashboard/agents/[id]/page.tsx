@@ -142,6 +142,7 @@ export default function AgentDetailsPage() {
                 name={agent.name}
                 size="agent-details"
                 className="w-16 h-16 rounded-xl" // override size to match design
+                updatedAt={agent.updatedAt}
               />
               <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="w-5 h-5 text-white" />

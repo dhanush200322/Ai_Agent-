@@ -27,6 +27,7 @@ export const MessageList: React.FC = () => {
                 message={message} 
                 agentName={selectedAgent?.name}
                 agentAvatar={selectedAgent?.avatar}
+                agentUpdatedAt={selectedAgent?.updatedAt}
                 citations={message.citations}
               />
             );
@@ -39,6 +40,7 @@ export const MessageList: React.FC = () => {
             content={streamingContent} 
             agentName={selectedAgent?.name}
             agentAvatar={selectedAgent?.avatar}
+            agentUpdatedAt={selectedAgent?.updatedAt}
             onStop={() => {
               // Not directly abortable from UI state alone, but we could add an abort controller to the store
             }}

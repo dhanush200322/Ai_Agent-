@@ -9,8 +9,9 @@ export const StreamingBubble: React.FC<{
   content: string, 
   agentName?: string,
   agentAvatar?: string,
+  agentUpdatedAt?: string,
   onStop?: () => void
-}> = ({ content, agentName, agentAvatar, onStop }) => {
+}> = ({ content, agentName, agentAvatar, agentUpdatedAt, onStop }) => {
   const [dots, setDots] = useState('');
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export const StreamingBubble: React.FC<{
             imageUrl={agentAvatar}
             name={agentName}
             size="chat-bubble"
+            updatedAt={agentUpdatedAt}
           />
           <div className="absolute inset-0 bg-yellow-500/10 animate-pulse rounded-full pointer-events-none"></div>
         </div>
