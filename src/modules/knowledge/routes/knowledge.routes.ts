@@ -13,6 +13,7 @@ const knowledgeController = new KnowledgeController();
 router.use(authenticate);
 
 router.get('/', authorize('knowledge:view'), asyncHandler(knowledgeController.getKnowledgeBases));
+router.get('/search', authorize('knowledge:view'), asyncHandler(knowledgeController.searchKnowledge));
 router.get('/:id', authorize('knowledge:view'), asyncHandler(knowledgeController.getKnowledgeBase));
 
 router.post('/', authorize('knowledge:create'), validate(createKnowledgeBaseSchema), asyncHandler(knowledgeController.createKnowledgeBase));
@@ -50,6 +51,8 @@ router.post('/:knowledgeBaseId/documents',
 );
 router.get('/:knowledgeBaseId/documents', authorize('knowledge:view'), validate(documentParamsSchema), asyncHandler(knowledgeController.getDocuments));
 router.get('/documents/:id', authorize('knowledge:view'), validate(documentParamsSchema), asyncHandler(knowledgeController.getDocument));
+router.get('/documents/:id/download', authorize('knowledge:view'), validate(documentParamsSchema), asyncHandler(knowledgeController.downloadDocument));
+router.post('/documents/:id/retry', authorize('knowledge:update'), validate(documentParamsSchema), asyncHandler(knowledgeController.retryDocument));
 router.delete('/documents/:id', authorize('knowledge:delete'), validate(documentParamsSchema), asyncHandler(knowledgeController.deleteDocument));
 
 // Agent connection routes

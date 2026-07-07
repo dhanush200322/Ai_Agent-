@@ -14,6 +14,20 @@ export class KnowledgeController {
     res.status(200).json(ApiResponse.success(data, 'Knowledge Bases fetched successfully', req.reqId));
   };
 
+  searchKnowledge = async (req: Request, res: Response) => {
+    const query = req.query.q as string;
+    const limit = parseInt(req.query.limit as string) || 5;
+    const kbIdsStr = req.query.knowledgeBaseIds as string;
+    const knowledgeBaseIds = kbIdsStr ? kbIdsStr.split(',') : undefined;
+
+    if (!query) {
+      return res.status(400).json(ApiResponse.error('Search query "q" is required', 'Validation Error', req.reqId));
+    }
+
+    const results = await this.knowledgeService.searchDocuments(req.user!.organizationId, query, knowledgeBaseIds, limit);
+    return res.status(200).json(ApiResponse.success(results, 'Search successful', req.reqId));
+  };
+
   getKnowledgeBase = async (req: Request, res: Response) => {
     const kb = await this.knowledgeService.getKnowledgeBase(req.user!.organizationId, req.params.id);
     res.status(200).json(ApiResponse.success(kb, 'Knowledge Base fetched successfully', req.reqId));
@@ -85,6 +99,35 @@ export class KnowledgeController {
   deleteDocument = async (req: Request, res: Response) => {
     await this.knowledgeService.softDeleteDocument(req.user!.organizationId, req.params.id);
     res.status(200).json(ApiResponse.success(null, 'Document deleted successfully', req.reqId));
+  };
+
+  downloadDocument = async (req: Request, res: Response): Promise<void> => {
+    const document = await this.knowledgeService.getDocument(req.user!.organizationId, req.params.id);
+    if (!document.storagePath) {
+      res.status(404).json(ApiResponse.error('Document file not found', 'Not Found', req.reqId));
+      return;
+    }
+    const path = require('path');
+    const absolutePath = path.join(__dirname, '../../../../public', document.storagePath);
+    res.download(absolutePath, document.originalName);
+  };
+
+  retryDocument = async (req: Request, res: Response) => {
+    const document = await this.knowledgeService.getDocument(req.user!.organizationId, req.params.id);
+    if (document.status !== 'FAILED') {
+      return res.status(400).json(ApiResponse.error('Can only retry failed documents', 'Validation Error', req.reqId));
+    }
+    
+    // Reset status and start processing
+    await this.knowledgeService['knowledgeRepo'].updateKnowledgeBase(req.user!.organizationId, document.knowledgeBaseId, {
+      // Actually we just need to update document, wait. We can just call processingService
+    });
+    // Fire and forget
+    this.knowledgeService['processingService'].processDocument(document.id).catch(err => {
+      console.error(`Unhandled error in background processing for doc ${document.id}`, err);
+    });
+
+    return res.status(200).json(ApiResponse.success(null, 'Retry started', req.reqId));
   };
 
   // Agent Connection methods

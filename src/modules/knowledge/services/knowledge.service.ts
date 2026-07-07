@@ -2,6 +2,10 @@ import { KnowledgeRepository } from '../repositories/knowledge.repository';
 import { AuditLogger } from '../../../shared/audit/auditLogger';
 import { NotFoundError } from '../../../shared/errors/AppError';
 import { DocumentProcessingService } from './document-processing.service';
+import { prisma } from '../../../shared/prisma';
+import fs from 'fs';
+import crypto from 'crypto';
+import path from 'path';
 
 export class KnowledgeService {
   private processingService = new DocumentProcessingService();
@@ -104,6 +108,36 @@ export class KnowledgeService {
     const kb = await this.knowledgeRepo.findKnowledgeBaseById(organizationId, knowledgeBaseId);
     if (!kb) throw new NotFoundError('Knowledge Base not found');
 
+    const fileBuffer = fs.readFileSync(file.path);
+    const hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+    // Duplicate Detection
+    // @ts-ignore
+    const existingDoc = await prisma.knowledgeDocument.findFirst({
+      where: {
+        organizationId,
+        knowledgeBaseId,
+        hash,
+        deletedAt: null
+      }
+    });
+
+    if (existingDoc) {
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      throw new Error(`Duplicate document detected: ${existingDoc.originalName}`);
+    }
+
+    // Versioning
+    const previousVersions = await prisma.knowledgeDocument.count({
+      where: {
+        organizationId,
+        knowledgeBaseId,
+        originalName: file.originalname,
+        deletedAt: null
+      }
+    });
+    const version = previousVersions + 1;
+
     const docData = {
       knowledgeBaseId,
       organizationId,
@@ -114,7 +148,9 @@ export class KnowledgeService {
       extension: file.originalname.split('.').pop() || '',
       size: file.size,
       storagePath: `/uploads/documents/${file.filename}`,
-      status: 'PENDING'
+      status: 'UPLOADING',
+      hash,
+      version
     };
 
     const document = await this.knowledgeRepo.createKnowledgeDocument(docData);
@@ -141,13 +177,65 @@ export class KnowledgeService {
     return doc;
   }
 
+  async searchDocuments(organizationId: string, query: string, knowledgeBaseIds?: string[], limit: number = 5) {
+    const embeddings = await this.processingService['embeddingService'].generateEmbeddings([query]);
+    if (!embeddings || embeddings.length === 0) {
+      throw new Error('Failed to generate embedding for query');
+    }
+
+    const queryVector = embeddings[0];
+    const searchResults = await this.processingService['vectorService'].similaritySearch(
+      organizationId,
+      queryVector,
+      { knowledgeBaseIds, limit }
+    );
+    return searchResults;
+  }
+
   async softDeleteDocument(organizationId: string, id: string) {
-    const doc = await this.knowledgeRepo.findKnowledgeDocumentById(organizationId, id);
+    const doc = await prisma.knowledgeDocument.findFirst({
+      where: { id, organizationId }
+    });
     if (!doc) throw new NotFoundError('Knowledge Document not found');
 
-    await this.knowledgeRepo.softDeleteKnowledgeDocument(organizationId, id);
-    AuditLogger.log('KNOWLEDGE_DOCUMENT_DELETED', 'knowledge', { documentId: id, organizationId });
-    return { success: true };
+    // @ts-ignore
+    const chunks = await prisma.knowledgeChunk.findMany({
+      where: { documentId: id }
+    });
+    const vectorIds = chunks.map((c: any) => c.vectorId).filter(Boolean) as string[];
+
+    try {
+      // 1. Delete DB
+      await prisma.$transaction(async (tx) => {
+        // @ts-ignore
+        await tx.knowledgeChunk.deleteMany({
+          where: { documentId: id }
+        });
+        // We do a hard delete to fully purge it, as requested
+        await tx.knowledgeDocument.delete({
+          where: { id }
+        });
+      });
+
+      // 2. Delete File
+      if (doc.storagePath) {
+        const absolutePath = path.join(__dirname, '../../../../public', doc.storagePath);
+        if (fs.existsSync(absolutePath)) {
+          fs.unlinkSync(absolutePath);
+        }
+      }
+
+      // 3. Delete Vectors
+      if (vectorIds.length > 0) {
+        await this.processingService['vectorService'].deleteVectors(vectorIds); // Access vectorService from processingService or instantiate one
+      }
+
+      AuditLogger.log('KNOWLEDGE_DOCUMENT_DELETED', 'knowledge', { documentId: id, organizationId });
+      return { success: true };
+    } catch (error) {
+      console.error(`Error deleting document ${id}`, error);
+      throw new Error('Failed to delete document completely');
+    }
   }
 
   // Agent Connection methods

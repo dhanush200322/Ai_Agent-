@@ -12,6 +12,7 @@ const router = (0, express_1.Router)();
 const knowledgeController = new knowledge_controller_1.KnowledgeController();
 router.use(auth_1.authenticate);
 router.get('/', (0, authorize_1.authorize)('knowledge:view'), (0, asyncHandler_1.asyncHandler)(knowledgeController.getKnowledgeBases));
+router.get('/search', (0, authorize_1.authorize)('knowledge:view'), (0, asyncHandler_1.asyncHandler)(knowledgeController.searchKnowledge));
 router.get('/:id', (0, authorize_1.authorize)('knowledge:view'), (0, asyncHandler_1.asyncHandler)(knowledgeController.getKnowledgeBase));
 router.post('/', (0, authorize_1.authorize)('knowledge:create'), (0, validate_1.validate)(knowledge_validator_1.createKnowledgeBaseSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.createKnowledgeBase));
 router.patch('/:id', (0, authorize_1.authorize)('knowledge:update'), (0, validate_1.validate)(knowledge_validator_1.updateKnowledgeBaseSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.updateKnowledgeBase));
@@ -35,6 +36,8 @@ router.post('/:knowledgeBaseId/documents', (0, authorize_1.authorize)('knowledge
 }, (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.uploadDocument));
 router.get('/:knowledgeBaseId/documents', (0, authorize_1.authorize)('knowledge:view'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.getDocuments));
 router.get('/documents/:id', (0, authorize_1.authorize)('knowledge:view'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.getDocument));
+router.get('/documents/:id/download', (0, authorize_1.authorize)('knowledge:view'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.downloadDocument));
+router.post('/documents/:id/retry', (0, authorize_1.authorize)('knowledge:update'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.retryDocument));
 router.delete('/documents/:id', (0, authorize_1.authorize)('knowledge:delete'), (0, validate_1.validate)(knowledge_validator_1.documentParamsSchema), (0, asyncHandler_1.asyncHandler)(knowledgeController.deleteDocument));
 // Agent connection routes
 router.get('/:id/agents', (0, authorize_1.authorize)('knowledge:view'), (0, asyncHandler_1.asyncHandler)(knowledgeController.getConnectedAgents));

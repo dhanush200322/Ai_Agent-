@@ -100,5 +100,19 @@ class VectorService {
             throw new AppError_1.AppError('Vector search failed', 500);
         }
     }
+    async deleteVectors(ids, collectionName = 'knowledge_chunks') {
+        if (!ids.length)
+            return;
+        try {
+            await this.client.delete(collectionName, {
+                wait: true,
+                points: ids
+            });
+        }
+        catch (error) {
+            console.error('[VectorService] Failed to delete vectors', error);
+            throw new AppError_1.AppError('Failed to delete vectors from vector database', 500);
+        }
+    }
 }
 exports.VectorService = VectorService;

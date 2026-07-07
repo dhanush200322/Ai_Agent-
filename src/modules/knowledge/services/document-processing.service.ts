@@ -95,11 +95,37 @@ export class DocumentProcessingService {
 
       // 4. Chunk Text
       console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Chunking text`);
+      // @ts-ignore
+      await prisma.knowledgeDocument.update({
+        where: { id: documentId },
+        data: { status: 'CHUNKING' },
+      });
+
       const chunks = this.chunkService.chunkText(cleanedText);
 
       if (chunks.length === 0) {
         throw new Error('No chunks generated from document');
       }
+
+      console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Saving ${chunks.length} chunks to PostgreSQL`);
+      // Save chunks to PostgreSQL
+      const dbChunks = await prisma.$transaction(
+        chunks.map((chunk, i) => {
+          // @ts-ignore
+          return prisma.knowledgeChunk.create({
+            data: {
+              documentId: document.id,
+              organizationId: document.organizationId,
+              text: chunk.content,
+              pageNumber: parsed.metadata.pages > 1 ? Math.floor((i / chunks.length) * parsed.metadata.pages) + 1 : 1,
+              tokenCount: Math.floor(chunk.content.length / 4), // rough estimate
+              vectorId: chunk.id,
+              collection: 'knowledge', // Assuming default Qdrant collection
+              status: 'PENDING'
+            }
+          });
+        })
+      );
 
       // Update DB to EMBEDDING
       // @ts-ignore
@@ -153,7 +179,19 @@ export class DocumentProcessingService {
       await this.vectorService.storeChunks(points);
       const indexingTime = Date.now() - indexingStartTime;
 
-      // 7. Update DB to COMPLETED
+      // Update DB chunks to READY
+      // @ts-ignore
+      await prisma.$transaction(
+        dbChunks.map((c: any) => {
+          // @ts-ignore
+          return prisma.knowledgeChunk.update({
+            where: { id: c.id },
+            data: { status: 'READY', embeddingModel: this.embeddingService.model, dimension: embeddings[0]?.length || 1536 }
+          })
+        })
+      );
+
+      // 7. Update DB to READY (mapped from COMPLETED for the UI parity)
       const processingTime = Date.now() - startTime;
       
       console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Performance Metrics:`);
@@ -166,7 +204,7 @@ export class DocumentProcessingService {
       await prisma.knowledgeDocument.update({
         where: { id: documentId },
         data: { 
-          status: 'COMPLETED',
+          status: 'READY',
           processedAt: new Date(),
           chunkCount: chunks.length,
           embeddingModel: this.embeddingService.model,

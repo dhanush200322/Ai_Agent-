@@ -66,6 +66,7 @@ model Organization {
   jobs                      JobQueue[]
   knowledgeBases            KnowledgeBase[]
   knowledgeDocuments        KnowledgeDocument[]
+  knowledgeChunks           KnowledgeChunk[]
   modelCosts                ModelCost[]
   modelFeedback             ModelFeedback[]
   modelQuotas               ModelQuota[]
@@ -326,15 +327,42 @@ model KnowledgeDocument {
   processingTime  Int?
   metadata        String?
   sourceType      String        @default("DOCUMENT")
+  version         Int           @default(1)
+  hash            String?
   knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
   organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   uploadedBy      User          @relation("UploadedKnowledgeDocuments", fields: [uploadedById], references: [id])
+  chunks          KnowledgeChunk[]
 
   @@index([knowledgeBaseId])
   @@index([organizationId])
   @@index([uploadedById])
   @@index([organizationId, deletedAt])
   @@index([knowledgeBaseId, deletedAt])
+}
+
+model KnowledgeChunk {
+  id                String            @id @default(uuid()) @db.Uuid
+  documentId        String            @db.Uuid
+  organizationId    String            @db.Uuid
+  text              String
+  metadata          String?
+  pageNumber        Int?
+  tokenCount        Int?
+  vectorId          String?
+  collection        String?
+  namespace         String?
+  status            String            @default("PENDING")
+  dimension         Int?
+  embeddingModel    String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  document          KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([organizationId])
+  @@index([vectorId])
 }
 
 model Conversation {
