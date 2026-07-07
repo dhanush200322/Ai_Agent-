@@ -10,6 +10,7 @@ import { MagneticButton } from '@/components/ui/MagneticButton';
 import { ArrowLeft, ArrowRight, Bot, Loader2, Sparkles, Sliders, AlignLeft, CheckCircle, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { AgentVisibility } from '../../types/agent';
+import { AvatarCropperModal } from '@/components/common/AvatarCropperModal';
 
 const createAgentSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -42,6 +43,9 @@ const STEPS = [
 export function CreateAgentForm() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState<string>('');
+  
   const { mutateAsync: createAgent, isPending } = useCreateAgent();
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateAgentValues>({
@@ -161,15 +165,41 @@ export function CreateAgentForm() {
             
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Avatar (Optional)</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) setValue('avatar', e.target.files[0]);
-                }}
-                className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[rgba(255,255,255,0.05)] file:text-white hover:file:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
-              />
+              <div className="flex items-center gap-4">
+                {formValues.avatar && (
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[rgba(255,255,255,0.1)] shrink-0">
+                    <img src={URL.createObjectURL(formValues.avatar)} alt="Avatar Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setTempImageSrc(reader.result as string);
+                        setCropperOpen(true);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                    e.target.value = ''; // Reset input so same file can be selected again
+                  }}
+                  className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[rgba(255,255,255,0.05)] file:text-white hover:file:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
+                />
+              </div>
             </div>
+            
+            <AvatarCropperModal
+              isOpen={cropperOpen}
+              onClose={() => setCropperOpen(false)}
+              imageSrc={tempImageSrc}
+              onCropComplete={(blob) => {
+                const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
+                setValue('avatar', file);
+              }}
+            />
           </div>
         )}
 

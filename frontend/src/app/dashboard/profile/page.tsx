@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import { useAuthStore } from '@/features/auth/store';
 import { useUpdateProfile, useChangePassword, useSessions, useRevokeSession, useRevokeAllSessions } from '@/services/profile/profile.service';
 import { User, Lock, Clock, Shield, Upload, Monitor, Smartphone, Globe, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AvatarCropperModal } from '@/components/common/AvatarCropperModal';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'sessions'>('profile');
@@ -74,6 +75,8 @@ function ProfileSettings({ user }: { user: any }) {
     lastName: user?.lastName || '',
     phone: user?.phone || '',
   });
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState<string>('');
   
   const updateMutation = useUpdateProfile();
 
@@ -97,12 +100,17 @@ function ProfileSettings({ user }: { user: any }) {
             <label className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
               <Upload className="w-6 h-6 text-white mb-1" />
               <span className="text-xs text-white font-medium">Upload</span>
-              <input type="file" className="hidden" accept="image/*" onChange={(e) => {
-                if (e.target.files?.[0]) {
-                  const fd = new FormData();
-                  fd.append('avatar', e.target.files[0]);
-                  updateMutation.mutate(fd);
+              <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setTempImageSrc(reader.result as string);
+                    setCropperOpen(true);
+                  };
+                  reader.readAsDataURL(file);
                 }
+                e.target.value = '';
               }} />
             </label>
           </div>
@@ -171,6 +179,18 @@ function ProfileSettings({ user }: { user: any }) {
           </form>
         </div>
       </div>
+      
+      <AvatarCropperModal
+        isOpen={cropperOpen}
+        onClose={() => setCropperOpen(false)}
+        imageSrc={tempImageSrc}
+        onCropComplete={(blob) => {
+          const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
+          const fd = new FormData();
+          fd.append('avatar', file);
+          updateMutation.mutate(fd);
+        }}
+      />
     </div>
   );
 }

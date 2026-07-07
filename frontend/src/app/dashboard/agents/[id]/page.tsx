@@ -17,6 +17,8 @@ import { PlaceholderTab } from '@/components/ui/PlaceholderTab';
 import { useAgentKnowledgeBases, useDetachKnowledgeBase } from '@/features/agents/hooks/useAgentKnowledge';
 import { AttachKnowledgeDialog } from '@/features/agents/components/AttachKnowledgeDialog';
 import { AgentAvatar } from '@/components/common/AgentAvatar';
+import { AvatarCropperModal } from '@/components/common/AvatarCropperModal';
+import { Camera } from 'lucide-react';
 
 
 const TABS = [
@@ -38,7 +40,8 @@ export default function AgentDetailsPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAttachKbOpen, setIsAttachKbOpen] = useState(false);
-  
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState<string>('');
 
   const { data: agent, isLoading, error } = useAgent(id);
   const { mutateAsync: updateAgent, isPending: isUpdating } = useUpdateAgent(id);
@@ -114,6 +117,16 @@ export default function AgentDetailsPage() {
     }
   };
 
+  const handleAvatarCropComplete = async (blob: Blob) => {
+    try {
+      const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
+      await updateAgent({ avatar: file });
+      toast.success('Avatar updated successfully');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update avatar');
+    }
+  };
+
 
   return (
     <ContentWrapper>
@@ -123,12 +136,35 @@ export default function AgentDetailsPage() {
         </Link>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <AgentAvatar
-              imageUrl={agent.avatar}
-              name={agent.name}
-              size="agent-details"
-              className="rounded-xl w-16 h-16" // override size to match design
-            />
+            <div className="relative group rounded-xl overflow-hidden cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
+              <AgentAvatar
+                imageUrl={agent.avatar}
+                name={agent.name}
+                size="agent-details"
+                className="w-16 h-16 rounded-xl" // override size to match design
+              />
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-5 h-5 text-white" />
+              </div>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setTempImageSrc(reader.result as string);
+                      setCropperOpen(true);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                  e.target.value = '';
+                }}
+              />
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-white leading-tight">{agent.name}</h1>
               <p className="text-sm text-gray-400 mt-1 font-mono">{agent.slug}</p>
@@ -360,6 +396,13 @@ export default function AgentDetailsPage() {
         isOpen={isAttachKbOpen}
         onClose={() => setIsAttachKbOpen(false)}
         agentId={id}
+      />
+
+      <AvatarCropperModal
+        isOpen={cropperOpen}
+        onClose={() => setCropperOpen(false)}
+        imageSrc={tempImageSrc}
+        onCropComplete={handleAvatarCropComplete}
       />
     </ContentWrapper>
   );
