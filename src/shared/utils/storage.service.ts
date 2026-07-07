@@ -28,4 +28,19 @@ export class StorageService {
   static getFileUrl(filename: string): string {
     return `/uploads/${filename}`;
   }
+  
+  static async deleteFile(fileUrl: string): Promise<void> {
+    try {
+      if (!fileUrl) return;
+      const filename = fileUrl.split('/uploads/')[1];
+      if (!filename) return;
+      const fs = require('fs');
+      const fullPath = path.join(__dirname, '../../../public/uploads', filename);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    } catch (e) {
+      console.error('Failed to delete old file:', e);
+    }
+  }
 }

@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { Sparkles, StopCircle } from 'lucide-react';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 
 export const StreamingBubble: React.FC<{ 
   content: string, 
@@ -23,13 +24,13 @@ export const StreamingBubble: React.FC<{
   return (
     <div className="flex w-full justify-start mb-6 group">
       <div className="flex gap-4 max-w-[90%] w-full">
-        <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0 overflow-hidden relative">
-          {agentAvatar ? (
-            <img src={agentAvatar} alt={agentName} className="w-full h-full object-cover" />
-          ) : (
-            <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
-          )}
-          <div className="absolute inset-0 bg-yellow-500/10 animate-pulse"></div>
+        <div className="relative shrink-0">
+          <AgentAvatar
+            imageUrl={agentAvatar}
+            name={agentName}
+            size="chat-bubble"
+          />
+          <div className="absolute inset-0 bg-yellow-500/10 animate-pulse rounded-full pointer-events-none"></div>
         </div>
         
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">

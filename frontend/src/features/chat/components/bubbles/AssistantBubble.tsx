@@ -5,6 +5,7 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css'; // or any highlight.js style
 import { Sparkles, Copy, ThumbsUp, ThumbsDown, Bookmark, RotateCw, Trash2, Share, Database, FileText, ChevronDown, ExternalLink } from 'lucide-react';
 import { Message, Citation } from '../../types/chat';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 
 export const AssistantBubble: React.FC<{ 
   message: Message, 
@@ -15,13 +16,11 @@ export const AssistantBubble: React.FC<{
   return (
     <div className="flex w-full justify-start mb-6 group">
       <div className="flex gap-4 max-w-[90%]">
-        <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0 overflow-hidden">
-          {agentAvatar ? (
-            <img src={agentAvatar} alt={agentName} className="w-full h-full object-cover" />
-          ) : (
-            <Sparkles className="w-4 h-4 text-yellow-500" />
-          )}
-        </div>
+        <AgentAvatar
+          imageUrl={agentAvatar}
+          name={agentName}
+          size="chat-bubble"
+        />
         
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-center gap-2">

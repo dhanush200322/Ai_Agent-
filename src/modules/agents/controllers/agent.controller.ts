@@ -35,6 +35,15 @@ export class AgentController {
     let payload = { ...req.body };
     if (req.file) {
       payload.avatar = StorageService.getFileUrl(req.file.filename);
+      // Clean up old avatar if exists
+      try {
+        const existingAgent = await this.agentService.getAgent(req.user!.organizationId, req.params.id);
+        if (existingAgent && existingAgent.avatar) {
+          await StorageService.deleteFile(existingAgent.avatar);
+        }
+      } catch (e) {
+        console.error('Failed to cleanup old avatar', e);
+      }
     }
     const agent = await this.agentService.updateAgent(req.user!.organizationId, req.params.id, payload);
     res.status(200).json(ApiResponse.success(agent, 'Agent updated successfully', req.reqId));

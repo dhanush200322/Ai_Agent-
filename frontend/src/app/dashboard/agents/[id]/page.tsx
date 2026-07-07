@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { PlaceholderTab } from '@/components/ui/PlaceholderTab';
 import { useAgentKnowledgeBases, useDetachKnowledgeBase } from '@/features/agents/hooks/useAgentKnowledge';
 import { AttachKnowledgeDialog } from '@/features/agents/components/AttachKnowledgeDialog';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 
 
 const TABS = [
@@ -122,9 +123,12 @@ export default function AgentDetailsPage() {
         </Link>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-xl bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden shrink-0">
-              {agent.avatar ? <img src={agent.avatar} className="w-full h-full object-cover" /> : <Bot className="w-8 h-8 text-[#D4AF37]" />}
-            </div>
+            <AgentAvatar
+              imageUrl={agent.avatar}
+              name={agent.name}
+              size="agent-details"
+              className="rounded-xl w-16 h-16" // override size to match design
+            />
             <div>
               <h1 className="text-2xl font-bold text-white leading-tight">{agent.name}</h1>
               <p className="text-sm text-gray-400 mt-1 font-mono">{agent.slug}</p>

@@ -4,6 +4,7 @@ import { useChatStore } from '../store/useChatStore';
 import { chatService } from '../services/chat.service';
 import { agentService } from '@/features/agents/services/agent.service';
 import { Agent, Conversation } from '../types/chat';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 
 export const ConversationSidebar: React.FC<{ 
   onSelect: (conv: Conversation) => void;
@@ -57,15 +58,11 @@ export const ConversationSidebar: React.FC<{
             className="w-full flex items-center justify-between p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20">
-                {selectedAgent?.avatar ? (
-                  <img src={selectedAgent.avatar} alt="Agent" className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  <span className="text-yellow-500 font-bold text-sm">
-                    {selectedAgent?.name?.charAt(0) || 'A'}
-                  </span>
-                )}
-              </div>
+              <AgentAvatar
+                imageUrl={selectedAgent?.avatar}
+                name={selectedAgent?.name || 'A'}
+                size="chat-sidebar"
+              />
               <div className="text-left">
                 <p className="text-sm font-medium text-white truncate max-w-[150px]">{selectedAgent?.name || 'Select Agent'}</p>
                 <p className="text-xs text-zinc-500 truncate max-w-[150px]">{selectedAgent?.model || 'Model'}</p>
@@ -85,13 +82,12 @@ export const ConversationSidebar: React.FC<{
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 hover:bg-zinc-800 transition-colors ${selectedAgent?.id === agent.id ? 'bg-zinc-800/50' : ''}`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-yellow-500/10 flex items-center justify-center overflow-hidden shrink-0">
-                    {agent.avatar ? (
-                      <img src={agent.avatar} alt={agent.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-yellow-500 text-xs">{agent.name.charAt(0)}</span>
-                    )}
-                  </div>
+                  <AgentAvatar
+                    imageUrl={agent.avatar}
+                    name={agent.name}
+                    size="xs"
+                    className="w-6 h-6 shrink-0"
+                  />
                   <div className="text-left">
                     <p className="text-sm text-white">{agent.name}</p>
                     <p className="text-xs text-zinc-500">{agent.model}</p>

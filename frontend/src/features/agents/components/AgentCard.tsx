@@ -3,6 +3,7 @@ import { Agent } from '../types/agent';
 import { MoreVertical, Bot, Globe, Lock, Building2, Calendar, User } from 'lucide-react';
 import Link from 'next/link';
 import { MagneticButton } from '@/components/ui/MagneticButton';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 
 interface AgentCardProps {
   agent: Agent;
@@ -35,13 +36,12 @@ export function AgentCard({ agent, onEdit, onDelete, onDuplicate }: AgentCardPro
       {/* Top Section */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-4">
-          <div className="relative w-12 h-12 rounded-xl bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden shrink-0">
-            {agent.avatar ? (
-              <img src={agent.avatar} alt={agent.name} className="w-full h-full object-cover" />
-            ) : (
-              <Bot className="w-6 h-6 text-[#D4AF37]" />
-            )}
-          </div>
+          <AgentAvatar
+            imageUrl={agent.avatar}
+            name={agent.name}
+            size="dashboard-card"
+            className="w-12 h-12 rounded-xl" // keeping the rounded-xl styling from original design for cards
+          />
           <div>
             <h3 className="text-lg font-semibold text-white group-hover:text-[#D4AF37] transition-colors truncate max-w-[180px]">
               {agent.name}

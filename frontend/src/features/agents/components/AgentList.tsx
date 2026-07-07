@@ -4,6 +4,7 @@ import { AgentCard } from './AgentCard';
 import { Bot, Plus } from 'lucide-react';
 import { MagneticButton } from '@/components/ui/MagneticButton';
 import Link from 'next/link';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 
 interface AgentListProps {
   agents: Agent[];
@@ -62,13 +63,12 @@ export function AgentList({ agents, isLoading, viewMode }: AgentListProps) {
                 <tr key={agent.id} className="border-b border-white/5 hover:bg-white/[0.05] transition-colors cursor-pointer group">
                   <td className="p-4 sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl group-hover:bg-[#151515]/90 transition-colors">
                     <div className="flex items-center space-x-3">
-                      <div className="relative w-10 h-10 rounded-xl bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden shrink-0">
-                        {agent.avatar ? (
-                          <img src={agent.avatar} alt={agent.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Bot className="w-5 h-5 text-[#D4AF37]" />
-                        )}
-                      </div>
+                      <AgentAvatar
+                        imageUrl={agent.avatar}
+                        name={agent.name}
+                        size="md"
+                        className="w-10 h-10 rounded-xl"
+                      />
                       <div>
                         <h4 className="text-white font-medium truncate max-w-[150px]">{agent.name}</h4>
                         <span className="text-[10px] text-gray-500 capitalize">{agent.visibility.toLowerCase()}</span>
