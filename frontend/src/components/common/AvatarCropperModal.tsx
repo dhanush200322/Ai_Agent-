@@ -33,7 +33,10 @@ export const AvatarCropperModal: React.FC<AvatarCropperModalProps> = ({
       const image = new Image();
       image.addEventListener('load', () => resolve(image));
       image.addEventListener('error', (error) => reject(error));
-      image.setAttribute('crossOrigin', 'anonymous');
+      // Only set crossOrigin if it's an external HTTP URL
+      if (url.startsWith('http')) {
+        image.setAttribute('crossOrigin', 'anonymous');
+      }
       image.src = url;
     });
 

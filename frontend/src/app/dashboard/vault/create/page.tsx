@@ -29,7 +29,7 @@ export default function CreateSecretPage() {
 
     createMutation.mutate(formData, {
       onSuccess: () => {
-        router.push('/dashboard/vault');
+        router.push('/dashboard/vault?tab=secrets');
       },
       onError: (err: any) => {
         setError(err.response?.data?.message || 'Failed to create secret. Please try again.');

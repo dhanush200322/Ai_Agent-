@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import { DashboardCard } from '@/components/dashboard/ui/DashboardCard';
@@ -8,16 +8,27 @@ import { LoadingSkeleton } from '@/components/dashboard/ui/LoadingSkeleton';
 import { Bot, Activity, Users, CreditCard } from 'lucide-react';
 import { useOrganizationStats, useOrganizationActivity } from '@/services/organization/organization.service';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuthStore } from '@/features/auth/store';
 
 export default function DashboardOverviewPage() {
   const { data: stats, isLoading: isStatsLoading } = useOrganizationStats();
   const { data: activities, isLoading: isActivitiesLoading } = useOrganizationActivity();
+  const user = useAuthStore(state => state.user);
+  
+  const [greeting, setGreeting] = useState('Welcome');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+  }, []);
 
   return (
     <ContentWrapper>
       <PageHeader 
-        title="Dashboard Overview"
-        description="Welcome back. Here's a summary of your organization's AI Agent activity."
+        title={`${greeting}, ${user?.firstName || 'there'}!`}
+        description="Here's a summary of your organization's AI Agent activity."
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">

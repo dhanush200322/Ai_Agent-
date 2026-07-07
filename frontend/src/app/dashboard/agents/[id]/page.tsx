@@ -25,11 +25,7 @@ const TABS = [
   { id: 'overview', label: 'Overview', icon: Bot },
   { id: 'configuration', label: 'Configuration', icon: Settings },
   { id: 'prompt', label: 'Prompt', icon: AlignLeft },
-  { id: 'knowledge', label: 'Knowledge', icon: Database },
-  { id: 'integrations', label: 'Integrations', icon: Plug },
-  { id: 'analytics', label: 'Analytics', icon: BarChart },
-  { id: 'logs', label: 'Logs', icon: ScrollText },
-  { id: 'settings', label: 'Settings', icon: Settings }
+  { id: 'knowledge', label: 'Knowledge', icon: Database }
 ];
 
 export default function AgentDetailsPage() {

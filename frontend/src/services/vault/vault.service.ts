@@ -19,6 +19,18 @@ export const vaultKeys = {
   detail: (id: string) => [...vaultKeys.details(), id] as const,
   leases: () => [...vaultKeys.all, 'lease'] as const,
   lease: (id: string) => [...vaultKeys.leases(), id] as const,
+  stats: () => [...vaultKeys.all, 'stats'] as const,
+};
+
+// Hook: Get Vault Stats
+export const useVaultStats = () => {
+  return useQuery({
+    queryKey: vaultKeys.stats(),
+    queryFn: async (): Promise<any> => {
+      const response = await api.get('/vault/stats');
+      return response.data.data;
+    },
+  });
 };
 
 // Hook: Get all active secrets
@@ -27,18 +39,18 @@ export const useSecrets = (category?: string) => {
     queryKey: vaultKeys.list(category),
     queryFn: async (): Promise<VaultSecret[]> => {
       const response = await api.get('/vault', { params: { category } });
-      return response.data;
+      return response.data.data;
     },
   });
 };
 
-// Hook: Get Secret details (we fetch the whole list and find the specific one for metadata)
+// Hook: Get Secret details
 export const useSecretMetadata = (id: string) => {
   return useQuery({
     queryKey: vaultKeys.list(),
     queryFn: async (): Promise<VaultSecret[]> => {
       const response = await api.get('/vault');
-      return response.data;
+      return response.data.data;
     },
     select: (secrets) => secrets.find(s => s.id === id),
   });
@@ -50,10 +62,10 @@ export const useRetrieveSecret = (id: string) => {
     queryKey: vaultKeys.detail(id),
     queryFn: async (): Promise<{ value: string }> => {
       const response = await api.get(`/vault/${id}`);
-      return response.data;
+      return response.data.data;
     },
-    enabled: false, // Must be triggered manually
-    gcTime: 0, // Never cache decrypted secrets
+    enabled: false,
+    gcTime: 0,
     staleTime: 0,
   });
 };
@@ -64,10 +76,11 @@ export const useCreateSecret = () => {
   return useMutation({
     mutationFn: async (data: { name: string; value: string; category: string; description?: string }) => {
       const response = await api.post('/vault', data);
-      return response.data;
+      return response.data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: vaultKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vaultKeys.stats() });
     },
   });
 };
@@ -78,11 +91,12 @@ export const useRotateSecret = () => {
   return useMutation({
     mutationFn: async ({ id, newValue }: { id: string; newValue?: string }) => {
       const response = await api.post(`/vault/${id}/rotate`, { newValue });
-      return response.data;
+      return response.data.data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: vaultKeys.lists() });
       queryClient.invalidateQueries({ queryKey: vaultKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: vaultKeys.stats() });
     },
   });
 };
@@ -93,10 +107,11 @@ export const useRevokeSecret = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       const response = await api.delete(`/vault/${id}`);
-      return response.data;
+      return response.data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: vaultKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vaultKeys.stats() });
     },
   });
 };
@@ -106,7 +121,7 @@ export const useCreateLease = () => {
   return useMutation({
     mutationFn: async ({ id, ttlSeconds, actorType }: { id: string; ttlSeconds: number; actorType?: string }) => {
       const response = await api.post(`/vault/${id}/lease`, { ttlSeconds, actorType });
-      return response.data;
+      return response.data.data;
     },
   });
 };
@@ -117,9 +132,9 @@ export const useRetrieveLease = (leaseId: string) => {
     queryKey: vaultKeys.lease(leaseId),
     queryFn: async (): Promise<{ value: string }> => {
       const response = await api.get(`/vault/lease/${leaseId}`);
-      return response.data;
+      return response.data.data;
     },
-    enabled: false, // Manual trigger
+    enabled: false,
     gcTime: 0,
     staleTime: 0,
   });

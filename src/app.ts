@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import crypto from 'crypto';
@@ -76,6 +77,9 @@ app.get('/', (req: Request, res: Response) => {
 
 // Health check endpoint
 app.use('/health', healthRoutes);
+
+// Serve Static Uploads (Avatars, etc.)
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);

@@ -2,26 +2,23 @@ import { Router } from 'express';
 import { VaultController } from '../controllers/vault.controller';
 import { v4 as uuidv4 } from 'uuid';
 
-// Mock auth middleware for the prototype
-const authMiddleware = (req: any, _res: any, next: any) => {
-  req.user = { 
-    id: uuidv4(),
-    organizationId: '00000000-0000-0000-0000-000000000001' 
-  };
-  next();
-};
+import { authenticate } from '../../../middleware/auth';
+import { authorize } from '../../../middleware/authorize';
 
 const router = Router();
 const controller = new VaultController();
 
-router.post('/', authMiddleware, controller.storeSecret.bind(controller));
-router.get('/', authMiddleware, controller.listSecrets.bind(controller));
-router.get('/:id', authMiddleware, controller.retrieveSecret.bind(controller));
-router.post('/:id/rotate', authMiddleware, controller.rotateSecret.bind(controller));
-router.delete('/:id', authMiddleware, controller.revokeSecret.bind(controller));
+router.use(authenticate);
+
+router.post('/', authorize('vault:write'), controller.storeSecret.bind(controller));
+router.get('/', authorize('vault:view'), controller.listSecrets.bind(controller));
+router.get('/stats', authorize('vault:view'), controller.getStats?.bind(controller) || ((req, res) => res.json({})));
+router.get('/:id', authorize('vault:view'), controller.retrieveSecret.bind(controller));
+router.post('/:id/rotate', authorize('vault:write'), controller.rotateSecret.bind(controller));
+router.delete('/:id', authorize('vault:write'), controller.revokeSecret.bind(controller));
 
 // Leases
-router.post('/:id/lease', authMiddleware, controller.createLease.bind(controller));
-router.get('/lease/:leaseId', authMiddleware, controller.retrieveLease.bind(controller));
+router.post('/:id/lease', authorize('vault:write'), controller.createLease.bind(controller));
+router.get('/lease/:leaseId', authorize('vault:view'), controller.retrieveLease.bind(controller));
 
 export default router;

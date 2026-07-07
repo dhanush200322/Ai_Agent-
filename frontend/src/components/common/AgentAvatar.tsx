@@ -65,7 +65,8 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   };
 
   const currentSizeClass = sizeClasses[size] || sizeClasses.md;
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+  const backendUrl = apiUrl.replace(/\/api\/v[0-9]+$/, '');
   
   const sizeMap: Record<AgentAvatarSize, string> = {
     xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl', '2xl': '2xl',

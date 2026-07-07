@@ -31,7 +31,6 @@ const NAVIGATION_ITEMS = [
   
   { label: 'Organization', href: '/dashboard/organization', icon: Building2, section: 'Administration' },
   { label: 'Users', href: '/dashboard/users', icon: Users, section: 'Administration' },
-  { label: 'Roles', href: '/dashboard/roles', icon: Shield, section: 'Administration' },
   { label: 'Vault', href: '/dashboard/vault', icon: Lock, section: 'Administration' },
   
   { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'Platform' },

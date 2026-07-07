@@ -87,5 +87,50 @@ class VaultService {
         }
         return this.retrieveSecret(lease.organizationId, lease.secretId, lease.actorId, lease.actorType);
     }
+    async getStats(organizationId) {
+        const totalSecrets = await prisma_1.prisma.vaultSecret.count({ where: { organizationId } });
+        const activeSecrets = await prisma_1.prisma.vaultSecret.count({ where: { organizationId, status: 'ACTIVE' } });
+        const disabledSecrets = await prisma_1.prisma.vaultSecret.count({ where: { organizationId, status: 'DISABLED' } });
+        const expiringSoon = 0; // Not natively supported by current Prisma schema
+        const expired = await prisma_1.prisma.vaultSecret.count({ where: { organizationId, status: 'DELETED' } });
+        // Rotated recently (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const rotated = await prisma_1.prisma.vaultSecretVersion.count({
+            where: {
+                secret: { organizationId },
+                version: { gt: 1 },
+                createdAt: { gte: sevenDaysAgo }
+            }
+        });
+        const accessCount = await prisma_1.prisma.vaultAccessLog.count({ where: { secret: { organizationId } } });
+        const lastAccess = await prisma_1.prisma.vaultAccessLog.findFirst({
+            where: { secret: { organizationId } },
+            orderBy: { createdAt: 'desc' },
+            select: { createdAt: true }
+        });
+        const categories = await prisma_1.prisma.vaultSecret.groupBy({
+            by: ['category'],
+            where: { organizationId },
+            _count: true
+        });
+        const providers = await prisma_1.prisma.vaultSecret.groupBy({
+            by: ['provider'],
+            where: { organizationId },
+            _count: true
+        });
+        return {
+            totalSecrets,
+            activeSecrets,
+            disabledSecrets,
+            expiringSoon,
+            expired,
+            rotated,
+            accessCount,
+            lastAccessTime: lastAccess?.createdAt || null,
+            categories: categories.length,
+            providers: providers.length
+        };
+    }
 }
 exports.VaultService = VaultService;

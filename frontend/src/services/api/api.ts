@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/features/auth/store';
+import { useNotificationStore } from '@/store/notificationStore';
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
@@ -37,7 +38,23 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config.method?.toLowerCase();
+    if (['post', 'put', 'patch', 'delete'].includes(method || '')) {
+      // Avoid login/refresh noise
+      const url = response.config.url || '';
+      if (!url.includes('/auth/login') && !url.includes('/auth/refresh')) {
+        const message = response.data?.message;
+        if (message && typeof message === 'string') {
+          useNotificationStore.getState().addNotification({
+            title: method === 'delete' ? 'Resource Deleted' : 'Action Successful',
+            message: message,
+          });
+        }
+      }
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 

@@ -2,23 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const vault_controller_1 = require("../controllers/vault.controller");
-const uuid_1 = require("uuid");
-// Mock auth middleware for the prototype
-const authMiddleware = (req, _res, next) => {
-    req.user = {
-        id: (0, uuid_1.v4)(),
-        organizationId: '00000000-0000-0000-0000-000000000001'
-    };
-    next();
-};
+const auth_1 = require("../../../middleware/auth");
+const authorize_1 = require("../../../middleware/authorize");
 const router = (0, express_1.Router)();
 const controller = new vault_controller_1.VaultController();
-router.post('/', authMiddleware, controller.storeSecret.bind(controller));
-router.get('/', authMiddleware, controller.listSecrets.bind(controller));
-router.get('/:id', authMiddleware, controller.retrieveSecret.bind(controller));
-router.post('/:id/rotate', authMiddleware, controller.rotateSecret.bind(controller));
-router.delete('/:id', authMiddleware, controller.revokeSecret.bind(controller));
+router.use(auth_1.authenticate);
+router.post('/', (0, authorize_1.authorize)('vault:write'), controller.storeSecret.bind(controller));
+router.get('/', (0, authorize_1.authorize)('vault:view'), controller.listSecrets.bind(controller));
+router.get('/stats', (0, authorize_1.authorize)('vault:view'), controller.getStats?.bind(controller) || ((req, res) => res.json({})));
+router.get('/:id', (0, authorize_1.authorize)('vault:view'), controller.retrieveSecret.bind(controller));
+router.post('/:id/rotate', (0, authorize_1.authorize)('vault:write'), controller.rotateSecret.bind(controller));
+router.delete('/:id', (0, authorize_1.authorize)('vault:write'), controller.revokeSecret.bind(controller));
 // Leases
-router.post('/:id/lease', authMiddleware, controller.createLease.bind(controller));
-router.get('/lease/:leaseId', authMiddleware, controller.retrieveLease.bind(controller));
+router.post('/:id/lease', (0, authorize_1.authorize)('vault:write'), controller.createLease.bind(controller));
+router.get('/lease/:leaseId', (0, authorize_1.authorize)('vault:view'), controller.retrieveLease.bind(controller));
 exports.default = router;

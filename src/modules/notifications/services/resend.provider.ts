@@ -7,14 +7,15 @@ export class ResendProvider {
     this.resend = new Resend(process.env.RESEND_API_KEY || 're_123');
   }
 
-  async sendEmail(to: string | string[], subject: string, html: string, attachments?: any[]) {
+  async sendEmail(to: string | string[], subject: string, html: string, attachments?: any[], replyTo?: string) {
     try {
       const response = await this.resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || 'Nexora AI <onboarding@resend.dev>',
         to: Array.isArray(to) ? to : [to],
         subject,
         html,
-        attachments
+        attachments,
+        replyTo: replyTo
       });
 
       if (response.error) {

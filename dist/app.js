@@ -22,6 +22,7 @@ const notification_routes_1 = __importDefault(require("./modules/notification/ro
 const workflow_routes_1 = __importDefault(require("./modules/workflow/routes/workflow.routes"));
 const vault_routes_1 = __importDefault(require("./modules/vault/routes/vault.routes"));
 const health_routes_1 = __importDefault(require("./routes/health.routes"));
+const contact_routes_1 = __importDefault(require("./modules/contact/routes/contact.routes"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const logger_1 = __importDefault(require("./shared/logger/logger"));
 const AppError_1 = require("./shared/errors/AppError");
@@ -83,6 +84,7 @@ app.use('/api/v1/chat', chat_routes_1.default);
 app.use('/api/v1/notifications', notification_routes_1.default);
 app.use('/api/v1/workflows', workflow_routes_1.default);
 app.use('/api/v1/vault', vault_routes_1.default);
+app.use('/api/v1/contact', contact_routes_1.default);
 // Catch 404 and forward to error handler
 app.use((req, _res, next) => {
     next(new AppError_1.NotFoundError(`Route ${req.originalUrl} not found`));

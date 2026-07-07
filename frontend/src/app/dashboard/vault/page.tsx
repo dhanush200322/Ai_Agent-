@@ -2,16 +2,19 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import { EmptyState } from '@/components/dashboard/ui/EmptyState';
-import { useSecrets, VaultSecret } from '@/services/vault/vault.service';
-import { Lock, Search, Plus, Shield, Key, Eye, Clock, Hash, Database, Cloud, Mail, CreditCard, Box, Fingerprint, Calendar, MoreVertical } from 'lucide-react';
+import { useSecrets, useVaultStats, useRetrieveSecret, VaultSecret } from '@/services/vault/vault.service';
+import { Lock, Search, Plus, Shield, Key, Eye, EyeOff, Copy, CheckCircle2, Clock, Hash, Database, Cloud, Mail, CreditCard, Box, Fingerprint, Calendar, MoreVertical } from 'lucide-react';
 
 export default function VaultPage() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'secrets'>('dashboard');
-  const { data: secrets, isLoading } = useSecrets();
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get('tab') === 'secrets' ? 'secrets' : 'dashboard';
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'secrets'>(defaultTab);
+  const { data: secrets, isLoading: isLoadingSecrets } = useSecrets();
+  const { data: stats, isLoading: isLoadingStats } = useVaultStats();
   const router = useRouter();
 
   return (
@@ -52,11 +55,11 @@ export default function VaultPage() {
       <AnimatePresence mode="wait">
         {activeTab === 'dashboard' ? (
           <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <VaultDashboard secrets={secrets} isLoading={isLoading} />
+            <VaultDashboard stats={stats} isLoading={isLoadingStats} />
           </motion.div>
         ) : (
           <motion.div key="secrets" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <SecretsList secrets={secrets} isLoading={isLoading} />
+            <SecretsList secrets={secrets} isLoading={isLoadingSecrets} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -64,8 +67,8 @@ export default function VaultPage() {
   );
 }
 
-function VaultDashboard({ secrets, isLoading }: { secrets?: VaultSecret[], isLoading: boolean }) {
-  if (isLoading) {
+function VaultDashboard({ stats, isLoading }: { stats?: any, isLoading: boolean }) {
+  if (isLoading || !stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -75,45 +78,55 @@ function VaultDashboard({ secrets, isLoading }: { secrets?: VaultSecret[], isLoa
     );
   }
 
-  const activeCount = secrets?.length || 0;
-  const categories = new Set(secrets?.map(s => s.category)).size;
-  const providers = new Set(secrets?.map(s => s.provider)).size;
-  const recentlyUpdated = secrets?.filter(s => (new Date().getTime() - new Date(s.updatedAt).getTime()) < 7 * 24 * 60 * 60 * 1000).length || 0;
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={<Shield className="w-5 h-5 text-emerald-400" />} label="Active Secrets" value={activeCount} />
-        <StatCard icon={<Box className="w-5 h-5 text-indigo-400" />} label="Categories" value={categories} />
-        <StatCard icon={<Cloud className="w-5 h-5 text-blue-400" />} label="Providers" value={providers} />
-        <StatCard icon={<Clock className="w-5 h-5 text-amber-400" />} label="Recently Rotated (7d)" value={recentlyUpdated} />
+        <StatCard icon={<Shield className="w-5 h-5 text-emerald-400" />} label="Active Secrets" value={stats.activeSecrets || 0} />
+        <StatCard icon={<Box className="w-5 h-5 text-indigo-400" />} label="Categories" value={stats.categories || 0} />
+        <StatCard icon={<Cloud className="w-5 h-5 text-blue-400" />} label="Providers" value={stats.providers || 0} />
+        <StatCard icon={<Clock className="w-5 h-5 text-amber-400" />} label="Recently Rotated (7d)" value={stats.rotated || 0} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Unsupported Stats Display */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl">
-          <h3 className="text-lg font-medium text-white mb-6">Disabled & Expiring Secrets</h3>
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-slate-500" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-rose-500/10 rounded-lg"><Lock className="w-5 h-5 text-rose-400" /></div>
+              <h3 className="text-lg font-medium text-white">Disabled / Revoked</h3>
             </div>
-            <h4 className="text-white font-medium text-lg mb-2">Backend Support Required</h4>
-            <p className="text-slate-400 text-sm max-w-sm">
-              The current backend API only exposes active secrets. Metrics for disabled, expiring, or revoked secrets are not currently available via the API.
-            </p>
+            <p className="text-slate-400 text-sm mb-6">Secrets that are no longer active or have been manually revoked by administrators.</p>
+          </div>
+          <div className="flex items-end justify-between">
+            <span className="text-4xl font-bold text-white">{stats.disabledSecrets + stats.expired || 0}</span>
+            <span className="text-sm text-slate-500">Total inactive</span>
           </div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl">
-          <h3 className="text-lg font-medium text-white mb-6">Usage Summary</h3>
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <Key className="w-8 h-8 text-slate-500" />
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-amber-500/10 rounded-lg"><Clock className="w-5 h-5 text-amber-400" /></div>
+              <h3 className="text-lg font-medium text-white">Expiring Soon</h3>
             </div>
-            <h4 className="text-white font-medium text-lg mb-2">Backend Support Required</h4>
-            <p className="text-slate-400 text-sm max-w-sm">
-              The backend does not currently expose usage relationships for AI Agents, Workflows, or Integrations.
-            </p>
+            <p className="text-slate-400 text-sm mb-6">Active leases and secrets that are scheduled to expire in the near future.</p>
+          </div>
+          <div className="flex items-end justify-between">
+            <span className="text-4xl font-bold text-white">{stats.expiringSoon || 0}</span>
+            <span className="text-sm text-slate-500">Needs attention</span>
+          </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-indigo-500/10 rounded-lg"><Key className="w-5 h-5 text-indigo-400" /></div>
+              <h3 className="text-lg font-medium text-white">Usage Summary</h3>
+            </div>
+            <p className="text-slate-400 text-sm mb-6">Total number of times secrets were accessed, read, or rotated across the workspace.</p>
+          </div>
+          <div className="flex items-end justify-between">
+            <span className="text-4xl font-bold text-white">{stats.accessCount || 0}</span>
+            <span className="text-sm text-slate-500">Access logs</span>
           </div>
         </div>
       </div>
@@ -167,6 +180,7 @@ function SecretsList({ secrets, isLoading }: { secrets?: VaultSecret[], isLoadin
                 <th className="p-4 font-medium sticky left-0 z-10 bg-black/40 backdrop-blur-xl min-w-[200px]">Secret Name</th>
                 <th className="p-4 font-medium">Category</th>
                 <th className="p-4 font-medium">Provider</th>
+                <th className="p-4 font-medium hidden md:table-cell">Secret Value</th>
                 <th className="p-4 font-medium hidden md:table-cell">Created Date</th>
                 <th className="p-4 font-medium hidden md:table-cell">Updated Date</th>
                 <th className="p-4 w-12"></th>
@@ -196,38 +210,7 @@ function SecretsList({ secrets, isLoading }: { secrets?: VaultSecret[], isLoadin
                 </tr>
               ) : (
                 filtered.map((secret, index) => (
-                  <motion.tr 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    key={secret.id} 
-                    className="border-b border-white/5 hover:bg-white/[0.05] transition-colors cursor-pointer group"
-                    onClick={() => router.push(`/dashboard/vault/${secret.id}`)}
-                  >
-                    <td className="p-4 sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl group-hover:bg-[#151515]/90 transition-colors">
-                      <div className="font-medium text-white flex items-center gap-2">
-                        <Lock className="w-4 h-4 text-slate-400 shrink-0" /> <span className="truncate">{secret.name}</span>
-                      </div>
-                      {secret.description && <div className="text-xs text-slate-500 mt-1 truncate max-w-[200px]">{secret.description}</div>}
-                    </td>
-                    <td className="p-4 whitespace-nowrap">
-                      <CategoryBadge category={secret.category} />
-                    </td>
-                    <td className="p-4 text-slate-300 text-sm whitespace-nowrap">
-                      {secret.provider}
-                    </td>
-                    <td className="p-4 text-sm text-slate-400 hidden md:table-cell whitespace-nowrap">
-                      <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(secret.createdAt).toLocaleDateString()}</div>
-                    </td>
-                    <td className="p-4 text-sm text-slate-400 hidden md:table-cell whitespace-nowrap">
-                      <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {new Date(secret.updatedAt).toLocaleDateString()}</div>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors" onClick={e => e.stopPropagation()}>
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </motion.tr>
+                  <SecretRow key={secret.id} secret={secret} index={index} />
                 ))
               )}
             </tbody>
@@ -235,5 +218,78 @@ function SecretsList({ secrets, isLoading }: { secrets?: VaultSecret[], isLoadin
         </div>
       </div>
     </div>
+  );
+}
+
+function SecretRow({ secret, index }: { secret: VaultSecret, index: number }) {
+  const router = useRouter();
+  const [showKey, setShowKey] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { data: secretData, refetch, isFetching } = useRetrieveSecret(secret.id);
+
+  const handleToggleShow = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!showKey) {
+      await refetch();
+    }
+    setShowKey(!showKey);
+  };
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    let value = secretData?.value;
+    if (!value) {
+      const res = await refetch();
+      value = res.data?.value;
+    }
+    if (value) {
+      navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <motion.tr 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="border-b border-white/5 hover:bg-white/[0.05] transition-colors cursor-pointer group"
+      onClick={() => router.push(`/dashboard/vault/${secret.id}`)}
+    >
+      <td className="p-4 sticky left-0 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl group-hover:bg-[#151515]/90 transition-colors">
+        <div className="font-medium text-white flex items-center gap-2">
+          <Lock className="w-4 h-4 text-slate-400 shrink-0" /> <span className="truncate">{secret.name}</span>
+        </div>
+        {secret.description && <div className="text-xs text-slate-500 mt-1 truncate max-w-[200px]">{secret.description}</div>}
+      </td>
+      <td className="p-4 whitespace-nowrap">
+        <CategoryBadge category={secret.category} />
+      </td>
+      <td className="p-4 text-slate-300 text-sm whitespace-nowrap">
+        {secret.provider}
+      </td>
+      <td className="p-4 hidden md:table-cell whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          <div className="font-mono text-xs bg-black/40 px-2 py-1 rounded text-slate-300 border border-white/10 w-32 truncate">
+            {isFetching ? 'Loading...' : showKey && secretData?.value ? secretData.value : '••••••••••••••••'}
+          </div>
+          <button onClick={handleToggleShow} className="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors" title={showKey ? "Hide Secret" : "Show Secret"}>
+            {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          </button>
+          <button onClick={handleCopy} className="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors" title="Copy to clipboard">
+            {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </td>
+      <td className="p-4 text-sm text-slate-400 hidden md:table-cell whitespace-nowrap">
+        <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(secret.createdAt).toLocaleDateString()}</div>
+      </td>
+      <td className="p-4 text-right">
+        <button className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors" onClick={e => e.stopPropagation()}>
+          <MoreVertical className="w-4 h-4" />
+        </button>
+      </td>
+    </motion.tr>
   );
 }

@@ -51,19 +51,25 @@ class UserService {
             inviterId
         });
         try {
-            const { Resend } = require('resend');
-            if (process.env.RESEND_API_KEY) {
-                const resend = new Resend(process.env.RESEND_API_KEY);
-                await resend.emails.send({
-                    from: inviter.email,
-                    to: email,
-                    subject: `You have been invited to join ${inviter.firstName}'s Organization`,
-                    html: `<p>Click <a href="http://localhost:3001/accept-invite?token=${token}">here</a> to accept your invitation.</p>`
-                });
-            }
+            const { ResendProvider } = require('../../notifications/services/resend.provider');
+            const resendProvider = new ResendProvider();
+            const subject = `You have been invited to join ${inviter.firstName}'s Workspace on Nexora AI`;
+            const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #111;">Join ${inviter.firstName} ${inviter.lastName} on Nexora AI</h2>
+          <p>Hello,</p>
+          <p><strong>${inviter.email}</strong> has invited you to join their workspace as a <strong>${role.name}</strong>.</p>
+          <p>Click the button below to accept the invitation and set up your account:</p>
+          <div style="margin: 30px 0;">
+            <a href="http://localhost:3001/accept-invite?token=${token}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">Accept Invitation</a>
+          </div>
+          <p style="color: #666; font-size: 14px;">If you didn't expect this invitation, you can safely ignore this email.</p>
+        </div>
+      `;
+            await resendProvider.sendEmail(email, subject, html, undefined, inviter.email);
         }
         catch (e) {
-            console.error('Failed to send invitation email via Resend', e);
+            console.error('Failed to send invitation email via ResendProvider', e);
         }
         auditLogger_1.AuditLogger.log('USER_INVITED', 'user', { email, organizationId, roleId: role.id });
         return invite;
