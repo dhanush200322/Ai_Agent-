@@ -28,11 +28,11 @@ class VaultService {
         await this.audit(secretId, actorId, 'USER', 'CREATE');
         return secretId;
     }
-    async retrieveSecret(secretId, actorId, actorType = 'USER') {
+    async retrieveSecret(organizationId, secretId, actorId, actorType = 'USER') {
         const cacheKey = `${redis_constants_1.REDIS_CONSTANTS.NAMESPACES.VAULT}${secretId}`;
         let value = await this.cache.get(cacheKey);
         if (!value) {
-            const result = await this.provider.retrieve(secretId);
+            const result = await this.provider.retrieve(organizationId, secretId);
             if (!result)
                 return null;
             value = result.value;
@@ -42,17 +42,17 @@ class VaultService {
         await this.audit(secretId, actorId, actorType, 'READ');
         return value;
     }
-    async rotateSecret(secretId, actorId, newValue) {
-        const newVersion = await this.provider.rotate(secretId, newValue);
+    async rotateSecret(organizationId, secretId, actorId, newValue) {
+        const newVersion = await this.provider.rotate(organizationId, secretId, newValue);
         // Invalidate cache
         const cacheKey = `${redis_constants_1.REDIS_CONSTANTS.NAMESPACES.VAULT}${secretId}`;
         await this.cache.del(cacheKey);
         await this.audit(secretId, actorId, 'SYSTEM', 'ROTATE', { version: newVersion });
         return newVersion;
     }
-    async revokeSecret(secretId, actorId) {
+    async revokeSecret(organizationId, secretId, actorId) {
         // 1. Disable in database
-        await this.provider.disable(secretId);
+        await this.provider.disable(organizationId, secretId);
         // 2. Invalidate cache
         const cacheKey = `${redis_constants_1.REDIS_CONSTANTS.NAMESPACES.VAULT}${secretId}`;
         await this.cache.del(cacheKey);
@@ -85,7 +85,7 @@ class VaultService {
         if (!lease || lease.isRevoked || new Date() > lease.expiresAt) {
             throw new Error('Lease is invalid, expired, or revoked');
         }
-        return this.retrieveSecret(lease.secretId, lease.actorId, lease.actorType);
+        return this.retrieveSecret(lease.organizationId, lease.secretId, lease.actorId, lease.actorType);
     }
 }
 exports.VaultService = VaultService;

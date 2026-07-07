@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const user_service_1 = require("../services/user.service");
 const storage_service_1 = require("../../../shared/utils/storage.service");
+const image_service_1 = require("../../../shared/utils/image.service");
 const ApiResponse_1 = require("../../../shared/response/ApiResponse");
 class UserController {
     userService = new user_service_1.UserService();
@@ -38,7 +39,18 @@ class UserController {
     updateProfile = async (req, res) => {
         let updateData = { ...req.body };
         if (req.file) {
-            updateData.avatar = storage_service_1.StorageService.getFileUrl(req.file.filename);
+            const baseName = await image_service_1.ImageService.processAvatar(req.file.path);
+            updateData.avatar = storage_service_1.StorageService.getFileUrl(baseName);
+            // Clean up old avatar if exists
+            try {
+                const existingUser = await this.userService.getUser(req.user.organizationId, req.user.id);
+                if (existingUser && existingUser.avatar) {
+                    await storage_service_1.StorageService.deleteFile(existingUser.avatar);
+                }
+            }
+            catch (e) {
+                console.error('Failed to cleanup old user avatar', e);
+            }
         }
         const profile = await this.userService.updateProfile(req.user.organizationId, req.user.id, updateData);
         res.status(200).json(ApiResponse_1.ApiResponse.success(profile, 'Profile updated', req.reqId));

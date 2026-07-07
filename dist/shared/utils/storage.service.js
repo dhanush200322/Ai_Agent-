@@ -19,17 +19,38 @@ const storage = multer_1.default.diskStorage({
 });
 exports.upload = (0, multer_1.default)({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
     fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-            return cb(new Error('Only image files are allowed'));
+        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+            return cb(new Error('Only standard image formats (jpg, png, webp, gif) are allowed'));
         }
         cb(null, true);
     }
 });
 class StorageService {
-    static getFileUrl(filename) {
-        return `/uploads/${filename}`;
+    static getFileUrl(baseName) {
+        // Note: The baseName is now a hash, e.g., 'avatar-abcdef...'
+        // The frontend will dynamically append sizes, so we just return the baseName
+        return baseName;
+    }
+    static async deleteFile(baseName) {
+        try {
+            if (!baseName)
+                return;
+            const fs = require('fs');
+            const uploadDir = path_1.default.join(__dirname, '../../../public/uploads');
+            const sizes = ['xs', 'sm', 'md', 'lg', 'xl', '2xl'];
+            for (const size of sizes) {
+                const fullPath = path_1.default.join(uploadDir, `${baseName}-${size}.webp`);
+                if (fs.existsSync(fullPath)) {
+                    fs.unlinkSync(fullPath);
+                }
+            }
+        }
+        catch (e) {
+            console.error('Failed to delete old files:', e);
+        }
     }
 }
 exports.StorageService = StorageService;

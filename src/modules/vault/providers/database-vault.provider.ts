@@ -38,9 +38,9 @@ export class DatabaseVaultProvider implements VaultProvider {
     return secret.id;
   }
 
-  async retrieve(secretId: string, version?: number): Promise<RetrieveSecretResult | null> {
+  async retrieve(organizationId: string, secretId: string, version?: number): Promise<RetrieveSecretResult | null> {
     const secret = await prisma.vaultSecret.findUnique({
-      where: { id: secretId },
+      where: { id: secretId, organizationId },
       include: {
         versions: {
           orderBy: { version: 'desc' },
@@ -76,9 +76,9 @@ export class DatabaseVaultProvider implements VaultProvider {
     }
   }
 
-  async rotate(secretId: string, newValue: string): Promise<number> {
+  async rotate(organizationId: string, secretId: string, newValue: string): Promise<number> {
     const secret = await prisma.vaultSecret.findUnique({
-      where: { id: secretId },
+      where: { id: secretId, organizationId },
       include: {
         versions: {
           orderBy: { version: 'desc' },
@@ -110,9 +110,9 @@ export class DatabaseVaultProvider implements VaultProvider {
     return newVersionNum;
   }
 
-  async disable(secretId: string): Promise<void> {
-    await prisma.vaultSecret.update({
-      where: { id: secretId },
+  async disable(organizationId: string, secretId: string): Promise<void> {
+    await prisma.vaultSecret.updateMany({
+      where: { id: secretId, organizationId },
       data: { status: 'DISABLED' }
     });
   }

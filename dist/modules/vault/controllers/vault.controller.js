@@ -30,10 +30,11 @@ class VaultController {
         }
     }
     async retrieveSecret(req, res) {
+        const organizationId = req.user.organizationId;
         const actorId = req.user.id;
         const { id } = req.params;
         try {
-            const value = await this.vaultService.retrieveSecret(id, actorId, 'USER');
+            const value = await this.vaultService.retrieveSecret(organizationId, id, actorId, 'USER');
             if (!value) {
                 res.status(404).json({ error: 'Secret not found or disabled' });
                 return;
@@ -45,12 +46,13 @@ class VaultController {
         }
     }
     async rotateSecret(req, res) {
+        const organizationId = req.user.organizationId;
         const actorId = req.user.id;
         const { id } = req.params;
         const { newValue } = req.body; // Manual Rotation
         try {
             if (newValue) {
-                const version = await this.vaultService.rotateSecret(id, actorId, newValue);
+                const version = await this.vaultService.rotateSecret(organizationId, id, actorId, newValue);
                 res.json({ success: true, version });
             }
             else {
@@ -64,10 +66,11 @@ class VaultController {
         }
     }
     async revokeSecret(req, res) {
+        const organizationId = req.user.organizationId;
         const actorId = req.user.id;
         const { id } = req.params;
         try {
-            await this.vaultService.revokeSecret(id, actorId);
+            await this.vaultService.revokeSecret(organizationId, id, actorId);
             res.json({ success: true });
         }
         catch (e) {

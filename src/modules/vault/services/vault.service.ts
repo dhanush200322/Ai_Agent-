@@ -34,13 +34,13 @@ export class VaultService {
     return secretId;
   }
 
-  async retrieveSecret(secretId: string, actorId: string, actorType: string = 'USER'): Promise<string | null> {
+  async retrieveSecret(organizationId: string, secretId: string, actorId: string, actorType: string = 'USER'): Promise<string | null> {
     const cacheKey = `${REDIS_CONSTANTS.NAMESPACES.VAULT}${secretId}`;
     
     let value = await this.cache.get<string>(cacheKey);
 
     if (!value) {
-      const result = await this.provider.retrieve(secretId);
+      const result = await this.provider.retrieve(organizationId, secretId);
       if (!result) return null;
       value = result.value;
       // Cache for a short time to reduce DB/Crypto load, e.g., 5 mins
@@ -51,8 +51,8 @@ export class VaultService {
     return value;
   }
 
-  async rotateSecret(secretId: string, actorId: string, newValue: string): Promise<number> {
-    const newVersion = await this.provider.rotate(secretId, newValue);
+  async rotateSecret(organizationId: string, secretId: string, actorId: string, newValue: string): Promise<number> {
+    const newVersion = await this.provider.rotate(organizationId, secretId, newValue);
     
     // Invalidate cache
     const cacheKey = `${REDIS_CONSTANTS.NAMESPACES.VAULT}${secretId}`;
@@ -62,9 +62,9 @@ export class VaultService {
     return newVersion;
   }
 
-  async revokeSecret(secretId: string, actorId: string): Promise<void> {
+  async revokeSecret(organizationId: string, secretId: string, actorId: string): Promise<void> {
     // 1. Disable in database
-    await this.provider.disable(secretId);
+    await this.provider.disable(organizationId, secretId);
 
     // 2. Invalidate cache
     const cacheKey = `${REDIS_CONSTANTS.NAMESPACES.VAULT}${secretId}`;
@@ -107,6 +107,6 @@ export class VaultService {
       throw new Error('Lease is invalid, expired, or revoked');
     }
 
-    return this.retrieveSecret(lease.secretId, lease.actorId, lease.actorType);
+    return this.retrieveSecret(lease.organizationId, lease.secretId, lease.actorId, lease.actorType);
   }
 }

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentController = void 0;
 const agent_service_1 = require("../services/agent.service");
 const storage_service_1 = require("../../../shared/utils/storage.service");
+const image_service_1 = require("../../../shared/utils/image.service");
 const ApiResponse_1 = require("../../../shared/response/ApiResponse");
 class AgentController {
     agentService = new agent_service_1.AgentService();
@@ -22,7 +23,8 @@ class AgentController {
         console.log('REQ_BODY', req.body);
         let payload = { ...req.body };
         if (req.file) {
-            payload.avatar = storage_service_1.StorageService.getFileUrl(req.file.filename);
+            const baseName = await image_service_1.ImageService.processAvatar(req.file.path);
+            payload.avatar = storage_service_1.StorageService.getFileUrl(baseName);
         }
         const agent = await this.agentService.createAgent(req.user.organizationId, req.user.id, payload);
         res.status(201).json(ApiResponse_1.ApiResponse.success(agent, 'Agent created successfully', req.reqId));
@@ -30,7 +32,18 @@ class AgentController {
     updateAgent = async (req, res) => {
         let payload = { ...req.body };
         if (req.file) {
-            payload.avatar = storage_service_1.StorageService.getFileUrl(req.file.filename);
+            const baseName = await image_service_1.ImageService.processAvatar(req.file.path);
+            payload.avatar = storage_service_1.StorageService.getFileUrl(baseName);
+            // Clean up old avatar if exists
+            try {
+                const existingAgent = await this.agentService.getAgent(req.user.organizationId, req.params.id);
+                if (existingAgent && existingAgent.avatar) {
+                    await storage_service_1.StorageService.deleteFile(existingAgent.avatar);
+                }
+            }
+            catch (e) {
+                console.error('Failed to cleanup old avatar', e);
+            }
         }
         const agent = await this.agentService.updateAgent(req.user.organizationId, req.params.id, payload);
         res.status(200).json(ApiResponse_1.ApiResponse.success(agent, 'Agent updated successfully', req.reqId));

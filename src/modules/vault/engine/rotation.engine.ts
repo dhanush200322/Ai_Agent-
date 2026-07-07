@@ -44,7 +44,7 @@ export class RotationEngine {
     });
   }
 
-  async executeRotation(secretId: string, strategy: string, metadata?: string): Promise<void> {
+  async executeRotation(organizationId: string, secretId: string, strategy: string, metadata?: string): Promise<void> {
     // This is called by the worker
     try {
       let newSecretValue = '';
@@ -64,7 +64,7 @@ export class RotationEngine {
         newSecretValue = require('crypto').randomBytes(32).toString('base64');
       }
 
-      await this.vaultService.rotateSecret(secretId, 'SYSTEM_ROTATION_ENGINE', newSecretValue);
+      await this.vaultService.rotateSecret(organizationId, secretId, 'SYSTEM_ROTATION_ENGINE', newSecretValue);
 
       // Update policy dates
       await prisma.secretRotationPolicy.update({

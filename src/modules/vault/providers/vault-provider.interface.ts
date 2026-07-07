@@ -30,17 +30,17 @@ export interface VaultProvider {
   /**
    * Retrieve the decrypted value of a secret (latest or specific version)
    */
-  retrieve(secretId: string, version?: number): Promise<RetrieveSecretResult | null>;
+  retrieve(organizationId: string, secretId: string, version?: number): Promise<RetrieveSecretResult | null>;
 
   /**
    * Update a secret (creates V+1)
    */
-  rotate(secretId: string, newValue: string): Promise<number>;
+  rotate(organizationId: string, secretId: string, newValue: string): Promise<number>;
 
   /**
    * Soft delete a secret
    */
-  disable(secretId: string): Promise<void>;
+  disable(organizationId: string, secretId: string): Promise<void>;
 
   /**
    * List all active secrets metadata (no values)

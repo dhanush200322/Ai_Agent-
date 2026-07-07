@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '@/features/auth/store';
 import { useUpdateProfile } from '@/services/profile/profile.service';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 import { User, Save, Loader2, Mail } from 'lucide-react';
 
 export function ProfileSettings() {
@@ -26,15 +27,12 @@ export function ProfileSettings() {
         </h3>
         
         <div className="flex items-center gap-6 mb-8 pb-8 border-b border-zinc-800">
-          <div className="w-24 h-24 rounded-2xl bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
-            {user?.avatar ? (
-              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl text-zinc-500 font-medium">
-                {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-              </span>
-            )}
-          </div>
+          <AgentAvatar 
+            imageUrl={user?.avatar} 
+            name={`${user?.firstName || ''} ${user?.lastName || ''}`.trim()} 
+            size="2xl" 
+            className="border border-zinc-700 rounded-2xl"
+          />
           <div>
             <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-medium transition-colors mb-2">
               Change Avatar

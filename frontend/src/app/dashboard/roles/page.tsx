@@ -7,10 +7,12 @@ import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import { useRoles, usePermissions, useCreateRole, useUpdateRole, useDeleteRole, useAssignPermission, useRemovePermission } from '@/services/rbac/rbac.service';
 import { EmptyState } from '@/components/dashboard/ui/EmptyState';
 import { Shield, Plus, MoreVertical, Check, X, Search, Edit2, Trash2 } from 'lucide-react';
+import { CreateRoleModal } from './components/CreateRoleModal';
 
 export default function RolesPage() {
   const [activeTab, setActiveTab] = useState<'list' | 'matrix'>('list');
   const [search, setSearch] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   const { data: roles, isLoading: isLoadingRoles } = useRoles();
   const { data: permissions, isLoading: isLoadingPermissions } = usePermissions();
@@ -43,7 +45,10 @@ export default function RolesPage() {
               Permission Matrix
             </button>
           </div>
-          <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
             <Plus className="w-4 h-4" /> Create Role
           </button>
         </div>
@@ -132,6 +137,11 @@ export default function RolesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <CreateRoleModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
     </ContentWrapper>
   );
 }

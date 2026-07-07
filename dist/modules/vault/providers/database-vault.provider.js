@@ -31,9 +31,9 @@ class DatabaseVaultProvider {
         });
         return secret.id;
     }
-    async retrieve(secretId, version) {
+    async retrieve(organizationId, secretId, version) {
         const secret = await prisma_1.prisma.vaultSecret.findUnique({
-            where: { id: secretId },
+            where: { id: secretId, organizationId },
             include: {
                 versions: {
                     orderBy: { version: 'desc' },
@@ -65,9 +65,9 @@ class DatabaseVaultProvider {
             throw new Error(`Decryption failed: ${err.message}`);
         }
     }
-    async rotate(secretId, newValue) {
+    async rotate(organizationId, secretId, newValue) {
         const secret = await prisma_1.prisma.vaultSecret.findUnique({
-            where: { id: secretId },
+            where: { id: secretId, organizationId },
             include: {
                 versions: {
                     orderBy: { version: 'desc' },
@@ -93,9 +93,9 @@ class DatabaseVaultProvider {
         });
         return newVersionNum;
     }
-    async disable(secretId) {
-        await prisma_1.prisma.vaultSecret.update({
-            where: { id: secretId },
+    async disable(organizationId, secretId) {
+        await prisma_1.prisma.vaultSecret.updateMany({
+            where: { id: secretId, organizationId },
             data: { status: 'DISABLED' }
         });
     }

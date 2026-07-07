@@ -8,7 +8,9 @@ import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import { useUsers, useUpdateUserStatus, useDeleteUser } from '@/services/users/users.service';
 import { useRoles } from '@/services/rbac/rbac.service';
 import { EmptyState } from '@/components/dashboard/ui/EmptyState';
+import { AgentAvatar } from '@/components/common/AgentAvatar';
 import { Search, Filter, MoreVertical, Shield, Mail, Calendar, CheckCircle2, XCircle, AlertCircle, Trash2, Download, UserPlus, Clock, Users } from 'lucide-react';
+import { InviteUserModal } from './components/InviteUserModal';
 
 export default function UsersPage() {
   const router = useRouter();
@@ -16,6 +18,7 @@ export default function UsersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const { data: usersData, isLoading: isLoadingUsers } = useUsers(1, 100, search, statusFilter, roleFilter);
   const { data: rolesData } = useRoles();
@@ -78,7 +81,7 @@ export default function UsersPage() {
           description="Manage enterprise users, roles, and access."
         />
         <button 
-          onClick={() => { /* Open Invite Modal */ }}
+          onClick={() => setIsInviteModalOpen(true)}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
           <UserPlus className="w-4 h-4" /> Invite User
@@ -204,13 +207,12 @@ export default function UsersPage() {
                     </td>
                     <td className="p-4 sticky left-12 z-10 bg-[#0A0A0A]/90 backdrop-blur-xl group-hover:bg-[#151515]/90 transition-colors min-w-[200px]">
                       <div className="flex items-center gap-3">
-                        {user.avatar ? (
-                          <img src={user.avatar} alt={user.firstName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-medium border border-indigo-500/30 shrink-0">
-                            {user.firstName?.[0]}{user.lastName?.[0]}
-                          </div>
-                        )}
+                        <AgentAvatar 
+                          imageUrl={user.avatar} 
+                          name={`${user.firstName || ''} ${user.lastName || ''}`.trim()} 
+                          size="md" 
+                          className="border border-white/10"
+                        />
                         <div className="min-w-0">
                           <div className="font-medium text-white truncate">{user.firstName} {user.lastName} {user.isOwner && <span className="ml-2 text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full">Owner</span>}</div>
                           <div className="text-sm text-slate-400 truncate">{user.email}</div>
@@ -254,6 +256,11 @@ export default function UsersPage() {
           </table>
         </div>
       </div>
+
+      <InviteUserModal 
+        isOpen={isInviteModalOpen} 
+        onClose={() => setIsInviteModalOpen(false)} 
+      />
     </ContentWrapper>
   );
 }

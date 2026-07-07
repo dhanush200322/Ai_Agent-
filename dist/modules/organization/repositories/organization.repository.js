@@ -14,7 +14,15 @@ class OrganizationRepository {
             data
         });
     }
-    async transferOwnership(_organizationId, currentOwnerId, newOwnerId) {
+    async transferOwnership(organizationId, currentOwnerId, newOwnerId) {
+        const newOwner = await prisma_1.prisma.user.findUnique({ where: { id: newOwnerId } });
+        if (!newOwner || newOwner.organizationId !== organizationId) {
+            throw new Error('New owner must belong to the same organization');
+        }
+        const currentOwner = await prisma_1.prisma.user.findUnique({ where: { id: currentOwnerId } });
+        if (!currentOwner || currentOwner.organizationId !== organizationId) {
+            throw new Error('Current owner must belong to the same organization');
+        }
         return prisma_1.prisma.$transaction([
             prisma_1.prisma.user.update({ where: { id: currentOwnerId }, data: { isOwner: false } }),
             prisma_1.prisma.user.update({ where: { id: newOwnerId }, data: { isOwner: true } })

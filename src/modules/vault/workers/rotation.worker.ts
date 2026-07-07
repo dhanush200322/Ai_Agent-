@@ -10,9 +10,10 @@ export class RotationWorker {
 
   async process(job: QueueJob): Promise<void> {
     const { secretId, strategy, metadata } = job.payload.payload;
+    const organizationId = job.payload.organizationId;
     
     await job.log(`Starting rotation for secret ${secretId} via strategy ${strategy}`);
-    await this.rotationEngine.executeRotation(secretId, strategy, metadata);
+    await this.rotationEngine.executeRotation(organizationId, secretId, strategy, metadata);
     await job.log(`Rotation completed for secret ${secretId}`);
   }
 }
