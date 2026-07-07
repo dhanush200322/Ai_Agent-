@@ -306,19 +306,19 @@ model AgentKnowledgeBase {
 }
 
 model KnowledgeDocument {
-  id              String        @id @default(uuid()) @db.Uuid
-  knowledgeBaseId String        @db.Uuid
-  organizationId  String        @db.Uuid
-  uploadedById    String        @db.Uuid
+  id              String           @id @default(uuid()) @db.Uuid
+  knowledgeBaseId String           @db.Uuid
+  organizationId  String           @db.Uuid
+  uploadedById    String           @db.Uuid
   originalName    String
   fileName        String?
   mimeType        String?
   extension       String?
   size            Int?
   storagePath     String?
-  status          String        @default("PENDING")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  status          String           @default("PENDING")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   deletedAt       DateTime?
   chunkCount      Int?
   embeddingModel  String?
@@ -326,12 +326,12 @@ model KnowledgeDocument {
   processedAt     DateTime?
   processingTime  Int?
   metadata        String?
-  sourceType      String        @default("DOCUMENT")
-  version         Int           @default(1)
+  sourceType      String           @default("DOCUMENT")
+  version         Int              @default(1)
   hash            String?
-  knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
-  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  uploadedBy      User          @relation("UploadedKnowledgeDocuments", fields: [uploadedById], references: [id])
+  knowledgeBase   KnowledgeBase    @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedBy      User             @relation("UploadedKnowledgeDocuments", fields: [uploadedById], references: [id])
   chunks          KnowledgeChunk[]
 
   @@index([knowledgeBaseId])
@@ -342,23 +342,23 @@ model KnowledgeDocument {
 }
 
 model KnowledgeChunk {
-  id                String            @id @default(uuid()) @db.Uuid
-  documentId        String            @db.Uuid
-  organizationId    String            @db.Uuid
-  text              String
-  metadata          String?
-  pageNumber        Int?
-  tokenCount        Int?
-  vectorId          String?
-  collection        String?
-  namespace         String?
-  status            String            @default("PENDING")
-  dimension         Int?
-  embeddingModel    String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  document          KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id             String            @id @default(uuid()) @db.Uuid
+  documentId     String            @db.Uuid
+  organizationId String            @db.Uuid
+  text           String
+  metadata       String?
+  pageNumber     Int?
+  tokenCount     Int?
+  vectorId       String?
+  collection     String?
+  namespace      String?
+  status         String            @default("PENDING")
+  dimension      Int?
+  embeddingModel String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  document       KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([organizationId])
