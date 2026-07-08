@@ -57,9 +57,14 @@ class BillingController {
                 return;
             }
             const amountInPaise = amountInINR * 100;
+            const keyId = (process.env.RAZORPAY_KEY_ID || process.env['R A Z O R P A Y _ K E Y _ I D'] || '').replace(/\s+/g, '');
+            const keySecret = (process.env.RAZORPAY_KEY_SECRET || process.env[' R A Z O R P A Y _ K E Y _ S E C R E T '] || '').replace(/\s+/g, '');
+            if (!keyId || !keySecret) {
+                throw new Error('Razorpay keys are missing or invalid.');
+            }
             const razorpay = new razorpay_1.default({
-                key_id: process.env.RAZORPAY_KEY_ID,
-                key_secret: process.env.RAZORPAY_KEY_SECRET
+                key_id: keyId,
+                key_secret: keySecret
             });
             const orderOptions = {
                 amount: amountInPaise,
@@ -75,7 +80,7 @@ class BillingController {
         }
         catch (error) {
             console.error('Error creating Razorpay order:', error);
-            res.status(500).json({ error: 'Failed to create payment order.' });
+            res.status(500).json({ error: error.message || 'Failed to create payment order.' });
         }
     }
     async verifyRazorpayPayment(req, res) {
@@ -83,7 +88,10 @@ class BillingController {
         const userId = req.user.id;
         const { razorpay_payment_id, razorpay_order_id, razorpay_signature, plan, billingCycle } = req.body;
         try {
-            const secret = process.env.RAZORPAY_KEY_SECRET;
+            const secret = (process.env.RAZORPAY_KEY_SECRET || process.env[' R A Z O R P A Y _ K E Y _ S E C R E T '] || '').replace(/\s+/g, '');
+            if (!secret) {
+                throw new Error('Razorpay secret is missing.');
+            }
             const generatedSignature = crypto_1.default
                 .createHmac('sha256', secret)
                 .update(razorpay_order_id + '|' + razorpay_payment_id)
@@ -197,9 +205,11 @@ class BillingController {
         res.json({ success: true, message: 'Use create-razorpay-order to renew' });
     }
     async razorpayWebhook(req, res) {
-        const secret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET;
+        const secret = (process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || process.env[' R A Z O R P A Y _ K E Y _ S E C R E T '] || '').replace(/\s+/g, '');
         const signature = req.headers['x-razorpay-signature'];
         try {
+            if (!secret)
+                throw new Error('Razorpay webhook secret is missing.');
             const generatedSignature = crypto_1.default
                 .createHmac('sha256', secret)
                 .update(JSON.stringify(req.body))
