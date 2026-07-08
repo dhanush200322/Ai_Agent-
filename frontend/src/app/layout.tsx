@@ -3,7 +3,7 @@ import { SmoothScroll } from "@/components/common/SmoothScroll";
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
-
+import { CustomCursor } from "@/components/ui/CustomCursor";
 import "./globals.css";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased text-foreground">
+        <CustomCursor />
         <SmoothScroll>
           <Providers>
             {children}
