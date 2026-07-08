@@ -7,6 +7,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 import app from './app';
 
 import { prisma } from './shared/prisma';
+import { startBillingCronJobs } from './modules/billing/workers/billing.cron';
 
 const PORT = process.env.PORT || 3000;
 
@@ -14,6 +15,9 @@ async function bootstrap() {
   try {
     await prisma.$connect();
     console.log("✅ PostgreSQL Connected");
+    
+    startBillingCronJobs();
+    console.log("✅ Billing Cron Jobs Initialized");
 
     const server = app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);

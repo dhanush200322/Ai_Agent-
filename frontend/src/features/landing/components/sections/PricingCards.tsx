@@ -7,6 +7,7 @@ import { MagneticButton } from "@/components/ui/MagneticButton";
 import { useRouter } from "next/navigation";
 import { api } from "@/services/api/api";
 import { toast } from "sonner";
+import { useAuthStore } from "@/features/auth/store";
 const plans = [
   {
     name: "Starter",
@@ -168,6 +169,10 @@ export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
               plan: 'professional',
               billingCycle
             });
+
+            // Refresh user session after payment
+            const userRes = await api.get('/auth/me');
+            useAuthStore.getState().setUser(userRes.data.data);
 
             toast.success("Successfully upgraded to Professional plan!");
             router.refresh(); // Refresh the page to reflect new subscription status

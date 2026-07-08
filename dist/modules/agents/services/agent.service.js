@@ -4,6 +4,7 @@ exports.AgentService = void 0;
 const agent_repository_1 = require("../repositories/agent.repository");
 const auditLogger_1 = require("../../../shared/audit/auditLogger");
 const AppError_1 = require("../../../shared/errors/AppError");
+const prisma_1 = require("../../../shared/prisma");
 class AgentService {
     agentRepo = new agent_repository_1.AgentRepository();
     async getAgents(organizationId, page, limit, search) {
@@ -27,6 +28,18 @@ class AgentService {
         const existing = await this.agentRepo.findAgentBySlug(organizationId, data.slug);
         if (existing) {
             throw new AppError_1.ConflictError('An agent with this slug already exists in your organization');
+        }
+        const subscription = await prisma_1.prisma.organizationSubscription.findUnique({
+            where: { organizationId },
+            include: { plan: true }
+        });
+        if (subscription && subscription.plan.name.toLowerCase() === 'starter' || subscription?.status === 'STARTER') {
+            const agentCount = await prisma_1.prisma.agent.count({
+                where: { organizationId, deletedAt: null }
+            });
+            if (agentCount >= 1) {
+                throw new AppError_1.AuthorizationError('Starter Plan allows only one AI Agent. Upgrade to Professional to create unlimited AI Agents.');
+            }
         }
         const agentData = {
             name: data.name,

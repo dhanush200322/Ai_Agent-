@@ -6,7 +6,8 @@ import { ContentWrapper } from '@/components/dashboard/layout/ContentWrapper';
 import { PageHeader } from '@/components/dashboard/layout/PageHeader';
 import { useAuthStore } from '@/features/auth/store';
 import { useUpdateProfile, useChangePassword, useSessions, useRevokeSession, useRevokeAllSessions } from '@/services/profile/profile.service';
-import { User, Lock, Clock, Shield, Upload, Monitor, Smartphone, Globe, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { User, Lock, Clock, Shield, Upload, Monitor, Smartphone, Globe, AlertCircle, CheckCircle2, Zap } from 'lucide-react';
+import { useSubscription } from '@/services/billing/billing.service';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'sessions'>('profile');
@@ -76,6 +77,7 @@ function ProfileSettings({ user }: { user: any }) {
   });
   
   const updateMutation = useUpdateProfile();
+  const { data: subscription } = useSubscription();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,8 +112,21 @@ function ProfileSettings({ user }: { user: any }) {
           </div>
           <h3 className="text-xl font-bold text-white">{user?.firstName} {user?.lastName}</h3>
           <p className="text-slate-400 text-sm">{user?.email}</p>
-          <div className="mt-4 px-3 py-1 bg-white/5 rounded-full border border-white/10 text-xs font-medium text-slate-300">
-            {user?.role?.name || 'User'}
+          <div className="mt-4 flex flex-col gap-2 w-full px-4">
+            <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10 text-xs font-medium text-slate-300">
+              Role: {user?.role?.name || 'User'}
+            </div>
+            {subscription && (
+              <div className={`flex flex-col items-center gap-1 p-3 rounded-lg border ${subscription.plan?.name === 'Professional' ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30' : 'bg-white/5 border-white/10'}`}>
+                <div className={`font-bold flex items-center gap-1 ${subscription.plan?.name === 'Professional' ? 'text-[#D4AF37]' : 'text-slate-300'}`}>
+                  {subscription.plan?.name === 'Professional' ? <Zap className="w-4 h-4" /> : null}
+                  {subscription.plan?.name?.toUpperCase() || 'STARTER'}
+                </div>
+                <div className="text-xs text-slate-400">
+                  {subscription.billingCycle} • Expires {new Date(subscription.expiryDate || subscription.renewalDate || '').toLocaleDateString()}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

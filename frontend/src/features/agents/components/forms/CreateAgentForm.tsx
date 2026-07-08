@@ -42,6 +42,7 @@ const STEPS = [
 export function CreateAgentForm() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const { mutateAsync: createAgent, isPending } = useCreateAgent();
 
@@ -87,12 +88,37 @@ export function CreateAgentForm() {
       toast.success('Agent created successfully!');
       router.push(`/dashboard/agents/${response.id}`);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create agent');
+      if (error.response?.status === 403 || error.response?.data?.message?.includes('Starter Plan')) {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create agent');
+      }
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto">
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#0F0F0F] border border-[#D4AF37]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative">
+            <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-4">
+              <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Upgrade to Professional</h2>
+            <p className="text-gray-400 mb-6">
+              The Starter Plan allows only one AI Agent. Upgrade to the Professional plan to unlock unlimited AI Agents, Knowledge Bases, and advanced capabilities.
+            </p>
+            <div className="flex gap-4">
+              <MagneticButton variant="secondary" className="flex-1" onClick={() => setShowUpgradeModal(false)}>
+                Cancel
+              </MagneticButton>
+              <MagneticButton variant="primary" className="flex-1" onClick={() => router.push('/dashboard/billing')}>
+                Upgrade Now
+              </MagneticButton>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Stepper */}
       <div className="flex items-center justify-between mb-8 relative">
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-[rgba(255,255,255,0.05)] -z-10" />

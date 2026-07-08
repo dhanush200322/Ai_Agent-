@@ -9,11 +9,14 @@ const path_1 = __importDefault(require("path"));
 dotenv_1.default.config({ path: path_1.default.join(__dirname, '../.env') });
 const app_1 = __importDefault(require("./app"));
 const prisma_1 = require("./shared/prisma");
+const billing_cron_1 = require("./modules/billing/workers/billing.cron");
 const PORT = process.env.PORT || 3000;
 async function bootstrap() {
     try {
         await prisma_1.prisma.$connect();
         console.log("✅ PostgreSQL Connected");
+        (0, billing_cron_1.startBillingCronJobs)();
+        console.log("✅ Billing Cron Jobs Initialized");
         const server = app_1.default.listen(PORT, () => {
             console.log(`🚀 Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
         });

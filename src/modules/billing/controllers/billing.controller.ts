@@ -48,10 +48,9 @@ export class BillingController {
 
   async createRazorpayOrder(req: Request, res: Response) {
     const organizationId = req.user!.organizationId;
-    const { plan, billingCycle } = req.body; // e.g. plan: "professional", billingCycle: "monthly"
+    const { plan, billingCycle } = req.body;
 
     try {
-      // Determine amount based on plan and billingCycle
       let amountInINR = 0;
       if (plan === 'professional') {
         amountInINR = billingCycle === 'annual' ? 9990 : 999;
@@ -60,7 +59,6 @@ export class BillingController {
         return;
       }
 
-      // Razorpay expects amount in paise (1 INR = 100 paise)
       const amountInPaise = amountInINR * 100;
 
       const razorpay = new Razorpay({
@@ -89,6 +87,7 @@ export class BillingController {
 
   async verifyRazorpayPayment(req: Request, res: Response) {
     const organizationId = req.user!.organizationId;
+    const userId = req.user!.id;
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature, plan, billingCycle } = req.body;
 
     try {
@@ -104,36 +103,92 @@ export class BillingController {
         return;
       }
 
-      // Find the subscription plan from DB based on name and cycle
+      const existingPayment = await prisma.payment.findUnique({
+        where: { providerPaymentId: razorpay_payment_id }
+      });
+      if (existingPayment) {
+        res.status(400).json({ error: 'Duplicate payment.' });
+        return;
+      }
+
       const subscriptionPlan = await prisma.subscriptionPlan.findFirst({
         where: { name: { equals: plan, mode: 'insensitive' } }
       });
+      
+      if (!subscriptionPlan) {
+        res.status(400).json({ error: 'Plan not found.' });
+        return;
+      }
 
-      const planId = subscriptionPlan?.id || 'default-plan-id';
+      const planId = subscriptionPlan.id;
+      let amountInINR = plan === 'professional' ? (billingCycle === 'annual' ? 9990 : 999) : 0;
 
-      // For this implementation, we will update or create the OrganizationSubscription
-      const orgSub = await prisma.organizationSubscription.upsert({
-        where: { organizationId },
-        update: {
-          status: 'ACTIVE',
-          billingCycle: billingCycle,
-          paymentProvider: 'RAZORPAY',
-          startDate: new Date(),
-          renewalDate: billingCycle === 'annual' 
+      const orgSub = await prisma.$transaction(async (tx) => {
+        const renewalDate = billingCycle === 'annual' 
             ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) 
-            : new Date(new Date().setMonth(new Date().getMonth() + 1)),
-        },
-        create: {
-          organizationId,
-          planId: planId,
-          billingCycle: billingCycle,
-          status: 'ACTIVE',
-          paymentProvider: 'RAZORPAY',
-          startDate: new Date(),
-          renewalDate: billingCycle === 'annual' 
-            ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) 
-            : new Date(new Date().setMonth(new Date().getMonth() + 1)),
-        }
+            : new Date(new Date().setMonth(new Date().getMonth() + 1));
+
+        const sub = await tx.organizationSubscription.upsert({
+          where: { organizationId },
+          update: {
+            userId: userId,
+            status: 'ACTIVE',
+            billingCycle: billingCycle,
+            paymentProvider: 'RAZORPAY',
+            startDate: new Date(),
+            renewalDate: renewalDate,
+            expiryDate: renewalDate,
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id,
+            razorpaySignature: razorpay_signature,
+            amount: amountInINR,
+            currency: 'INR'
+          },
+          create: {
+            userId: userId,
+            organizationId,
+            planId: planId,
+            billingCycle: billingCycle,
+            status: 'ACTIVE',
+            paymentProvider: 'RAZORPAY',
+            startDate: new Date(),
+            renewalDate: renewalDate,
+            expiryDate: renewalDate,
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id,
+            razorpaySignature: razorpay_signature,
+            amount: amountInINR,
+            currency: 'INR'
+          }
+        });
+        
+        const invoice = await tx.invoice.create({
+          data: {
+            organizationId,
+            invoiceNumber: `INV-${Date.now()}`,
+            subtotal: amountInINR,
+            tax: 0,
+            total: amountInINR,
+            status: 'PAID',
+            paidAt: new Date()
+          }
+        });
+        
+        await tx.payment.create({
+          data: {
+            invoiceId: invoice.id,
+            provider: 'RAZORPAY',
+            providerPaymentId: razorpay_payment_id,
+            currency: 'INR',
+            amount: amountInINR,
+            status: 'COMPLETED',
+            orderId: razorpay_order_id,
+            paymentMethod: 'razorpay',
+            purchaseDate: new Date()
+          }
+        });
+
+        return sub;
       });
 
       res.json({ success: true, subscription: orgSub });
@@ -144,6 +199,56 @@ export class BillingController {
   }
 
   // --- End Razorpay Integration ---
+
+  async getPaymentHistory(req: Request, res: Response) {
+    const organizationId = req.user!.organizationId;
+    try {
+      const payments = await prisma.payment.findMany({
+        where: { invoice: { organizationId } },
+        include: { invoice: true },
+        orderBy: { purchaseDate: 'desc' }
+      });
+      res.json(payments);
+    } catch (error: any) {
+      res.status(500).json({ error: 'Failed to fetch payment history' });
+    }
+  }
+
+  async renew(req: Request, res: Response) {
+    res.json({ success: true, message: 'Use create-razorpay-order to renew' });
+  }
+
+  async razorpayWebhook(req: Request, res: Response) {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET!;
+    const signature = req.headers['x-razorpay-signature'] as string;
+    
+    try {
+      const generatedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(JSON.stringify(req.body))
+        .digest('hex');
+
+      if (generatedSignature !== signature) {
+        res.status(400).json({ error: 'Invalid webhook signature' });
+        return;
+      }
+
+      const event = req.body;
+      
+      const webhookEvent = await prisma.billingWebhookEvent.create({
+        data: {
+          provider: 'RAZORPAY',
+          providerEventId: event.id || `evt_${Date.now()}`,
+          eventType: event.event || 'unknown',
+          payload: JSON.stringify(event)
+        }
+      });
+
+      res.status(200).send('OK');
+    } catch (err: any) {
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  }
 
   async webhook(req: Request, res: Response) {
     const signature = req.headers['stripe-signature'] as string;

@@ -161,6 +161,7 @@ model User {
   sessions                   UserSession[]
   createdWorkflows           Workflow[]                @relation("CreatedWorkflows")
   approvedWorkflows          WorkflowApproval[]        @relation("ApprovedWorkflows")
+  subscriptions              OrganizationSubscription[]
 
   @@index([organizationId])
   @@index([roleId])
@@ -1337,6 +1338,7 @@ model SubscriptionPlan {
 
 model OrganizationSubscription {
   id              String              @id @default(uuid()) @db.Uuid
+  userId          String?             @db.Uuid
   organizationId  String              @unique @db.Uuid
   planId          String              @db.Uuid
   billingCycle    String
@@ -1346,8 +1348,21 @@ model OrganizationSubscription {
   cancelDate      DateTime?
   paymentProvider PaymentProviderType @default(STRIPE)
   autoRenew       Boolean             @default(true)
+
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+  amount            Decimal?            @db.Decimal(10, 2)
+  currency          String?             @default("INR")
+  expiryDate        DateTime?
+
+  reminder30Sent    Boolean             @default(false)
+  reminder7Sent     Boolean             @default(false)
+  reminder3Sent     Boolean             @default(false)
+
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+  user            User?               @relation(fields: [userId], references: [id])
   organization    Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   plan            SubscriptionPlan    @relation(fields: [planId], references: [id])
 }
@@ -1396,6 +1411,12 @@ model Payment {
   amount            Decimal             @db.Decimal(10, 2)
   status            PaymentStatus       @default(PENDING)
   metadata          String?
+  
+  orderId           String?
+  transactionId     String?
+  paymentMethod     String?
+  purchaseDate      DateTime            @default(now())
+
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   invoice           Invoice             @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
@@ -3680,10 +3701,12 @@ enum WorkerStatus {
 enum SubscriptionStatus {
   TRIAL
   ACTIVE
+  PENDING
   PAST_DUE
   SUSPENDED
   CANCELLED
   EXPIRED
+  STARTER
 }
 
 enum InvoiceStatus {

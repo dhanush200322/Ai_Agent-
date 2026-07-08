@@ -1,6 +1,7 @@
 import { AgentRepository } from '../repositories/agent.repository';
 import { AuditLogger } from '../../../shared/audit/auditLogger';
-import { ConflictError, NotFoundError } from '../../../shared/errors/AppError';
+import { ConflictError, NotFoundError, AuthorizationError } from '../../../shared/errors/AppError';
+import { prisma } from '../../../shared/prisma';
 
 export class AgentService {
   private agentRepo = new AgentRepository();
@@ -27,6 +28,20 @@ export class AgentService {
     const existing = await this.agentRepo.findAgentBySlug(organizationId, data.slug);
     if (existing) {
       throw new ConflictError('An agent with this slug already exists in your organization');
+    }
+
+    const subscription = await prisma.organizationSubscription.findUnique({
+      where: { organizationId },
+      include: { plan: true }
+    });
+
+    if (subscription && subscription.plan.name.toLowerCase() === 'starter' || subscription?.status === 'STARTER') {
+      const agentCount = await prisma.agent.count({
+        where: { organizationId, deletedAt: null }
+      });
+      if (agentCount >= 1) {
+        throw new AuthorizationError('Starter Plan allows only one AI Agent. Upgrade to Professional to create unlimited AI Agents.');
+      }
     }
 
     const agentData: any = {
