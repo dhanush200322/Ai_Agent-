@@ -35,7 +35,7 @@ export class AgentService {
       include: { plan: true }
     });
 
-    const isStarter = !subscription || subscription.status === 'STARTER' || (subscription.plan && subscription.plan.name.toLowerCase() === 'starter');
+    const isStarter = !subscription || (subscription.status as string) === 'STARTER' || (subscription.plan && subscription.plan.name.toLowerCase() === 'starter');
 
     if (isStarter) {
       const agentCount = await prisma.agent.count({
