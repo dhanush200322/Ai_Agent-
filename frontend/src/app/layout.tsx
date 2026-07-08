@@ -12,6 +12,9 @@ const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space
 export const metadata = {
   title: 'Nexora AI',
   description: 'Manage and orchestrate AI agents',
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 export default function RootLayout({

@@ -51,11 +51,10 @@ export const Navbar = () => {
       >
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#4F8CFF] to-[#6366F1] flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(79,140,255,0.4)] flex-shrink-0">
-              <div className="absolute inset-0 bg-white/30 group-hover:translate-x-full transition-transform duration-700 ease-out -skew-x-12 -translate-x-full" />
-              <div className="w-4 h-4 bg-[#04070D] rounded-sm z-10" />
+            <div className="relative w-9 h-9 flex items-center justify-center flex-shrink-0 animate-coin-flip">
+              <img src="/logo.png" alt="Nexora Logo" className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-white hidden sm:block">AgentOS</span>
+            <span className="font-bold text-xl tracking-tight text-white hidden sm:block">Nexora AI</span>
           </Link>
           <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-white/60">
             {navLinks.map((item) => (
