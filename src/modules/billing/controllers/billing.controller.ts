@@ -198,6 +198,12 @@ export class BillingController {
           }
         });
 
+        // Reactivate any INACTIVE agents upon successful renewal/upgrade
+        await tx.agent.updateMany({
+          where: { organizationId, status: 'INACTIVE', deletedAt: null },
+          data: { status: 'ACTIVE' }
+        });
+
         return sub;
       });
 
