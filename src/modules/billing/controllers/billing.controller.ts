@@ -7,11 +7,13 @@ import { QueueManager } from '../../queue/engine/queue-manager';
 import { BullMQProvider } from '../../queue/providers/bullmq.provider';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import { EmailService } from '../services/email.service';
 
 export class BillingController {
   private subscriptionEngine = new SubscriptionEngine();
   private stripeProvider = new StripeProvider();
   private queueManager = new QueueManager(new BullMQProvider());
+  private emailService = new EmailService();
 
   async getPlans(_req: Request, res: Response) {
     const plans = await prisma.subscriptionPlan.findMany({ where: { active: true } });
@@ -208,6 +210,21 @@ export class BillingController {
       });
 
       res.json({ success: true, subscription: orgSub });
+
+      // Asynchronously send confirmation email without blocking the response
+      if (req.user?.email && orgSub.renewalDate) {
+        this.emailService.sendSubscriptionConfirmationEmail(
+          req.user.email,
+          req.user.firstName || 'User',
+          plan,
+          billingCycle,
+          new Date(),
+          orgSub.renewalDate,
+          amountInINR,
+          razorpay_payment_id,
+          razorpay_order_id
+        ).catch(e => console.error("Async email send failed:", e));
+      }
     } catch (error: any) {
       console.error('Error verifying Razorpay payment:', error);
       res.status(500).json({ error: 'Failed to verify payment.' });
