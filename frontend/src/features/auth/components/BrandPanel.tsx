@@ -9,8 +9,8 @@ export function BrandPanel() {
     <>
       <div className="z-10">
         <Link href="/" className="inline-flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#F7D774] flex items-center justify-center text-black font-bold text-xl">
-            N
+          <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 animate-coin-flip">
+            <img src="/logo.png" alt="Nexora Logo" className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
           </div>
           <span className="text-xl font-bold text-white tracking-tight">Nexora AI</span>
         </Link>
