@@ -193,9 +193,10 @@ export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
       });
       
       rzp1.open();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to initiate payment", error);
-      toast.error("Failed to initiate payment. Please try again.");
+      const errorMsg = error?.response?.data?.error || error?.message || "Failed to initiate payment. Please try again.";
+      toast.error(errorMsg);
     } finally {
       setIsProcessing(false);
     }

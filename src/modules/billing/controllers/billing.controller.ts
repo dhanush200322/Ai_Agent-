@@ -61,9 +61,16 @@ export class BillingController {
 
       const amountInPaise = amountInINR * 100;
 
+      const keyId = (process.env.RAZORPAY_KEY_ID || process.env['R A Z O R P A Y _ K E Y _ I D'] || '').replace(/\s+/g, '');
+      const keySecret = (process.env.RAZORPAY_KEY_SECRET || process.env[' R A Z O R P A Y _ K E Y _ S E C R E T '] || '').replace(/\s+/g, '');
+
+      if (!keyId || !keySecret) {
+        throw new Error('Razorpay keys are missing or invalid.');
+      }
+
       const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID!,
-        key_secret: process.env.RAZORPAY_KEY_SECRET!
+        key_id: keyId,
+        key_secret: keySecret
       });
 
       const orderOptions = {
@@ -81,7 +88,7 @@ export class BillingController {
       });
     } catch (error: any) {
       console.error('Error creating Razorpay order:', error);
-      res.status(500).json({ error: 'Failed to create payment order.' });
+      res.status(500).json({ error: error.message || 'Failed to create payment order.' });
     }
   }
 
@@ -91,7 +98,10 @@ export class BillingController {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature, plan, billingCycle } = req.body;
 
     try {
-      const secret = process.env.RAZORPAY_KEY_SECRET!;
+      const secret = (process.env.RAZORPAY_KEY_SECRET || process.env[' R A Z O R P A Y _ K E Y _ S E C R E T '] || '').replace(/\s+/g, '');
+      if (!secret) {
+        throw new Error('Razorpay secret is missing.');
+      }
       
       const generatedSignature = crypto
         .createHmac('sha256', secret)
@@ -219,10 +229,11 @@ export class BillingController {
   }
 
   async razorpayWebhook(req: Request, res: Response) {
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET!;
+    const secret = (process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || process.env[' R A Z O R P A Y _ K E Y _ S E C R E T '] || '').replace(/\s+/g, '');
     const signature = req.headers['x-razorpay-signature'] as string;
     
     try {
+      if (!secret) throw new Error('Razorpay webhook secret is missing.');
       const generatedSignature = crypto
         .createHmac('sha256', secret)
         .update(JSON.stringify(req.body))
