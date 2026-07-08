@@ -159,6 +159,11 @@ export function PricingCards({ showCTA = true }: PricingCardsProps = {}) {
         name: "Nexora AI",
         description: `Upgrade to Professional (${billingCycle})`,
         order_id: order_id,
+        prefill: {
+          name: "Demo User",
+          email: "demo@nexora.ai",
+          contact: "9000000000"
+        },
         handler: async function (response: any) {
           try {
             // 3. Verify payment on backend
