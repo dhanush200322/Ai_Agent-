@@ -37,7 +37,6 @@ export function Sidebar() {
 
       {/* Sidebar Content */}
       <motion.aside
-        layout
         className={`
           fixed top-0 left-0 bottom-0 z-50 
           bg-[rgba(10,10,10,0.95)] backdrop-blur-xl border-r border-[rgba(255,255,255,0.05)]

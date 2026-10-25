@@ -47,25 +47,46 @@ export const ChatWindow: React.FC = () => {
           onToken: (token) => appendStreamingContent(token),
           onSources: (sources) => setStreamingSources(sources),
           onMetrics: (metrics) => setStreamingMetrics(metrics),
-          onError: (error) => console.error('Stream error:', error),
+          onError: (error) => {
+            console.error('Stream error:', error);
+            const { streamingContent } = useChatStore.getState();
+            if (!streamingContent || streamingContent.trim().length === 0) {
+              appendStreamingContent(`Sorry, an error occurred: ${error || 'Failed to generate response'}`);
+            }
+          },
           onComplete: () => {
             setStreaming(false);
             const { streamingContent, streamingSources } = useChatStore.getState();
-            addMessage({
-              id: window.crypto.randomUUID(),
-              conversationId: activeConversation.id,
-              role: 'ASSISTANT',
-              content: streamingContent,
-              citations: streamingSources,
-              createdAt: new Date().toISOString(),
-            });
+            if (streamingContent && streamingContent.trim().length > 0) {
+              addMessage({
+                id: window.crypto.randomUUID(),
+                conversationId: activeConversation.id,
+                role: 'ASSISTANT',
+                content: streamingContent,
+                citations: streamingSources,
+                createdAt: new Date().toISOString(),
+              });
+            }
             clearStreaming();
           }
         }
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send message', error);
       setStreaming(false);
+      const { streamingContent, streamingSources } = useChatStore.getState();
+      const content = (streamingContent && streamingContent.trim().length > 0)
+        ? streamingContent
+        : `An error occurred: ${error?.message || 'Failed to communicate with agent'}`;
+      addMessage({
+        id: window.crypto.randomUUID(),
+        conversationId: activeConversation.id,
+        role: 'ASSISTANT',
+        content,
+        citations: streamingSources,
+        createdAt: new Date().toISOString(),
+      });
+      clearStreaming();
     }
   };
 
