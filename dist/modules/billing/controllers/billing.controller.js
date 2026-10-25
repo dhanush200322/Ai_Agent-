@@ -11,10 +11,12 @@ const queue_manager_1 = require("../../queue/engine/queue-manager");
 const bullmq_provider_1 = require("../../queue/providers/bullmq.provider");
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
+const email_service_1 = require("../services/email.service");
 class BillingController {
     subscriptionEngine = new subscription_engine_1.SubscriptionEngine();
     stripeProvider = new stripe_provider_1.StripeProvider();
     queueManager = new queue_manager_1.QueueManager(new bullmq_provider_1.BullMQProvider());
+    emailService = new email_service_1.EmailService();
     async getPlans(_req, res) {
         const plans = await prisma_1.prisma.subscriptionPlan.findMany({ where: { active: true } });
         res.json(plans);
@@ -177,9 +179,18 @@ class BillingController {
                         purchaseDate: new Date()
                     }
                 });
+                // Reactivate any INACTIVE agents upon successful renewal/upgrade
+                await tx.agent.updateMany({
+                    where: { organizationId, status: 'INACTIVE', deletedAt: null },
+                    data: { status: 'ACTIVE' }
+                });
                 return sub;
             });
             res.json({ success: true, subscription: orgSub });
+            // Asynchronously send confirmation email without blocking the response
+            if (req.user?.email && orgSub.renewalDate) {
+                this.emailService.sendSubscriptionConfirmationEmail(req.user.email, req.user.firstName || 'User', plan, billingCycle, new Date(), orgSub.renewalDate, amountInINR, razorpay_payment_id, razorpay_order_id).catch(e => console.error("Async email send failed:", e));
+            }
         }
         catch (error) {
             console.error('Error verifying Razorpay payment:', error);

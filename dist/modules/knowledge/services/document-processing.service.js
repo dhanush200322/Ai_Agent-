@@ -7,6 +7,7 @@ exports.DocumentProcessingService = void 0;
 const prisma_1 = require("../../../shared/prisma");
 const document_parser_service_1 = require("./document-parser.service");
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const text_cleaner_1 = require("../utils/text-cleaner");
 const chunk_service_1 = require("./chunk.service");
 const embedding_service_1 = require("./embedding.service");
@@ -48,7 +49,24 @@ class DocumentProcessingService {
                     throw new Error('DOCUMENT source missing storagePath or mimeType');
                 }
                 const absolutePath = path_1.default.join(__dirname, '../../../../public', document.storagePath);
-                parsed = await document_parser_service_1.DocumentParserService.parse(absolutePath, document.mimeType);
+                if (fs_1.default.existsSync(absolutePath)) {
+                    parsed = await document_parser_service_1.DocumentParserService.parse(absolutePath, document.mimeType);
+                }
+                else {
+                    // If file is not present on disk (e.g. after container restart), check if DB already has chunks
+                    // @ts-ignore
+                    const existingChunks = await prisma_1.prisma.knowledgeChunk.findMany({
+                        where: { documentId: document.id },
+                        orderBy: { createdAt: 'asc' },
+                    });
+                    if (existingChunks.length > 0) {
+                        console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] File ${absolutePath} not found on disk, using ${existingChunks.length} existing chunks from DB`);
+                        parsed.text = existingChunks.map((c) => c.text).join('\n\n');
+                    }
+                    else {
+                        throw new Error(`File ${document.originalName} not found on disk. Please re-upload.`);
+                    }
+                }
             }
             else if (document.sourceType === 'WEBSITE') {
                 const meta = JSON.parse(document.metadata || '{}');
@@ -99,6 +117,11 @@ class DocumentProcessingService {
             if (chunks.length === 0) {
                 throw new Error('No chunks generated from document');
             }
+            // Clean up previous chunks if retrying/reprocessing
+            // @ts-ignore
+            await prisma_1.prisma.knowledgeChunk.deleteMany({
+                where: { documentId: document.id },
+            });
             console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Saving ${chunks.length} chunks to PostgreSQL`);
             // Save chunks to PostgreSQL
             const dbChunks = await prisma_1.prisma.$transaction(chunks.map((chunk, i) => {
@@ -186,6 +209,7 @@ class DocumentProcessingService {
                     chunkCount: chunks.length,
                     embeddingModel: this.embeddingService.model,
                     processingTime,
+                    errorMessage: null,
                 },
             });
             console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Completed successfully in ${processingTime}ms`);

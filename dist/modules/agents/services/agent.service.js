@@ -33,7 +33,8 @@ class AgentService {
             where: { organizationId },
             include: { plan: true }
         });
-        if (subscription && subscription.plan.name.toLowerCase() === 'starter' || subscription?.status === 'STARTER') {
+        const isStarter = !subscription || subscription.status === 'STARTER' || (subscription.plan && subscription.plan.name.toLowerCase() === 'starter');
+        if (isStarter) {
             const agentCount = await prisma_1.prisma.agent.count({
                 where: { organizationId, deletedAt: null }
             });

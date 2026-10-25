@@ -2,6 +2,7 @@ import { prisma } from '../../../shared/prisma';
 import { PrismaClient } from '@prisma/client';
 import { DocumentParserService } from './document-parser.service';
 import path from 'path';
+import fs from 'fs';
 import { TextCleaner } from '../utils/text-cleaner';
 import { ChunkService } from './chunk.service';
 import { EmbeddingService } from './embedding.service';
@@ -54,7 +55,22 @@ export class DocumentProcessingService {
           throw new Error('DOCUMENT source missing storagePath or mimeType');
         }
         const absolutePath = path.join(__dirname, '../../../../public', document.storagePath);
-        parsed = await DocumentParserService.parse(absolutePath, document.mimeType);
+        if (fs.existsSync(absolutePath)) {
+          parsed = await DocumentParserService.parse(absolutePath, document.mimeType);
+        } else {
+          // If file is not present on disk (e.g. after container restart), check if DB already has chunks
+          // @ts-ignore
+          const existingChunks = await prisma.knowledgeChunk.findMany({
+            where: { documentId: document.id },
+            orderBy: { createdAt: 'asc' },
+          });
+          if (existingChunks.length > 0) {
+            console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] File ${absolutePath} not found on disk, using ${existingChunks.length} existing chunks from DB`);
+            parsed.text = existingChunks.map((c: any) => c.text).join('\n\n');
+          } else {
+            throw new Error(`File ${document.originalName} not found on disk. Please re-upload.`);
+          }
+        }
       } else if (document.sourceType === 'WEBSITE') {
         const meta = JSON.parse(document.metadata || '{}');
         if (!meta.url) throw new Error('WEBSITE source missing URL');
@@ -106,6 +122,12 @@ export class DocumentProcessingService {
       if (chunks.length === 0) {
         throw new Error('No chunks generated from document');
       }
+
+      // Clean up previous chunks if retrying/reprocessing
+      // @ts-ignore
+      await prisma.knowledgeChunk.deleteMany({
+        where: { documentId: document.id },
+      });
 
       console.log(`[${reqId || 'SYSTEM'}] [DocumentProcessing] Saving ${chunks.length} chunks to PostgreSQL`);
       // Save chunks to PostgreSQL
@@ -209,6 +231,7 @@ export class DocumentProcessingService {
           chunkCount: chunks.length,
           embeddingModel: this.embeddingService.model,
           processingTime,
+          errorMessage: null,
         },
       });
 
