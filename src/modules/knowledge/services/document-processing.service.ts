@@ -226,7 +226,7 @@ export class DocumentProcessingService {
       await prisma.knowledgeDocument.update({
         where: { id: documentId },
         data: { 
-          status: 'READY',
+          status: 'COMPLETED',
           processedAt: new Date(),
           chunkCount: chunks.length,
           embeddingModel: this.embeddingService.model,
